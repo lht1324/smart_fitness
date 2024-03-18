@@ -22,9 +22,6 @@ fun MainScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Header(
-            title = "촬영"
-        )
         Text(
             text = "Main",
             fontSize = LocalDensity.current.run { 18.dp.toSp() },

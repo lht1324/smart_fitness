@@ -18,9 +18,6 @@ fun SettingScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Header(
-            title = "설정"
-        )
         Text(
             text = "Setting",
             fontSize = LocalDensity.current.run { 18.dp.toSp() },

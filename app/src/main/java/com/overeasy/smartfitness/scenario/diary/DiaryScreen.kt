@@ -18,9 +18,6 @@ fun DiaryScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Header(
-            title = "운동 일지"
-        )
         Text(
             text = "Diary",
             fontSize = LocalDensity.current.run { 18.dp.toSp() },

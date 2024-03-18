@@ -21,6 +21,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.model.ScreenState
 import com.overeasy.smartfitness.scenario.diary.DiaryScreen
 import com.overeasy.smartfitness.scenario.main.MainScreen
+import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.ranking.RankingScreen
 import com.overeasy.smartfitness.scenario.setting.SettingScreen
 import com.overeasy.smartfitness.ui.theme.fontFamily
@@ -48,22 +51,38 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val coroutineScope = rememberCoroutineScope()
-
-            val screenHeight = LocalConfiguration.current.screenHeightDp
-            var tabHeight by remember { mutableFloatStateOf(0f) }
+            val pagerState = rememberPagerState(
+                pageCount = {
+                    ScreenState.entries.size
+                }
+            )
 
             val tabItemList = ScreenState.entries.map { state ->
                 state.value
             }
-            val pagerState = rememberPagerState(
-                pageCount = {
-                    tabItemList.size
+
+            val screenHeight = LocalConfiguration.current.screenHeightDp
+            var headerHeight by remember { mutableFloatStateOf(0f) }
+            var tabHeight by remember { mutableFloatStateOf(0f) }
+            val headerTitle by remember {
+                derivedStateOf {
+                    tabItemList[pagerState.targetPage]
                 }
-            )
+            }
+
             SmartFitnessTheme {
                 Column(Modifier.fillMaxSize()) {
+                    Header(
+                        modifier = Modifier.onSizeChanged { (_, height) ->
+                            val heightDp = pxToDp(height)
+
+                            if (heightDp != headerHeight)
+                                headerHeight = heightDp
+                        },
+                        title = headerTitle
+                    )
                     HorizontalPager(
-                        modifier = Modifier.height(((screenHeight - tabHeight).dp)),
+                        modifier = Modifier.height(((screenHeight - (headerHeight + tabHeight)).dp)),
                         state = pagerState,
                         userScrollEnabled = false
                     ) { page ->
@@ -98,8 +117,8 @@ class MainActivity : ComponentActivity() {
                                             width = 0.dp,
                                             color = Color.Black
                                         )
-                                        .onSizeChanged { size ->
-                                            val heightDp = pxToDp(size.height)
+                                        .onSizeChanged { (_, height) ->
+                                            val heightDp = pxToDp(height)
 
                                             if (heightDp != tabHeight)
                                                 tabHeight = heightDp
@@ -110,19 +129,9 @@ class MainActivity : ComponentActivity() {
                                     selectedContentColor = Color.Blue,
                                     unselectedContentColor = Color.Cyan
                                 )
-//                                if (index != tabItemList.size - 1) {
-//                                    Divider(
-//                                        modifier = Modifier.size(
-//                                            width = 2.dp,
-//                                            height = tabHeight.dp
-//                                        ).weight(1f),
-//                                        color = Color.Black
-//                                    )
-//                                }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

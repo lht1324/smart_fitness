@@ -18,9 +18,6 @@ fun RankingScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Header(
-            title = "랭킹"
-        )
         Text(
             text = "Ranking",
             fontSize = LocalDensity.current.run { 18.dp.toSp() },
