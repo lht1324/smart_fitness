@@ -1,6 +1,7 @@
 package com.overeasy.smartfitness.scenario.public
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
 @Composable
@@ -26,31 +29,37 @@ fun Header(
 ) {
     Box(
         modifier = modifier
-            .padding(12.dp)
-            .fillMaxWidth()
+            .background(color = ColorPrimary)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_back_button),
+        Box(
             modifier = Modifier
-                .size(16.dp)
-                .align(Alignment.CenterStart)
-                .clickable {
-                    onClickBack()
-                },
-            contentDescription = "뒤로 가기"
-        )
-        Text(
-            text = title,
-            modifier = Modifier.align(Alignment.Center),
-            fontSize = 48.dpToSp(),
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Black
-        )
-        if (endButton != null) {
-            Box(
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                endButton()
+                .padding(12.dp)
+                .fillMaxWidth()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_back_button),
+                modifier = Modifier
+                    .size(16.dp)
+                    .align(Alignment.CenterStart)
+                    .clickable {
+                        onClickBack()
+                    },
+                contentDescription = "뒤로 가기"
+            )
+            Text(
+                text = title,
+                modifier = Modifier.align(Alignment.Center),
+                color = ColorSecondary,
+                fontSize = 24.dpToSp(),
+                fontFamily = fontFamily,
+                fontWeight = FontWeight.Black
+            )
+            if (endButton != null) {
+                Box(
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    endButton()
+                }
             }
         }
     }

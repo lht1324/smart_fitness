@@ -9,7 +9,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +20,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -41,10 +39,14 @@ import com.overeasy.smartfitness.scenario.main.MainScreen
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.ranking.RankingScreen
 import com.overeasy.smartfitness.scenario.setting.SettingScreen
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +83,12 @@ class MainActivity : ComponentActivity() {
                         },
                         title = headerTitle
                     )
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp),
+                        color = ColorSecondary
+                    )
                     HorizontalPager(
                         modifier = Modifier.height(((screenHeight - (headerHeight + tabHeight)).dp)),
                         state = pagerState,
@@ -91,14 +99,13 @@ class MainActivity : ComponentActivity() {
                     Divider(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(2.dp)
-                            .background(color = Color.Blue)
-                            .weight(1f)
+                            .height(2.dp),
+                        color = ColorSecondary
                     )
                     TabRow(
                         selectedTabIndex = pagerState.currentPage,
-                        containerColor = Color.White,
-                        contentColor = Color.Magenta,
+                        containerColor = ColorPrimary,
+                        contentColor = ColorSecondary,
                         indicator = { _ ->
                             TabRowDefaults.Indicator(height = 1.dp, color = Color.Transparent)
                         }
@@ -114,8 +121,8 @@ class MainActivity : ComponentActivity() {
                                     },
                                     modifier = Modifier
                                         .border(
-                                            width = 0.dp,
-                                            color = Color.Black
+                                            width = 0.5.dp,
+                                            color = ColorSecondary
                                         )
                                         .onSizeChanged { (_, height) ->
                                             val heightDp = pxToDp(height)
@@ -126,8 +133,8 @@ class MainActivity : ComponentActivity() {
                                     text = {
                                         Text(text = tabItem)
                                     },
-                                    selectedContentColor = Color.Blue,
-                                    unselectedContentColor = Color.Cyan
+                                    selectedContentColor = Color.White,
+                                    unselectedContentColor = ColorSecondary
                                 )
                             }
                         }

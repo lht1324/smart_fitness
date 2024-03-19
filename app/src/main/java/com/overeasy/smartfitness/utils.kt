@@ -7,6 +7,7 @@ import android.util.TypedValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 fun println(tag: String?, msg: String) = Log.d(tag, msg)
 
@@ -14,10 +15,10 @@ fun println(tag: String?, msg: String) = Log.d(tag, msg)
 fun Dp.dpToSp() = LocalDensity.current.run { this@dpToSp.toSp() }
 
 @Composable
-fun Int.dpToSp() = LocalDensity.current.run { this@dpToSp.toSp() }
+fun Int.dpToSp() = LocalDensity.current.run { this@dpToSp.dp.toSp() }
 
 @Composable
-fun Float.dpToSp() = LocalDensity.current.run { this@dpToSp.toSp() }
+fun Float.dpToSp() = LocalDensity.current.run { this@dpToSp.dp.toSp() }
 
 fun Context.pxToDp(px: Int): Float {
     var density = resources.displayMetrics.density
