@@ -23,6 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val coroutineScope = rememberCoroutineScope()
+//            val coroutineScope = rememberCoroutineScope()
             val pagerState = rememberPagerState(
                 pageCount = {
                     ScreenState.entries.size
@@ -62,13 +64,15 @@ class MainActivity : ComponentActivity() {
             val tabItemList = ScreenState.entries.map { state ->
                 state.value
             }
+            var currentPage by remember { mutableIntStateOf(0) }
 
             val screenHeight = LocalConfiguration.current.screenHeightDp
             var headerHeight by remember { mutableFloatStateOf(0f) }
             var tabHeight by remember { mutableFloatStateOf(0f) }
             val headerTitle by remember {
                 derivedStateOf {
-                    tabItemList[pagerState.targetPage]
+//                    tabItemList[pagerState.targetPage]
+                    tabItemList[currentPage]
                 }
             }
 
@@ -89,13 +93,10 @@ class MainActivity : ComponentActivity() {
                             .height(2.dp),
                         color = ColorSecondary
                     )
-                    HorizontalPager(
+                    CurrentScreen(
                         modifier = Modifier.height(((screenHeight - (headerHeight + tabHeight)).dp)),
-                        state = pagerState,
-                        userScrollEnabled = false
-                    ) { page ->
-                        CurrentScreen(stateValue = tabItemList[page])
-                    }
+                        stateValue = tabItemList[currentPage]
+                    )
                     Divider(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -113,11 +114,13 @@ class MainActivity : ComponentActivity() {
                         tabItemList.forEachIndexed { index, tabItem ->
                             Row {
                                 Tab(
-                                    selected = pagerState.currentPage == index,
+//                                    selected = pagerState.currentPage == index,
+                                    selected = currentPage == index,
                                     onClick = {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(index)
-                                        }
+                                        currentPage = index
+//                                        coroutineScope.launch {
+//                                            pagerState.animateScrollToPage(index)
+//                                        }
                                     },
                                     modifier = Modifier
                                         .border(
@@ -146,20 +149,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CurrentScreen(stateValue: String) = when (stateValue) {
-    ScreenState.MainScreen.value -> MainScreen()
-    ScreenState.DiaryScreen.value -> DiaryScreen()
-    ScreenState.RankingScreen.value -> RankingScreen()
-    ScreenState.SettingScreen.value -> SettingScreen()
-    else -> Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "화면 로딩에 실패했습니다.",
-            fontSize = 18.dpToSp(),
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Bold
-        )
+fun CurrentScreen(
+    modifier: Modifier = Modifier,
+    stateValue: String
+) = Box(
+    modifier = modifier
+) {
+    when (stateValue) {
+        ScreenState.MainScreen.value -> MainScreen()
+        ScreenState.DiaryScreen.value -> DiaryScreen()
+        ScreenState.RankingScreen.value -> RankingScreen()
+        ScreenState.SettingScreen.value -> SettingScreen()
+        else -> Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "화면 로딩에 실패했습니다.",
+                fontSize = 18.dpToSp(),
+                fontFamily = fontFamily,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
