@@ -3,6 +3,7 @@ package com.overeasy.smartfitness.scenario.diary
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -40,8 +42,13 @@ import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import java.time.LocalDate
+
+private const val weekDayCount = 7
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -49,22 +56,18 @@ fun DiaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
-    val currentDate by viewModel.currentDate.collectAsState(initial = null)
+    val currentDate by viewModel.currentEndOfMonth.collectAsState(initial = null)
     val calendarList by remember {
         derivedStateOf {
             viewModel.calendarList.toList()
         }
     }
-
-    val pagerState = rememberPagerState(
-        initialPage = 2,
-        pageCount = {
-            calendarList.size
-        }
-    )
+    val calendarIndex by viewModel.calendarIndex.collectAsState()
+    val isCalendarListEmpty = false
 
     if (currentDate != null && calendarList.isNotEmpty()) {
         val pagerState = rememberPagerState(
+            initialPage = calendarIndex,
             pageCount = {
                 calendarList.size
             }
@@ -79,8 +82,27 @@ fun DiaryScreen(
             Calendar(
                 pagerState = pagerState,
                 currentDate = currentDate!!,
-                calendarList = calendarList
+                calendarList = calendarList,
+                isCalendarListEmpty = isCalendarListEmpty,
+                onChangeMonth = { isSwipeToLeft ->
+                    viewModel.onChangeMonth(isSwipeToLeft)
+                }
             )
+        }
+
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }.map { page ->
+                page to page
+            }.scan( 3 to 3) { previous, next ->
+                previous.second to next.first
+            }.distinctUntilChanged().collectLatest { (previous, next) ->
+                println("jaehoLee", "onChange")
+                viewModel.onChangeMonth(previous > next) // isSwipedToLeft
+            }
+        }
+
+        LaunchedEffect(calendarIndex) {
+            println("jaehoLee", "calendarIndex = $calendarIndex, ${pagerState.currentPage}")
         }
     } else {
         Box(
@@ -91,10 +113,6 @@ fun DiaryScreen(
             // loading
         }
     }
-
-    LaunchedEffect(pagerState.isScrollInProgress)  {
-        println("jaehoLee", "isInProgress = ${pagerState.isScrollInProgress}")
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -103,13 +121,18 @@ private fun Calendar(
     modifier: Modifier = Modifier,
     pagerState: PagerState,
     currentDate: LocalDate,
-    calendarList: List<List<CalendarItem>>
+    calendarList: List<List<CalendarItem>>,
+    isCalendarListEmpty: Boolean,
+    onChangeMonth: (Boolean) -> Unit
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        DayOfWeekRow()
+        CalendarHeader(
+            currentMonth = currentDate.monthValue,
+            onChangeMonth = onChangeMonth
+        )
         Divider(
             modifier = Modifier.fillMaxWidth(),
             color = ColorSecondary
@@ -118,14 +141,14 @@ private fun Calendar(
             Column(
                 modifier = Modifier.wrapContentHeight(),
             ) {
-                val calendarRowCount = calendarList[page].size / 7
+                val calendarRowCount = calendarList[page].size / weekDayCount
 
                 for (i in 1..calendarRowCount) {
                     Spacer(modifier = Modifier.height(5.dp))
                     Row {
-                        for (j in 1..7) {
+                        for (j in 1..weekDayCount) {
                             CalendarItem(calendarItem = calendarList[page][(i - 1) * 7 + j - 1])
-                            if (i in 1..6) {
+                            if (i in 1..< weekDayCount) {
                                 Spacer(modifier = Modifier.width(5.dp))
                             }
                         }
@@ -134,20 +157,68 @@ private fun Calendar(
             }
         }
     }
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.distinctUntilChanged().collect { page ->
-            // date 변경
-        }
-    }
 }
 
 @Composable
 private fun CalendarHeader(
-    onClickLeftButton: () -> Unit,
-    onClickRightButton: () -> Unit
+    modifier: Modifier = Modifier,
+    currentMonth: Int,
+    onChangeMonth: (Boolean) -> Unit
 ) {
-
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(modifier = Modifier.wrapContentWidth()) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = ColorPrimary,
+                        shape = AbsoluteRoundedCornerShape(5.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = ColorSecondary,
+                        shape = AbsoluteRoundedCornerShape(5.dp)
+                    )
+                    .clickable {
+                        onChangeMonth(true)
+                    }
+            ) {
+                Text(
+                    text = "이전 달"
+                )
+            }
+            Box() {
+                Text(
+                    text = currentMonth.toString(),
+                    fontSize = 18.dpToSp(),
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = fontFamily
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = ColorPrimary,
+                        shape = AbsoluteRoundedCornerShape(5.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = ColorSecondary,
+                        shape = AbsoluteRoundedCornerShape(5.dp)
+                    )
+                    .clickable {
+                        onChangeMonth(false)
+                    }
+            ) {
+                Text(
+                    text = "다음 달"
+                )
+            }
+        }
+        DayOfWeekRow()
+    }
 }
 
 @Composable
