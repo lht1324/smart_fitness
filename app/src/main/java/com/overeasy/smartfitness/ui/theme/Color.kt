@@ -19,3 +19,6 @@ val ColorBronze = Color(0xFF6E4D25)
 val ColorSilver = Color(0xFFE0E0E0)
 val ColorGold = Color(0xFFDBAC34)
 val ColorMaster = Color(0xFFD62532)
+
+val ColorSaturday = Color(0xFF3E77E9)
+val ColorSunday = Color(0xFFFF5952)

@@ -4,8 +4,14 @@ import android.content.Context
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -31,4 +37,22 @@ fun Context.pxToDp(px: Int): Float {
         density *= 2f
 
     return px.toFloat() / density
+}
+
+fun Modifier.noRippleClickable(
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    onClick: () -> Unit
+) = composed {
+    then(
+        clickable(
+            enabled = enabled,
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClickLabel = onClickLabel,
+            role = role,
+            onClick = onClick
+        )
+    )
 }

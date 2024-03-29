@@ -1,6 +1,7 @@
 package com.overeasy.smartfitness.module
 
 import com.overeasy.smartfitness.model.CalendarItem
+import com.overeasy.smartfitness.println
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -30,8 +31,12 @@ object CalendarManager {
                     LocalDate.of(year + 1, 1, 1)
                 }
 
-                val lastMonthLastWeekCount = firstDayOfMonth.dayOfWeek.value - 1
-                val nextMonthFirstWeekCount = 7 - lastDayOfMonth.dayOfWeek.value
+                val lastMonthLastWeekCount = firstDayOfMonth.dayOfWeek.value
+                val nextMonthFirstWeekCount = if (lastDayOfMonth.dayOfWeek.value < 7) {
+                    -(lastDayOfMonth.dayOfWeek.value - 6)
+                } else {
+                    lastDayOfMonth.dayOfWeek.value - 1
+                }
 
                 val getFormattedNumber: (Int) -> String = { number: Int ->
                     String.format("%02d", number)
@@ -39,7 +44,7 @@ object CalendarManager {
 
                 for (day in 1..lastMonthLastWeekCount + lastDayOfMonth.dayOfMonth + nextMonthFirstWeekCount) {
                     val calendarItem = CalendarItem(
-                        isActive = day in (lastMonthLastWeekCount + 1)..(lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount),
+                        isCurrentMonth = day in (lastMonthLastWeekCount + 1)..(lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount),
                         date = when (day) {
                             in 1..lastMonthLastWeekCount -> "${lastDayOfLastMonth.year}" +
                                     "/${getFormattedNumber(lastDayOfLastMonth.monthValue)}" +

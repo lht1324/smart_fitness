@@ -114,13 +114,9 @@ class MainActivity : ComponentActivity() {
                         tabItemList.forEachIndexed { index, tabItem ->
                             Row {
                                 Tab(
-//                                    selected = pagerState.currentPage == index,
                                     selected = currentPage == index,
                                     onClick = {
                                         currentPage = index
-//                                        coroutineScope.launch {
-//                                            pagerState.animateScrollToPage(index)
-//                                        }
                                     },
                                     modifier = Modifier
                                         .border(

@@ -3,52 +3,46 @@ package com.overeasy.smartfitness.scenario.diary
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.CalendarItem
 import com.overeasy.smartfitness.println
+import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
-import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
-import java.time.LocalDate
-
-private const val weekDayCount = 7
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -56,22 +50,24 @@ fun DiaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
-    val currentDate by viewModel.currentEndOfMonth.collectAsState(initial = null)
+    val currentYear by viewModel.currentYear.collectAsState(initial = 1970)
+    val currentMonth by viewModel.currentMonth.collectAsState(initial = 1)
     val calendarList by remember {
         derivedStateOf {
             viewModel.calendarList.toList()
         }
     }
     val calendarIndex by viewModel.calendarIndex.collectAsState()
-    val isCalendarListEmpty = false
 
-    if (currentDate != null && calendarList.isNotEmpty()) {
+    if (calendarIndex != null && calendarList.isNotEmpty()) {
+        val coroutineScope = rememberCoroutineScope()
         val pagerState = rememberPagerState(
-            initialPage = calendarIndex,
+            initialPage = calendarIndex!!,
             pageCount = {
                 calendarList.size
             }
         )
+        var selectedCalendarItem by remember { mutableStateOf<CalendarItem?>(null) }
 
         Column(
             modifier = modifier
@@ -81,28 +77,45 @@ fun DiaryScreen(
         ) {
             Calendar(
                 pagerState = pagerState,
-                currentDate = currentDate!!,
+                currentYear = currentYear,
+                currentMonth = currentMonth,
                 calendarList = calendarList,
-                isCalendarListEmpty = isCalendarListEmpty,
                 onChangeMonth = { isSwipeToLeft ->
-                    viewModel.onChangeMonth(isSwipeToLeft)
+                    coroutineScope.launch {
+                        if (isSwipeToLeft) {
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                        } else {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
+                },
+                onClickItem = { calendarItem ->
+                    selectedCalendarItem = calendarItem
                 }
+            )
+//            Spacer(modifier = Modifier.height(20.dp))
+            InfoSection(
+                modifier = Modifier
+                    .padding(bottom = 20.dp)
+                    .padding(horizontal = 24.dp),
+                selectedCalendarItem = selectedCalendarItem
             )
         }
 
         LaunchedEffect(pagerState) {
             snapshotFlow { pagerState.currentPage }.map { page ->
                 page to page
-            }.scan( 3 to 3) { previous, next ->
+            }.scan(calendarIndex!! to calendarIndex!!) { previous, next ->
                 previous.second to next.first
-            }.distinctUntilChanged().collectLatest { (previous, next) ->
-                println("jaehoLee", "onChange")
-                viewModel.onChangeMonth(previous > next) // isSwipedToLeft
-            }
-        }
+            }.filter { (previous, next) ->
+                previous != next
+            }.map { (previous, next) ->
+                previous > next
+            }.collectLatest { isSwipedToLeft ->
+                selectedCalendarItem = null
 
-        LaunchedEffect(calendarIndex) {
-            println("jaehoLee", "calendarIndex = $calendarIndex, ${pagerState.currentPage}")
+                viewModel.onChangeMonth(isSwipedToLeft)
+            }
         }
     } else {
         Box(
@@ -115,213 +128,126 @@ fun DiaryScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Calendar(
+private fun InfoSection(
     modifier: Modifier = Modifier,
-    pagerState: PagerState,
-    currentDate: LocalDate,
-    calendarList: List<List<CalendarItem>>,
-    isCalendarListEmpty: Boolean,
-    onChangeMonth: (Boolean) -> Unit
+    selectedCalendarItem: CalendarItem?
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CalendarHeader(
-            currentMonth = currentDate.monthValue,
-            onChangeMonth = onChangeMonth
-        )
-        Divider(
-            modifier = Modifier.fillMaxWidth(),
-            color = ColorSecondary
-        )
-        HorizontalPager(state = pagerState) { page ->
-            Column(
-                modifier = Modifier.wrapContentHeight(),
-            ) {
-                val calendarRowCount = calendarList[page].size / weekDayCount
+    val context = LocalContext.current
 
-                for (i in 1..calendarRowCount) {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    Row {
-                        for (j in 1..weekDayCount) {
-                            CalendarItem(calendarItem = calendarList[page][(i - 1) * 7 + j - 1])
-                            if (i in 1..< weekDayCount) {
-                                Spacer(modifier = Modifier.width(5.dp))
-                            }
-                        }
-                    }
-                }
-            }
+    var textHeight by remember { mutableIntStateOf(0) }
+    val textHeightDp by remember {
+        derivedStateOf {
+            context.pxToDp(textHeight)
         }
     }
-}
 
-@Composable
-private fun CalendarHeader(
-    modifier: Modifier = Modifier,
-    currentMonth: Int,
-    onChangeMonth: (Boolean) -> Unit
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier
     ) {
-        Row(modifier = Modifier.wrapContentWidth()) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = ColorPrimary,
-                        shape = AbsoluteRoundedCornerShape(5.dp)
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = ColorSecondary,
-                        shape = AbsoluteRoundedCornerShape(5.dp)
-                    )
-                    .clickable {
-                        onChangeMonth(true)
-                    }
-            ) {
-                Text(
-                    text = "이전 달"
+        Box(
+            modifier = Modifier
+                .padding(top = (20.0f + (textHeightDp / 2.0f)).dp)
+                .fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    color = Color.White,
+                    shape = AbsoluteRoundedCornerShape(5.dp)
                 )
-            }
-            Box() {
+        )
+        Box(
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .background(
+                    color = ColorPrimary
+                )
+                .align(Alignment.TopStart)
+        ) {
+            Text(
+                text = if (selectedCalendarItem != null) {
+                    val splitDate = selectedCalendarItem.date.split('/')
+                    val year = splitDate[0].toInt()
+                    val month = splitDate[1].toInt()
+                    val day = splitDate[2].toInt()
+
+                    selectedCalendarItem.run { "${year}년 ${month}월 ${day}일" }
+                } else {
+                    "운동 정보"
+                },
+                modifier = Modifier
+                    .padding(20.dp)
+                    .onSizeChanged { (_, height) ->
+                        if (height != textHeight) {
+                            textHeight = height
+                        }
+                    },
+                color = Color.White,
+                fontSize = 24.dpToSp(),
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = fontFamily
+            )
+        }
+        Column(
+            modifier = Modifier
+                .padding(top = (40 + (textHeightDp / 2.0f)).dp)
+                .padding(horizontal = 20.dp)
+        ) {
+            if (selectedCalendarItem != null) {
                 Text(
-                    text = currentMonth.toString(),
+                    text = "세트 총합",
+                    color = Color.White,
+                    fontSize = 20.dpToSp(),
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
+                )
+                Text(
+                    text = "${selectedCalendarItem.daySetCount}회",
+                    color = Color.White,
                     fontSize = 18.dpToSp(),
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = fontFamily
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                if (selectedCalendarItem.dayCalorieIncome != null) {
+                    Text(
+                        text = "칼로리 섭취량",
+                        color = Color.White,
+                        fontSize = 20.dpToSp(),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily
+                    )
+                    Text(
+                        text = "${selectedCalendarItem.dayCalorieIncome} kcal",
+                        color = Color.White,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = fontFamily
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+                Text(
+                    text = "칼로리 소모량",
+                    color = Color.White,
+                    fontSize = 20.dpToSp(),
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
+                )
+                Text(
+                    text = "${selectedCalendarItem.dayCalorieUsage} kcal",
+                    color = Color.White,
+                    fontSize = 18.dpToSp(),
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = fontFamily
+                )
+            } else {
+                Text(
+                    text = "궁금한 날짜를 터치해주세요.",
+                    color = Color.White,
+                    fontSize = 20.dpToSp(),
+                    fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily
                 )
             }
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = ColorPrimary,
-                        shape = AbsoluteRoundedCornerShape(5.dp)
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = ColorSecondary,
-                        shape = AbsoluteRoundedCornerShape(5.dp)
-                    )
-                    .clickable {
-                        onChangeMonth(false)
-                    }
-            ) {
-                Text(
-                    text = "다음 달"
-                )
-            }
-        }
-        DayOfWeekRow()
-    }
-}
-
-@Composable
-private fun DayOfWeekRow(
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-//        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-        DayOfWeekRowItem(text = "일")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "월")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "화")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "수")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "목")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "금")
-        Spacer(modifier = Modifier.width(5.dp))
-        DayOfWeekRowItem(text = "토")
-    }
-}
-
-@Composable
-private fun DayOfWeekRowItem(
-    modifier: Modifier = Modifier,
-    text: String
-) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-
-    Box(
-        modifier = modifier
-            .size(((screenWidth - (24 + 24)) / 7.0f).dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .align(Alignment.Center),
-            color = Color.White,
-            fontSize = 12.dpToSp(),
-            fontFamily = fontFamily
-        )
-    }
-}
-
-@Composable
-private fun CalendarItem(
-    modifier: Modifier = Modifier,
-    calendarItem: CalendarItem
-) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    val itemSize = (screenWidth - (24 + 24)) / 7.0f
-
-    Box(
-        modifier = modifier
-            .size(itemSize.dp)
-            .border(
-                width = 2.dp,
-                color = Color.White,
-                shape = AbsoluteRoundedCornerShape(5.dp)
-            )
-    ) {
-        val splitDate = calendarItem.date.split('/')
-
-        Column(
-            modifier = Modifier
-//                .fillMaxSize()
-                .padding(2.dp)
-                .align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = splitDate[0],
-                color = Color.White,
-                fontSize = 11.dpToSp(),
-                fontWeight = FontWeight.Light,
-                fontFamily = fontFamily
-            )
-            Text(
-                text = splitDate[1],
-                color = Color.White,
-                fontSize = 11.dpToSp(),
-                fontWeight = FontWeight.Light,
-                fontFamily = fontFamily
-            )
-            Text(
-                text = splitDate[2],
-                color = Color.White,
-                fontSize = 11.dpToSp(),
-                fontWeight = FontWeight.Light,
-                fontFamily = fontFamily
-            )
-        }
-        if (!calendarItem.isActive) {
-            Box(
-                modifier = Modifier
-                    .size(itemSize.dp)
-                    .background(color = Color.DarkGray.copy(alpha = 0.3f))
-            )
         }
     }
 }
