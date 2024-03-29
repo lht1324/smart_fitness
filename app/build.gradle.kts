@@ -85,8 +85,18 @@ dependencies {
     implementation (libs.ktor.client.logging)
     implementation(libs.ktor.client.serialization)
 //    implementation(libs.logback.classic)
-    implementation (libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.json)
 //    testImplementation(libs.ktor.client.mock)
+
+    // CameraX
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation (libs.androidx.camera.view)
+
+    // Google ML Kit
+    implementation(libs.pose.detection)
+    implementation(libs.pose.detection.accurate)
 
     // Test
     testImplementation(libs.junit)

@@ -33,12 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.CalendarItem
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
@@ -218,7 +216,7 @@ private fun InfoSection(
                     )
                     Text(
                         text = "${selectedCalendarItem.dayCalorieIncome} kcal",
-                        color = Color.White,
+                        color = Color.Red,
                         fontSize = 18.dpToSp(),
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = fontFamily
@@ -234,7 +232,7 @@ private fun InfoSection(
                 )
                 Text(
                     text = "${selectedCalendarItem.dayCalorieUsage} kcal",
-                    color = Color.White,
+                    color = Color(0xFF08E95F),
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
