@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Tab
@@ -24,9 +22,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +32,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.model.ScreenState
-import com.overeasy.smartfitness.scenario.diary.DiaryScreen
-import com.overeasy.smartfitness.scenario.main.MainScreen
+import com.overeasy.smartfitness.scenario.diary.diary.DiaryScreen
+import com.overeasy.smartfitness.scenario.diary.navigation.DiaryNavHost
+import com.overeasy.smartfitness.scenario.workout.workout.MainScreen
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.ranking.RankingScreen
 import com.overeasy.smartfitness.scenario.setting.SettingScreen
@@ -46,7 +43,6 @@ import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -153,7 +149,8 @@ fun CurrentScreen(
 ) {
     when (stateValue) {
         ScreenState.MainScreen.value -> MainScreen()
-        ScreenState.DiaryScreen.value -> DiaryScreen()
+//        ScreenState.DiaryScreen.value -> DiaryScreen()
+        ScreenState.DiaryScreen.value -> DiaryNavHost()
         ScreenState.RankingScreen.value -> RankingScreen()
         ScreenState.SettingScreen.value -> SettingScreen()
         else -> Box(

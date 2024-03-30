@@ -1,11 +1,10 @@
-package com.overeasy.smartfitness.scenario.diary
+package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.model.CalendarItem
 import com.overeasy.smartfitness.module.CalendarManager
-import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.scenario.diary
+package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -33,8 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.CalendarItem
+import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -46,7 +48,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DiaryScreen(
     modifier: Modifier = Modifier,
-    viewModel: DiaryViewModel = hiltViewModel()
+    viewModel: DiaryViewModel = hiltViewModel(),
+    onClickMoveToDetail: (String) -> Unit
 ) {
     val currentYear by viewModel.currentYear.collectAsState(initial = 1970)
     val currentMonth by viewModel.currentMonth.collectAsState(initial = 1)
@@ -96,7 +99,8 @@ fun DiaryScreen(
                 modifier = Modifier
                     .padding(bottom = 20.dp)
                     .padding(horizontal = 24.dp),
-                selectedCalendarItem = selectedCalendarItem
+                selectedCalendarItem = selectedCalendarItem,
+                onClickMoveToDetail = onClickMoveToDetail
             )
         }
 
@@ -129,7 +133,8 @@ fun DiaryScreen(
 @Composable
 private fun InfoSection(
     modifier: Modifier = Modifier,
-    selectedCalendarItem: CalendarItem?
+    selectedCalendarItem: CalendarItem?,
+    onClickMoveToDetail: (String) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -243,6 +248,33 @@ private fun InfoSection(
                     color = Color.White,
                     fontSize = 20.dpToSp(),
                     fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
+                )
+            }
+        }
+        if (selectedCalendarItem != null) {
+            Box(
+                modifier = Modifier
+                    .padding(
+                        top = (40 + (textHeightDp / 2.0f)).dp,
+                        end = 20.dp
+                    )
+                    .background(
+                        color = ColorSecondary,
+                        shape = AbsoluteRoundedCornerShape(20.dp)
+                    )
+                    .noRippleClickable {
+                        onClickMoveToDetail(selectedCalendarItem.date)
+                    }.align(Alignment.TopEnd)
+            ) {
+                Text(
+                    text = "상세 정보",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .align(Alignment.Center),
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.Normal,
                     fontFamily = fontFamily
                 )
             }

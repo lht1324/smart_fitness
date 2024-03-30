@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.scenario.diary
+package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
