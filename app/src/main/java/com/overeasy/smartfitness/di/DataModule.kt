@@ -1,68 +1,84 @@
-//package com.overeasy.smartfitness.di
-//
-//import android.os.Build
-//import dagger.Provides
-//import io.ktor.client.*
-//import io.ktor.client.engine.cio.*
-//import io.ktor.client.features.*
-//import io.ktor.client.features.json.*
-//import io.ktor.client.features.json.serializer.*
-//import io.ktor.client.features.logging.*
-//import io.ktor.client.request.*
-//import io.ktor.http.*
-//import io.ktor.client.plugins.HttpTimeout
-//import javax.inject.Singleton
-//
-//object DataModule {
-//    @Singleton
-//    @Provides
-//    fun provideKtorHttpClient(): HttpClient = HttpClient(CIO) {
-//        val appVersion = BuildConfig.VERSION_NAME
-//        val sdkVersion = Build.VERSION.SDK_INT
-//
-//        install(JsonFeature) {
-//            serializer = KotlinxSerializer(
-//                Json {
-//                    prettyPrint = true
-//                    isLenient = true
-//                    ignoreUnknownKeys = true
-//                }
-//            )
-//        }
-//
-//        install(HttpTimeout) {
-//            requestTimeoutMillis = 30000L
-//            connectTimeoutMillis = 30000L
-//            socketTimeoutMillis = 30000L
-//        }
-//
-////        HttpResponseValidator {
-////            handleResponseException { throwable ->
-////                SafeResponseException(
-////                    throwable = throwable,
-////                    userId = MainApp.appPref.userId.toString(),
-////                    version = Version(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
-////                    toaster = toaster,
-////                    serverThrowableHelper = serverThrowableHelper
-////                )
-////            }
-////        }
-//
-//        if (BuildConfig.DEBUG) {
-//            install(Logging) {
-//                logger = object : Logger {
-//                    override fun log(message: String) {
-//                        Timber.d(message)
-//                    }
-//                }
-//                level = LogLevel.ALL
-//            }
-//        }
-////        defaultRequest {
-////            header("App-Id", appId)
-////            header("App-Info", appInfo)
-////            header("Access-Token", jwtNetwork.accessToken)
-////            contentType(ContentType.Application.Json)
-////        }
-//    }
-//}
+package com.overeasy.smartfitness.di
+
+import android.os.Build
+import com.overeasy.smartfitness.BuildConfig
+import com.overeasy.smartfitness.domain.diet.DietRepository
+import com.overeasy.smartfitness.domain.diet.impl.DietRepositoryImpl
+import com.overeasy.smartfitness.domain.diary.DiaryRepository
+import com.overeasy.smartfitness.domain.diary.impl.DiaryRepositoryImpl
+import com.overeasy.smartfitness.domain.workout.WorkoutRepository
+import com.overeasy.smartfitness.domain.workout.impl.WorkoutRepositoryImpl
+import com.overeasy.smartfitness.domain.ranking.RankingRepository
+import com.overeasy.smartfitness.domain.ranking.impl.RankingRepositoryImpl
+import com.overeasy.smartfitness.domain.setting.SettingRepository
+import com.overeasy.smartfitness.domain.setting.impl.SettingRepositoryImpl
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DataModule {
+    @Singleton
+    @Provides
+    fun provideKtorHttpClient(): HttpClient = HttpClient(CIO) {
+        val appId = BuildConfig.appId
+        val appVersion = BuildConfig.VERSION_NAME
+        val sdkVersion = Build.VERSION.SDK_INT
+        val appInfo = "AOS,$appVersion,$sdkVersion"
+
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                }
+            )
+        }
+
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60000L
+            connectTimeoutMillis = 60000L
+            socketTimeoutMillis = 60000L
+        }
+
+        defaultRequest {
+            header("App-Id", appId)
+            header("App-Info", appInfo)
+//            header("Access-Token", jwtNetwork.accessToken)
+            contentType(ContentType.Application.Json)
+        }
+    }
+
+    @Singleton
+    @Provides
+    fun provideDietRepository(client: HttpClient): DietRepository = DietRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideDiaryRepository(client: HttpClient): DiaryRepository = DiaryRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideWorkoutRepository(client: HttpClient): WorkoutRepository = WorkoutRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideRankingRepository(client: HttpClient): RankingRepository = RankingRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideSettingRepository(client: HttpClient): SettingRepository = SettingRepositoryImpl(client)
+}

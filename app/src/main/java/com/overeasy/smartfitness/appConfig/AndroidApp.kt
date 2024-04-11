@@ -5,5 +5,5 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class AndroidApp : Application() {
-    /* no-op (currently */
+    /* no-op (currently) */
 }

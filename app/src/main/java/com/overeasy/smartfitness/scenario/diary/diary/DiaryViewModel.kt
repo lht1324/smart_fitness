@@ -3,6 +3,7 @@ package com.overeasy.smartfitness.scenario.diary.diary
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.domain.diary.DiaryRepository
 import com.overeasy.smartfitness.model.CalendarItem
 import com.overeasy.smartfitness.module.CalendarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,7 @@ import java.time.YearMonth
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-
+    private val diaryRepository: DiaryRepository
 ) : ViewModel() {
     private val currentYearMonth = MutableStateFlow<YearMonth?>(null)
     val currentYear = currentYearMonth.filterNotNull().map { yearMonth ->

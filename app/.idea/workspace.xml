@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cb65b929-8a6f-476d-bfed-a017a0cec0dd" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/domain/diet/DietRepository.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/domain/diet/entity/GetDietCategory.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/domain/diet/impl/DietRepositoryImpl.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/domain/diet/model/CategoryItem.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/domain/public/BaseResponseModel.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/logout/LogoutScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/logout/LogoutViewModel.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/myinfo/MyInfoScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/myinfo/MyInfoViewModel.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/public/SettingTextField.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/register/BodyInfoInputScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_chinese.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_dessert.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_fastfood.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_japansese.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_korean.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/food_category_western.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/ic_arrrow_down.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/workout_guy.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/di/DataModule.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/di/DataModule.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/model/ScreenState.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/model/ScreenState.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/diary/DiaryScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/diary/DiaryScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/diarydetail/DiaryDetailScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/diarydetail/DiaryDetailScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/navigation/DiaryNavHost.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/diary/navigation/DiaryNavHost.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/public/Header.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/public/Header.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/ranking/RankingList.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/ranking/RankingListItem.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/ranking/RankingScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/ranking/RankingViewModel.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/SettingScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/setting/SettingViewModel.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/workout/resullt/WorkoutResultScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/workout/workout/WorkoutScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/overeasy/smartfitness/scenario/workout/workout/WorkoutScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../gradle/libs.versions.toml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ProjectId" id="2etddDlRBh1eVSVJBBuoVLX00nL" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cb65b929-8a6f-476d-bfed-a017a0cec0dd" name="Changes" comment="" />
+      <created>1712727894449</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1712727894449</updated>
+    </task>
+    <servers />
+  </component>
+</project>

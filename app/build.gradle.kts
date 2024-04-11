@@ -1,10 +1,9 @@
 plugins {
-    kotlin("kapt")
-    id("dagger.hilt.android.plugin")
-//    id("com.google.dagger.hilt.android")
-//    alias(libs.plugins.hilt)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("kapt")
+    kotlin("plugin.serialization")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -22,6 +21,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "appId", "\"smart_fitness\"")
+        buildConfigField("String", "BASE_URL", "\"https://namu.wiki\"")
     }
 
     buildTypes {
@@ -32,11 +34,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "IS_DEBUG", "false")
         }
 
         debug {
             applicationIdSuffix = ".debug"
             isMinifyEnabled = false
+
+            buildConfigField("boolean", "IS_DEBUG", "true")
         }
     }
     compileOptions {
@@ -47,6 +52,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     composeOptions {
@@ -64,11 +70,17 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Hilt
+    // Kotlin
+    implementation(libs.kotlinx.serialization.json)
+
+    // DI
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.dagger)
     kapt(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    kapt(libs.dagger.compiler)
+    kapt(libs.dagger.android.processor)
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -82,17 +94,18 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.android)
-    implementation (libs.ktor.client.logging)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.content.negotiation.v2310)
     implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.serialization.kotlinx.json)
 //    implementation(libs.logback.classic)
-    implementation(libs.kotlinx.serialization.json)
 //    testImplementation(libs.ktor.client.mock)
 
     // CameraX
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.lifecycle)
-    implementation (libs.androidx.camera.view)
+    implementation(libs.androidx.camera.view)
 
     // Google ML Kit
     implementation(libs.pose.detection)

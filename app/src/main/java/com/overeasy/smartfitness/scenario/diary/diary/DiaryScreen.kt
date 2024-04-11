@@ -3,14 +3,18 @@ package com.overeasy.smartfitness.scenario.diary.diary
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.dpToSp
@@ -36,6 +41,7 @@ import com.overeasy.smartfitness.model.CalendarItem
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
@@ -94,7 +100,6 @@ fun DiaryScreen(
                     selectedCalendarItem = calendarItem
                 }
             )
-//            Spacer(modifier = Modifier.height(20.dp))
             InfoSection(
                 modifier = Modifier
                     .padding(bottom = 20.dp)
@@ -125,7 +130,25 @@ fun DiaryScreen(
                 .fillMaxSize()
                 .background(color = ColorPrimary)
         ) {
-            // loading
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(100.dp),
+                color = ColorSaturday,
+                strokeWidth = 15.dp
+            )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "데이터를 불러오는 중입니다.\n잠시만 기다려주세요...",
+                    color = ColorSecondary,
+                    fontSize = 24.dpToSp(),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = fontFamily,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -244,7 +267,7 @@ private fun InfoSection(
                 )
             } else {
                 Text(
-                    text = "궁금한 날짜를 터치해주세요.",
+                    text = "운동 정보가 존재하지 않아요.",
                     color = Color.White,
                     fontSize = 20.dpToSp(),
                     fontWeight = FontWeight.Bold,
@@ -265,7 +288,8 @@ private fun InfoSection(
                     )
                     .noRippleClickable {
                         onClickMoveToDetail(selectedCalendarItem.date)
-                    }.align(Alignment.TopEnd)
+                    }
+                    .align(Alignment.TopEnd)
             ) {
                 Text(
                     text = "상세 정보",

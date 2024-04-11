@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.text.DecimalFormat
 
 fun println(tag: String?, msg: String) = Log.d(tag, msg)
 
@@ -56,3 +57,5 @@ fun Modifier.noRippleClickable(
         )
     )
 }
+
+fun addCommaIntoNumber(number: Int) = DecimalFormat("#,###").format(number)

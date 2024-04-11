@@ -4,9 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,42 +28,58 @@ fun Header(
     modifier: Modifier = Modifier,
     title: String = "",
     endButton: (@Composable () -> Unit)? = null,
-    onClickBack: () -> Unit = {}
+    onClickBack: () -> Unit = {},
+    isBackButtonEnabled: Boolean = true,
+    isDividerEnabled: Boolean = true
 ) {
-    Box(
+    Column(
         modifier = modifier
-            .background(color = ColorPrimary)
     ) {
         Box(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth()
+            modifier = modifier
+                .background(color = ColorPrimary)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_back_button),
+            Box(
                 modifier = Modifier
-                    .size(16.dp)
-                    .align(Alignment.CenterStart)
-                    .clickable {
-                        onClickBack()
-                    },
-                contentDescription = "뒤로 가기"
-            )
-            Text(
-                text = title,
-                modifier = Modifier.align(Alignment.Center),
-                color = ColorSecondary,
-                fontSize = 24.dpToSp(),
-                fontFamily = fontFamily,
-                fontWeight = FontWeight.Black
-            )
-            if (endButton != null) {
-                Box(
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    endButton()
+                    .padding(12.dp)
+                    .fillMaxWidth()
+            ) {
+                if (isBackButtonEnabled) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_back_button),
+                        modifier = Modifier
+                            .size(16.dp)
+                            .align(Alignment.CenterStart)
+                            .clickable {
+                                onClickBack()
+                            },
+                        contentDescription = "뒤로 가기"
+                    )
+                }
+                Text(
+                    text = title,
+                    modifier = Modifier.align(Alignment.Center),
+                    color = ColorSecondary,
+                    fontSize = 24.dpToSp(),
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Black
+                )
+                if (endButton != null) {
+                    Box(
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        endButton()
+                    }
                 }
             }
+        }
+        if (isDividerEnabled) {
+            Divider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp),
+                color = ColorSecondary
+            )
         }
     }
 }
