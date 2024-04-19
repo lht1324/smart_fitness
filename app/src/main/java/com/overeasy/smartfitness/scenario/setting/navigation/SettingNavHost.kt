@@ -18,6 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.scenario.public.Header
+import com.overeasy.smartfitness.scenario.setting.finish.FinishScreen
+import com.overeasy.smartfitness.scenario.setting.finish.SettingFinishState
 import com.overeasy.smartfitness.scenario.setting.login.LoginScreen
 import com.overeasy.smartfitness.scenario.setting.logout.LogoutScreen
 import com.overeasy.smartfitness.scenario.setting.myinfo.MyInfoScreen
@@ -32,9 +34,11 @@ import com.overeasy.smartfitness.ui.theme.ColorPrimary
 fun SettingNavHost(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     val navHostController = rememberNavController()
+
+//    var isLogin by remember { mutableStateOf(MainApplication.appPreference.isLogin) }
+    var isLogin by remember { mutableStateOf(false) }
+    var finishState by remember { mutableStateOf(SettingFinishState.LoginFinish) }
 
     var currentDestination by remember { mutableStateOf(SettingRoutes.Setting.route) }
     val currentHeaderTitle by remember {
@@ -46,12 +50,16 @@ fun SettingNavHost(
                 SettingRoutes.Register.route -> "회원가입"
                 SettingRoutes.Logout.route -> "로그아웃"
                 SettingRoutes.Withdraw.route -> "탈퇴"
+                SettingRoutes.Finish.route -> when (finishState) {
+                    SettingFinishState.LoginFinish -> "로그인"
+                    SettingFinishState.RegisterFinish -> "회원가입"
+                    SettingFinishState.LogoutFinish -> "로그아웃"
+                    SettingFinishState.WithdrawFinish -> "탈퇴"
+                }
                 else -> ""
             }
         }
     }
-
-    var isLogin by remember { mutableStateOf(MainApplication.appPreference.isLogin) }
 
     Column(
         modifier = modifier
@@ -89,10 +97,10 @@ fun SettingNavHost(
             }
             composable(SettingRoutes.Login.route) {
                 LoginScreen(
-                    onFinishLogin = { msg ->
+                    onFinishLogin = {
                         isLogin = MainApplication.appPreference.isLogin
 
-                        navHostController.navigateUp()
+                        navHostController.navigate(SettingRoutes.Finish.createRoute(SettingFinishState.LoginFinish.value))
                     }
                 )
             }
@@ -107,6 +115,11 @@ fun SettingNavHost(
             }
             composable(SettingRoutes.Withdraw.route) {
                 WithdrawScreen()
+            }
+            composable(SettingRoutes.Finish.route) { backStackEntry ->
+                FinishScreen(
+                    finishState = backStackEntry.arguments?.getString(SettingRoutes.Finish.FINISH_STATE) ?: ""
+                )
             }
         }
     }

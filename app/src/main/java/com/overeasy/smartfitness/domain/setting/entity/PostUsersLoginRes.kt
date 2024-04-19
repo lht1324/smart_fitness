@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class PostUsersLoginRes(
     override val status: Int = 200,
     @SerialName("message") override val message: String,
-    @SerialName("result") val result: User,
+    @SerialName("result") val result: User? = null,
 
     override val success: Boolean = false,
     override val error: String? = null,

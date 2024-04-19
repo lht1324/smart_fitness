@@ -2,16 +2,19 @@ package com.overeasy.smartfitness.scenario.setting.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,7 +40,7 @@ class LoginViewModel @Inject constructor(
         password.isEmpty()
     }
 
-    private val onClickLoginEvent = MutableSharedFlow<Unit>()
+    private val isClickedLoginButton = MutableStateFlow(false)
 
     fun onChangeId(value: String) {
         _id.value = value
@@ -48,30 +51,38 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onClickLogin() {
-        viewModelScope.launch {
-            onClickLoginEvent.emit(Unit)
-        }
+        isClickedLoginButton.value = true
     }
 
     init {
         viewModelScope.launch {
             launch {
-                onClickLoginEvent.flatMapLatest {
-                    combine(id, password) { id, password ->
+                combine(id, password) { id, password ->
+                    id to password
+                }.flatMapLatest { (id, password) ->
+                    isClickedLoginButton.filter { isClicked ->
+                        isClicked
+                    }.map {
                         id to password
                     }
-                }.map { (id, password) ->
-                    settingRepository.postUsersLogin(
-                        id = id,
-                        password = password
-                    )
-                }.collectLatest { res ->
-                    if (res.status == 200) {
+                }.collectLatest { (id, password) ->
+                    ApiRequestHelper.makeRequest {
+                        settingRepository.postUsersLogin(
+                            id = id,
+                            password = password
+                        )
+                    }.onSuccess {
+                        isClickedLoginButton.value = false
+
                         MainApplication.appPreference.isLogin = true
 
-                        _loginUiEvent.emit(LoginUiEvent.OnFinishLogin("성공"))
-                    } else {
-                        _loginUiEvent.emit(LoginUiEvent.OnFinishLogin("실패, ${res.message}"))
+                        _loginUiEvent.emit(LoginUiEvent.OnFinishLogin)
+                    }.onFailure {
+                        isClickedLoginButton.value = false
+
+                        _loginUiEvent.emit(LoginUiEvent.ShowFailedDialog)
+                    }.onError {
+                        isClickedLoginButton.value = false
                     }
                 }
             }
@@ -79,7 +90,7 @@ class LoginViewModel @Inject constructor(
     }
 
     sealed class LoginUiEvent {
-        //        data object OnFinishLogin : LoginUiEvent()
-        data class OnFinishLogin(val msg: String) : LoginUiEvent()
+        data object OnFinishLogin : LoginUiEvent()
+        data object ShowFailedDialog : LoginUiEvent()
     }
 }

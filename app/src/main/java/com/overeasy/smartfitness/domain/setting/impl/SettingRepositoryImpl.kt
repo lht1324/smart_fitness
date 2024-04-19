@@ -5,6 +5,7 @@ import com.overeasy.smartfitness.simplePost
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.GetUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
+import com.overeasy.smartfitness.println
 import io.ktor.client.HttpClient
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.encodeToString
@@ -18,7 +19,7 @@ class SettingRepositoryImpl @Inject constructor(
 
     @OptIn(InternalAPI::class)
     override suspend fun postUsersLogin(id: String, password: String): PostUsersLoginRes =
-        client.simplePost("$baseUrl/users/login") {
+        client.simplePost<PostUsersLoginRes>("$baseUrl/users/login") {
             body = Json.encodeToString(
                 GetUsersLoginReq(
                     username = id,

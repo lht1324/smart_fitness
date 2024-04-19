@@ -4,15 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.public.SettingButton
 import com.overeasy.smartfitness.scenario.setting.public.SettingTextField
 import kotlinx.coroutines.flow.collectLatest
@@ -21,8 +18,10 @@ import kotlinx.coroutines.flow.collectLatest
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onFinishLogin: (String) -> Unit
+    onFinishLogin: () -> Unit
 ) {
+    var isShowDialog by remember { mutableStateOf(false) }
+
     val id by viewModel.id.collectAsState()
     val password by viewModel.password.collectAsState()
 
@@ -55,11 +54,25 @@ fun LoginScreen(
         )
     }
 
+    if (isShowDialog) {
+        Dialog(
+            title = "로그인에 실패했어요.",
+            description = "아이디, 비밀번호를 다시 확인해주세요.",
+            confirmText = "다시 하기",
+            onClickConfirm = {
+                isShowDialog = false
+            }
+        )
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loginUiEvent.collectLatest { event ->
             when (event) {
                 is LoginViewModel.LoginUiEvent.OnFinishLogin -> {
-                    onFinishLogin(event.msg)
+                    onFinishLogin()
+                }
+                LoginViewModel.LoginUiEvent.ShowFailedDialog -> {
+                    isShowDialog = true
                 }
             }
         }
