@@ -7,9 +7,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GetDiaryDetailRes(
-    override val code: Int,
-    override val msg: String,
+    override val status: Int,
+    override val message: String,
     val workoutScore: Int,
     val dietMenuList: List<DietMenu>,
-    val workoutList: List<Workout>
+    val workoutList: List<Workout>,
+
+    override val success: Boolean = false,
+    override val error: String? = null,
+    override val timestamp: String? = null,
+    override val path: String? = null
 ) : BaseResponseModel

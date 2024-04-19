@@ -60,7 +60,7 @@ fun Header(
                     text = title,
                     modifier = Modifier.align(Alignment.Center),
                     color = ColorSecondary,
-                    fontSize = 24.dpToSp(),
+                    fontSize = 28.dpToSp(),
                     fontFamily = fontFamily,
                     fontWeight = FontWeight.Black
                 )

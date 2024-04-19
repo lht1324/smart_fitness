@@ -17,13 +17,14 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        multiDexEnabled = true
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
 
         buildConfigField("String", "appId", "\"smart_fitness\"")
-        buildConfigField("String", "BASE_URL", "\"https://namu.wiki\"")
     }
 
     buildTypes {
@@ -35,6 +36,7 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "IS_DEBUG", "false")
+            buildConfigField("String", "BASE_URL", "\"https://namu.wiki\"")
         }
 
         debug {
@@ -42,6 +44,7 @@ android {
             isMinifyEnabled = false
 
             buildConfigField("boolean", "IS_DEBUG", "true")
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
         }
     }
     compileOptions {
@@ -66,12 +69,15 @@ android {
 }
 
 dependencies {
-    // Basic
+    // Google
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.multidex)
+    implementation(libs.gson)
 
     // Kotlin
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlin.reflect)
 
     // DI
     implementation(libs.hilt.android)

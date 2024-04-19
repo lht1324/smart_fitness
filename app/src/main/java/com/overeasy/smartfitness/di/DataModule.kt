@@ -20,9 +20,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
@@ -38,6 +42,10 @@ object DataModule {
         val sdkVersion = Build.VERSION.SDK_INT
         val appInfo = "AOS,$appVersion,$sdkVersion"
 
+        install(Logging) {
+            level = LogLevel.ALL
+        }
+
         install(ContentNegotiation) {
             json(
                 Json {
@@ -46,6 +54,11 @@ object DataModule {
                     ignoreUnknownKeys = true
                 }
             )
+            headers {
+//                "App-Id" to appId
+//                "App-Info" to appInfo
+                HttpHeaders.ContentType to ContentType.Application.Json
+            }
         }
 
         install(HttpTimeout) {
@@ -55,10 +68,10 @@ object DataModule {
         }
 
         defaultRequest {
-            header("App-Id", appId)
-            header("App-Info", appInfo)
-//            header("Access-Token", jwtNetwork.accessToken)
-            contentType(ContentType.Application.Json)
+//            header("App-Id", appId)
+//            header("App-Info", appInfo)
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+//            contentType(ContentType.Application.Json)
         }
     }
 

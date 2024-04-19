@@ -6,7 +6,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GetDietCategoryRes(
-    override val code: Int,
-    override val msg: String,
-    val categoryList: List<CategoryItem>
+    override val status: Int,
+    override val message: String,
+    val categoryList: List<CategoryItem>,
+
+    override val success: Boolean = false,
+    override val error: String? = null,
+    override val timestamp: String? = null,
+    override val path: String? = null
 ) : BaseResponseModel

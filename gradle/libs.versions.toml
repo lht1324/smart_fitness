@@ -4,6 +4,7 @@ cameraCamera2 = "1.4.0-alpha04"
 cameraCore = "1.3.2"
 daggerAndroidProcessor = "2.41"
 daggerCompiler = "2.41"
+gson = "2.10.1"
 hiltAndroid = "2.49"
 hiltNavigationFragment = "1.2.0"
 kotlin = "1.9.0"
@@ -11,6 +12,7 @@ coreKtx = "1.12.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
+kotlinReflect = "1.9.10"
 kotlinxSerializationJson = "1.3.2"
 kotlinxSerializationJsonVersion = "1.6.0"
 ktorClientAndroid = "2.3.10"
@@ -29,6 +31,7 @@ activityCompose = "1.8.2"
 composeBom = "2024.04.00"
 logbackClassic = "1.2.10"
 material3Android = "1.2.1"
+multidex = "2.0.1"
 poseDetection = "18.0.0-beta4"
 poseDetectionAccurate = "18.0.0-beta4"
 
@@ -41,10 +44,12 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationFragment" }
 androidx-hilt-navigation-fragment = { module = "androidx.hilt:hilt-navigation-fragment", version.ref = "hiltNavigationFragment" }
 androidx-material3-android = { module = "androidx.compose.material3:material3-android", version.ref = "material3Android" }
+androidx-multidex = { module = "androidx.multidex:multidex", version.ref = "multidex" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "hiltAndroid" }
 dagger-android-processor = { module = "com.google.dagger:dagger-android-processor", version.ref = "daggerAndroidProcessor" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "hiltAndroid" }
 dagger-compiler-v241 = { module = "com.google.dagger:dagger-compiler", version.ref = "daggerCompiler" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -60,6 +65,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinReflect" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 kotlinx-serialization-json-v160 = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }

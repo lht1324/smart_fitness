@@ -1,9 +1,8 @@
 package com.overeasy.smartfitness
 
 import android.content.Context
-import android.util.DisplayMetrics
 import android.util.Log
-import android.util.TypedValue
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
@@ -58,4 +57,10 @@ fun Modifier.noRippleClickable(
     )
 }
 
-fun addCommaIntoNumber(number: Int) = DecimalFormat("#,###").format(number)
+fun addCommaIntoNumber(number: Int): String = DecimalFormat("#,###").format(number)
+
+fun showToast(
+    context: Context,
+    msg: String,
+    duration: Int = Toast.LENGTH_SHORT
+): Toast = Toast.makeText(context, msg, duration)
