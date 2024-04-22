@@ -19,6 +19,7 @@ fun NicknameInputArea(
     nickname: String,
     onChangeNickname: (String) -> Unit,
     isNicknameInvalid: Boolean,
+    buttonText: String = "입력 완료",
     onFinish: () -> Unit,
 ) {
     var isShowDialog by remember { mutableStateOf(false) }
@@ -38,7 +39,7 @@ fun NicknameInputArea(
         Spacer(modifier = Modifier.height(10.dp))
         SettingButton(
             modifier = Modifier.align(Alignment.End),
-            text = "입력 완료",
+            text = buttonText,
             onClick = {
                 if (!isNicknameInvalid) {
                     onFinish()

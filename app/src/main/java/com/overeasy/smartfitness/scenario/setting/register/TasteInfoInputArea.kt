@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonColors
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,21 +37,23 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 @Composable
 fun TasteInfoInputArea(
     modifier: Modifier = Modifier,
+    spicyPreference: Int? = null,
+    meatConsumption: Boolean? = null,
+    tastePreference: String? = null,
+    activityLevel: Int? = null,
+    preferenceTypeFood: String? = null,
+    isInRegister: Boolean = true,
     onChangeSpicyPreference: (Int) -> Unit,
     onChangeMeatConsumption: (Boolean) -> Unit,
     onChangeTastePreference: (String) -> Unit,
     onChangeActivityLevel: (Int) -> Unit,
     onChangePreferenceTypeFood: (String) -> Unit,
-    onClickSkipTasteInput: () -> Unit,
+    onClickSkipTasteInput: () -> Unit = { },
     onFinishTasteInfoInput: () -> Unit
 ) {
     var isShowUnfinishedDialog by remember { mutableStateOf(false) }
     var isShowSkipDialog by remember { mutableStateOf(false) }
 
-    // 작성은 가능한데
-    // 항목 일부 미작성해도 제출 가능한지,
-    // 일단 작성 시작했으면 다 채울지
-    // 그거 짚고 가야 한다
     val scrollState = rememberScrollState()
 
     val spicyPreferenceList = remember {
@@ -102,15 +106,23 @@ fun TasteInfoInputArea(
         Column(
             modifier = Modifier
                 .padding(horizontal = 20.dp)
-                .verticalScroll(state = scrollState)
+                .then(
+                    if (isInRegister) {
+                        Modifier.verticalScroll(state = scrollState)
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             InputSection(
                 title = "선호하는 매운 맛 단계를 골라주세요.",
-                radioItemList = spicyPreferenceList,
+                radioItemList = spicyPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    spicyPreferenceList.toList().forEachIndexed { index, (option, _) ->
-                        spicyPreferenceList[index] = option to (index == selectedIndex)
+                    spicyPreferenceList.toList().forEachIndexed { index, _ ->
+                        spicyPreferenceList[index] = spicyPreferenceList[index].copy(
+                            second = index == selectedIndex
+                        )
 
                         if (index == selectedIndex) {
                             onChangeSpicyPreference(index)
@@ -121,10 +133,12 @@ fun TasteInfoInputArea(
             Separator()
             InputSection(
                 title = "고기를 드시나요?",
-                radioItemList = meatPreferenceList,
+                radioItemList = meatPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
                     meatPreferenceList.toList().forEachIndexed { index, (option, _) ->
-                        meatPreferenceList[index] = option to (index == selectedIndex)
+                        meatPreferenceList[index] = meatPreferenceList[index].copy(
+                            second = index == selectedIndex
+                        )
 
                         onChangeMeatConsumption(index == 0)
                     }
@@ -133,24 +147,32 @@ fun TasteInfoInputArea(
             Separator()
             InputSection(
                 title = "선호하는 맛을 골라주세요.\n(최소 1개 이상, 복수 선택 가능)",
-                radioItemList = tastePreferenceList,
+                radioItemList = tastePreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    val (option, isSelected) = tastePreferenceList[selectedIndex]
+                    val (_, isSelected) = tastePreferenceList[selectedIndex]
 
-                    if (!isSelected) {
-                        onChangeTastePreference(option)
+                    tastePreferenceList[selectedIndex] = tastePreferenceList[selectedIndex].copy(
+                        second = !(isSelected)
+                    )
+
+                    val result = tastePreferenceList.toList().filter { (_, isSelected) ->
+                        isSelected
+                    }.joinToString(",") { (name, _) ->
+                        name
                     }
 
-                    tastePreferenceList[selectedIndex] = option to !isSelected
+                    onChangeTastePreference(result)
                 }
             )
             Separator()
             InputSection(
                 title = "활동적이신 분인가요?",
-                radioItemList = activityPreferenceList,
+                radioItemList = activityPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    activityPreferenceList.toList().forEachIndexed { index, (option, _) ->
-                        activityPreferenceList[index] = option to (index == selectedIndex)
+                    activityPreferenceList.toList().forEachIndexed { index, _ ->
+                        activityPreferenceList[index] = activityPreferenceList[index].copy(
+                            second = index == selectedIndex
+                        )
 
                         if (index == selectedIndex) {
                             onChangeActivityLevel(index)
@@ -161,15 +183,21 @@ fun TasteInfoInputArea(
             Separator()
             InputSection(
                 title = "선호하는 음식 종류를 골라주세요.\n(최소 1개 이상, 복수 선택 가능)",
-                radioItemList = foodPreferenceList,
+                radioItemList = foodPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    val (option, isSelected) = foodPreferenceList[selectedIndex]
+                    val (_, isSelected) = foodPreferenceList[selectedIndex]
 
-                    if (!isSelected) {
-                        onChangePreferenceTypeFood(option)
+                    foodPreferenceList[selectedIndex] = foodPreferenceList[selectedIndex].copy(
+                        second = !isSelected
+                    )
+
+                    val result = foodPreferenceList.toList().filter { (_, isSelected) ->
+                        isSelected
+                    }.joinToString(",") { (name, _) ->
+                        name
                     }
 
-                    foodPreferenceList[selectedIndex] = option to !isSelected
+                    onChangePreferenceTypeFood(result)
                 }
             )
             Separator()
@@ -210,13 +238,15 @@ fun TasteInfoInputArea(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.width(10.dp))
-                Button(
-                    text = "건너뛰기",
-                    onClick = {
-                        isShowSkipDialog = true
-                    }
-                )
+                if (isInRegister) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Button(
+                        text = "건너뛰기",
+                        onClick = {
+                            isShowSkipDialog = true
+                        }
+                    )
+                }
             }
         }
     }
@@ -252,6 +282,68 @@ fun TasteInfoInputArea(
                 isShowSkipDialog = false
             }
         )
+    }
+
+    LaunchedEffect(spicyPreference, meatConsumption, tastePreference, activityLevel, preferenceTypeFood) {
+        if (spicyPreference != null) {
+            val (name, _) = spicyPreferenceList[spicyPreference]
+
+            spicyPreferenceList[spicyPreference] = name to true
+        }
+        if (meatConsumption != null) {
+            if (meatConsumption) {
+                meatPreferenceList[0] = meatPreferenceList[0].copy(second = true)
+            } else {
+                meatPreferenceList[1] = meatPreferenceList[1].copy(second = true)
+            }
+        }
+        if (tastePreference != null) {
+            val indexList = tastePreferenceList.toList().mapIndexed { index, (option, _) ->
+                if (tastePreference.contains(option))
+                    index
+                else
+                    -1
+            }.filter { index ->
+                index != -1
+            }
+
+            indexList.forEach { index ->
+                tastePreferenceList[index] = tastePreferenceList[index].copy(
+                    second = true
+                )
+            }
+//            val index = tastePreferenceList.indexOfFirst { (name, _) ->
+//                name == tastePreference
+//            }
+//
+//            tastePreferenceList[index] = tastePreferenceList[index].copy(second = true)
+        }
+        if (activityLevel != null) {
+            val (name, _) = activityPreferenceList[activityLevel]
+
+            activityPreferenceList[activityLevel] = name to true
+        }
+        if (preferenceTypeFood != null) {
+            val indexList = foodPreferenceList.toList().mapIndexed { index, (option, _) ->
+                if (preferenceTypeFood.contains(option))
+                    index
+                else
+                    -1
+            }.filter { index ->
+                index != -1
+            }
+
+            indexList.forEach { index ->
+                foodPreferenceList[index] = foodPreferenceList[index].copy(
+                    second = true
+                )
+            }
+//            val index = foodPreferenceList.indexOfFirst { (name, _) ->
+//                name == preferenceTypeFood
+//            }
+//
+//            foodPreferenceList[index] = foodPreferenceList[index].copy(second = true)
+        }
     }
 }
 
@@ -308,7 +400,11 @@ private fun InputSection(
                             selected = isSelected,
                             onClick = {
                                 onClickItem(index)
-                            }
+                            },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = ColorSecondary,
+                                unselectedColor = ColorSecondary
+                            )
                         )
                         Text(
                             text = radioItem,

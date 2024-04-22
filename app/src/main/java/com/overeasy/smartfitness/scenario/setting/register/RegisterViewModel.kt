@@ -45,9 +45,9 @@ class RegisterViewModel @Inject constructor(
 
     private val _bodyInfo = MutableStateFlow(
         RegisterBodyInfo(
-            age = "",
-            height = "",
-            weight = ""
+            age = null,
+            height = null,
+            weight = null
         )
     )
 
@@ -288,7 +288,7 @@ class RegisterViewModel @Inject constructor(
                             println("jaehoLee", "onError res = ${throwable.message}")
                             _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
                         }
-                        
+
                         isClickedRegisterButton.value = false
                     }.onFailure { res ->
                         isClickedRegisterButton.value = false

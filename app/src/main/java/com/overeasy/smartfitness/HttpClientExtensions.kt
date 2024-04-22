@@ -8,6 +8,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.url
+import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
 suspend inline fun <reified T> HttpClient.simplePost(
     baseUrl: String,
@@ -15,7 +18,9 @@ suspend inline fun <reified T> HttpClient.simplePost(
 ): T = post {
     url(baseUrl)
     block()
-}.body()
+}.run {
+    Json.decodeFromString<T>(bodyAsText())
+}
 
 suspend inline fun <reified T> HttpClient.simpleGet(
     baseUrl: String,
@@ -23,7 +28,9 @@ suspend inline fun <reified T> HttpClient.simpleGet(
 ): T = get {
     url(baseUrl)
     block()
-}.body()
+}.run {
+    Json.decodeFromString<T>(bodyAsText())
+}
 
 suspend inline fun <reified T> HttpClient.simplePut(
     baseUrl: String,
@@ -31,7 +38,9 @@ suspend inline fun <reified T> HttpClient.simplePut(
 ): T = put {
     url(baseUrl)
     block()
-}.body()
+}.run {
+    Json.decodeFromString<T>(bodyAsText())
+}
 
 suspend inline fun <reified T> HttpClient.simpleDelete(
     baseUrl: String,
@@ -39,4 +48,6 @@ suspend inline fun <reified T> HttpClient.simpleDelete(
 ): T = delete {
     url(baseUrl)
     block()
-}.body()
+}.run {
+    Json.decodeFromString<T>(bodyAsText())
+}

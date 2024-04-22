@@ -44,7 +44,7 @@ fun SettingNavHost(
         derivedStateOf {
             when (currentDestination) {
                 SettingRoutes.Setting.route -> "설정"
-                SettingRoutes.MyInfo.route -> "회원가입"
+                SettingRoutes.MyInfo.route -> "내 정보"
                 SettingRoutes.Login.route -> "로그인"
                 SettingRoutes.Register.route -> "회원가입"
                 SettingRoutes.Logout.route -> "로그아웃"

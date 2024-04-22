@@ -1,10 +1,13 @@
 package com.overeasy.smartfitness.domain.setting
 
+import com.overeasy.smartfitness.domain.base.BaseResponse
 import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
+import com.overeasy.smartfitness.domain.setting.entity.GetUsersRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpRes
+import com.overeasy.smartfitness.domain.setting.entity.PutUsersReq
 
 interface SettingRepository {
     suspend fun postUsersLogin(
@@ -15,7 +18,15 @@ interface SettingRepository {
         req: PostUsersSignUpReq
     ): PostUsersSignUpRes
 
+    suspend fun getUsers(
+        id: Int
+    ): GetUsersRes
+
+    suspend fun putUsers(
+        req: PutUsersReq
+    ): BaseResponse
+
     suspend fun deleteUsers(
         id: Int
-    ) : DeleteUsersRes
+    ): DeleteUsersRes
 }

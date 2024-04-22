@@ -27,12 +27,14 @@ fun BodyInfoInputArea(
     age: String,
     height: String,
     weight: String,
-    onChangeAge: (String) -> Unit,
-    onChangeHeight: (String) -> Unit,
-    onChangeWeight: (String) -> Unit,
     isAgeInvalid: Boolean,
     isHeightInvalid: Boolean,
     isWeightInvalid: Boolean,
+    isInRegister: Boolean = true,
+    buttonText: String = "신체 정보\n입력하기",
+    onChangeAge: (String) -> Unit,
+    onChangeHeight: (String) -> Unit,
+    onChangeWeight: (String) -> Unit,
     onClickFinish: () -> Unit
 ) {
     var isShowSkipDialog by remember { mutableStateOf(false) }
@@ -73,7 +75,7 @@ fun BodyInfoInputArea(
         ) {
             SettingButton(
                 modifier = Modifier.align(Alignment.End),
-                text = "신체 정보\n입력하기",
+                text = buttonText,
                 onClick = {
                     val isEveryBodyInfoValid = !isAgeInvalid && !isHeightInvalid && !isWeightInvalid
                     val isEveryBodyInfoNotEmpty = age.isNotEmpty() && height.isNotEmpty() && weight.isNotEmpty()
@@ -85,14 +87,16 @@ fun BodyInfoInputArea(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            SettingButton(
-                modifier = Modifier.align(Alignment.End),
-                text = "건너 뛰기",
-                onClick = {
-                    isShowSkipDialog = true
-                }
-            )
+            if (isInRegister) {
+                Spacer(modifier = Modifier.height(10.dp))
+                SettingButton(
+                    modifier = Modifier.align(Alignment.End),
+                    text = "건너 뛰기",
+                    onClick = {
+                        isShowSkipDialog = true
+                    }
+                )
+            }
         }
     }
 
