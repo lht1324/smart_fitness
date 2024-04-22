@@ -5,10 +5,12 @@ package com.overeasy.smartfitness.domain.setting.impl
 import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.simplePost
 import com.overeasy.smartfitness.domain.setting.SettingRepository
+import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpRes
+import com.overeasy.smartfitness.simpleDelete
 import io.ktor.client.HttpClient
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.encodeToString
@@ -26,7 +28,14 @@ class SettingRepositoryImpl @Inject constructor(
         }
 
     override suspend fun postUsersSignUp(req: PostUsersSignUpReq): PostUsersSignUpRes =
-        client.simplePost("$baseUrl/users/login") {
+        client.simplePost("$baseUrl/users/signup") {
             body = Json.encodeToString(req)
+        }
+
+    // logout 없음 (로컬 처리)
+
+    override suspend fun deleteUsers(id: Int): DeleteUsersRes =
+        client.simpleDelete("$baseUrl/users/$id") {
+
         }
 }

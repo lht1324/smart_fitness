@@ -1,7 +1,5 @@
 package com.overeasy.smartfitness.domain.base
 
-import com.overeasy.smartfitness.println
-
 class ResponseResult<out T> internal constructor(val response: Any?) {
     val responseResultType get() = when {
         isSuccess -> ResponseResultType.Success
@@ -10,8 +8,8 @@ class ResponseResult<out T> internal constructor(val response: Any?) {
         else -> ResponseResultType.Error
     }
 
-    val isSuccess get(): Boolean = response.run { this is BaseResponseModel && status == 200 }
-    val isFailure get(): Boolean = response.run { this is BaseResponseModel && status != 200 }
+    val isSuccess get(): Boolean = response.run { this is BaseResponseModel && success } // code == 200 }
+    val isFailure get(): Boolean = response.run { this is BaseResponseModel && !success } // code != 200 }
     val isError get(): Boolean = response is Exception
 
     suspend fun onSuccess(action: suspend (response: T) -> Unit): ResponseResult<T> {

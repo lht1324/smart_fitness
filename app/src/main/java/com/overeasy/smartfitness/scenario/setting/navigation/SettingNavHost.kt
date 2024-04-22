@@ -35,8 +35,8 @@ fun SettingNavHost(
 ) {
     val navHostController = rememberNavController()
 
-//    var isLogin by remember { mutableStateOf(MainApplication.appPreference.isLogin) }
-    var isLogin by remember { mutableStateOf(false) }
+    var isLogin by remember { mutableStateOf(MainApplication.appPreference.isLogin) }
+//    var isLogin by remember { mutableStateOf(false) }
     var finishState by remember { mutableStateOf(SettingFinishState.LoginFinish) }
 
     var currentDestination by remember { mutableStateOf(SettingRoutes.Setting.route) }
@@ -72,9 +72,16 @@ fun SettingNavHost(
             title = currentHeaderTitle,
             isBackButtonEnabled = currentDestination != SettingRoutes.Setting.route,
             onClickBack = {
-                println("jaehoLee", "registerState = $currentRegisterState")
                 if (currentDestination != SettingRoutes.Register.route) {
-                    navHostController.navigateUp()
+                    if (currentDestination != SettingRoutes.Finish.route) {
+                        navHostController.navigateUp()
+                    } else {
+                        currentRegisterState = RegisterState.UserInfoInput
+                        navHostController.popBackStack(
+                            route = SettingRoutes.Setting.route,
+                            inclusive = false
+                        )
+                    }
                 } else {
                     when (currentRegisterState) {
                         RegisterState.UserInfoInput -> navHostController.navigateUp()
@@ -139,11 +146,7 @@ fun SettingNavHost(
                         isLogin = MainApplication.appPreference.isLogin
                         finishState = SettingFinishState.RegisterFinish
 
-                        navHostController.navigate(
-                            SettingRoutes.Finish.createRoute(
-                                SettingFinishState.RegisterFinish.value
-                            )
-                        )
+                        navHostController.navigate(SettingRoutes.Finish.route)
                     }
                 )
             }
@@ -151,15 +154,28 @@ fun SettingNavHost(
                 MyInfoScreen()
             }
             composable(SettingRoutes.Logout.route) {
-                LogoutScreen()
+                LogoutScreen(
+                    onFinishLogout = {
+                        isLogin = MainApplication.appPreference.isLogin
+                        finishState = SettingFinishState.LogoutFinish
+
+                        navHostController.navigate(SettingRoutes.Finish.route)
+                    }
+                )
             }
             composable(SettingRoutes.Withdraw.route) {
-                WithdrawScreen()
+                WithdrawScreen(
+                    onFinishWithdraw = {
+                        isLogin = MainApplication.appPreference.isLogin
+                        finishState = SettingFinishState.WithdrawFinish
+
+                        navHostController.navigate(SettingRoutes.Finish.route)
+                    }
+                )
             }
             composable(SettingRoutes.Finish.route) { backStackEntry ->
                 FinishScreen(
-                    finishState = backStackEntry.arguments?.getString(SettingRoutes.Finish.FINISH_STATE)
-                        ?: ""
+                    finishState = finishState
                 )
             }
         }

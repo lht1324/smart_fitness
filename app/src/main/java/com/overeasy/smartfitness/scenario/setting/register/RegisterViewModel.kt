@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.setting.SettingRepository
+import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
 import com.overeasy.smartfitness.isLettersOrDigits
 import com.overeasy.smartfitness.isLettersOrDigitsIncludeKorean
@@ -264,22 +265,42 @@ class RegisterViewModel @Inject constructor(
                 }.filter { (_, isClicked) ->
                     isClicked
                 }.collectLatest { (req, _) ->
+                    println("jaehoLee", "register req= $req")
                     ApiRequestHelper.makeRequest {
                         settingRepository.postUsersSignUp(req)
-                    }.onSuccess {
+                    }.onSuccess { res ->
+                        ApiRequestHelper.makeRequest {
+                            settingRepository.postUsersLogin(
+                                PostUsersLoginReq(
+                                    username = req.username,
+                                    password = req.password
+                                )
+                            )
+                        }.onSuccess { loginRes ->
+                            MainApplication.appPreference.isLogin = true
+                            MainApplication.appPreference.userId = loginRes.result?.id?.toIntOrNull() ?: -1
+
+                            _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
+                        }.onFailure { loginRes ->
+                            println("jaehoLee", "onFailure res = $loginRes")
+                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+                        }.onError { throwable ->
+                            println("jaehoLee", "onError res = ${throwable.message}")
+                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+                        }
+                        
+                        isClickedRegisterButton.value = false
+                    }.onFailure { res ->
                         isClickedRegisterButton.value = false
 
-                        MainApplication.appPreference.isLogin = true
-
-                        println("jaehoLee", "succeed res = $it")
-                        _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
-                    }.onFailure {
+                        println("jaehoLee", "onFailure res = $res")
+                        when (res.code) {
+                            301 -> _registerUiEvent.emit(RegisterUiEvent.UserInfoAlreadyExist)
+                            else -> _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+                        }
+                    }.onError { throwable ->
                         isClickedRegisterButton.value = false
-
-                        println("jaehoLee", "failed res = $it")
-                        _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
-                    }.onError {
-                        isClickedRegisterButton.value = false
+                        println("jaehoLee", "onError throwable = ${throwable.message}")
                     }
                 }
             }
@@ -288,6 +309,7 @@ class RegisterViewModel @Inject constructor(
 
     sealed class RegisterUiEvent {
         data object OnFinishRegister : RegisterUiEvent()
+        data object UserInfoAlreadyExist : RegisterUiEvent()
         data object ShowFailedDialog : RegisterUiEvent()
     }
 }

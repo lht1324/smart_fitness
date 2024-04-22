@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GetDiaryDetailRes(
-    override val status: Int,
+    override val code: Int,
     override val message: String,
     val workoutScore: Int,
     val dietMenuList: List<DietMenu>,

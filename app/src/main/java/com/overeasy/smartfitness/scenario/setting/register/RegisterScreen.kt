@@ -15,7 +15,8 @@ fun RegisterScreen(
     onChangeRegisterState: (RegisterState) -> Unit,
     onFinishRegister: () -> Unit,
 ) {
-    var isShowDialog by remember { mutableStateOf(false) }
+    var isShowErrorDialog by remember { mutableStateOf(false) }
+    var isShowAlreadyExistDialog by remember { mutableStateOf(false) }
 
     val id by viewModel.id.collectAsState()
     val password by viewModel.password.collectAsState()
@@ -94,16 +95,30 @@ fun RegisterScreen(
         currentRegisterArea()
     }
 
-    if (isShowDialog) {
+    if (isShowErrorDialog) {
         Dialog(
             title = "이런! 회원가입에 실패했어요... \uD83D\uDE25",
             description = "다시 시도 해주실 수 있을까요?",
             confirmText = "다시 시도",
             onClickConfirm = {
-                isShowDialog = false
+                isShowErrorDialog = false
             },
             onDismissRequest = {
-                isShowDialog = false
+                isShowErrorDialog = false
+            }
+        )
+    }
+
+    if (isShowAlreadyExistDialog) {
+        Dialog(
+            title = "이미 존재하는 정보에요.",
+            description = "이미 존재하는 아이디네요.\n다시 작성해주실 수 있을까요?",
+            confirmText = "다시 작성하기",
+            onClickConfirm = {
+                isShowAlreadyExistDialog = false
+            },
+            onDismissRequest = {
+                isShowAlreadyExistDialog = false
             }
         )
     }
@@ -111,12 +126,14 @@ fun RegisterScreen(
     LaunchedEffect(Unit) {
         viewModel.registerUiEvent.collectLatest { event ->
             when (event) {
-                is RegisterViewModel.RegisterUiEvent.OnFinishRegister -> {
+                RegisterViewModel.RegisterUiEvent.OnFinishRegister -> {
                     onFinishRegister()
                 }
-
+                RegisterViewModel.RegisterUiEvent.UserInfoAlreadyExist -> {
+                    isShowAlreadyExistDialog = true
+                }
                 RegisterViewModel.RegisterUiEvent.ShowFailedDialog -> {
-                    isShowDialog = true
+                    isShowErrorDialog = true
                 }
             }
         }

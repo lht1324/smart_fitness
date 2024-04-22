@@ -6,10 +6,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PostUsersLoginRes(
+data class DeleteUsersRes(
     override val code: Int = -1,
     @SerialName("message") override val message: String,
-    @SerialName("result") val result: User? = null,
+    @SerialName("result") val result: String? = null,
 
     override val success: Boolean = false,
     override val error: String? = null,

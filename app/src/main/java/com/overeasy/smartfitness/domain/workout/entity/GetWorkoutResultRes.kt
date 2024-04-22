@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GetWorkoutResultRes(
-    override val status: Int,
+    override val code: Int,
     override val message: String,
     val workoutResult: WorkoutResult,
 

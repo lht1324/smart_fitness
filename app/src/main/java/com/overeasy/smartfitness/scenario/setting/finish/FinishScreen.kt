@@ -16,15 +16,15 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 @Composable
 fun FinishScreen(
     modifier: Modifier = Modifier,
-    finishState: String
+    finishState: SettingFinishState
 ) {
     val title by remember {
         derivedStateOf {
             when (finishState) {
-                SettingFinishState.LoginFinish.value -> "로그인이 완료되었어요."
-                SettingFinishState.RegisterFinish.value -> "회원가입이 완료되었어요."
-                SettingFinishState.LogoutFinish.value -> "로그아웃이 완료되었어요."
-                SettingFinishState.WithdrawFinish.value -> "탈퇴 처리가 완료되었습니다."
+                SettingFinishState.LoginFinish -> "로그인이 완료되었어요."
+                SettingFinishState.RegisterFinish -> "회원가입이 완료되었어요."
+                SettingFinishState.LogoutFinish -> "로그아웃이 완료되었어요."
+                SettingFinishState.WithdrawFinish -> "탈퇴 처리가 완료되었습니다."
                 else -> "죄송합니다. 에러가 발생했네요... \uD83D\uDE25"
             }
         }
@@ -33,10 +33,10 @@ fun FinishScreen(
     val description by remember {
         derivedStateOf {
             when (finishState) {
-                SettingFinishState.LoginFinish.value -> "그럼 운동을 시작해볼까요?"
-                SettingFinishState.RegisterFinish.value -> "이제 모든 기능을 즐길 수 있어요!"
-                SettingFinishState.LogoutFinish.value -> "다음에 또 다시 찾아주세요. \uD83D\uDE01"
-                SettingFinishState.WithdrawFinish.value -> "그동안 이용해주셔서 감사합니다."
+                SettingFinishState.LoginFinish -> "그럼 운동을 시작해볼까요?"
+                SettingFinishState.RegisterFinish -> "이제 모든 기능을 즐길 수 있어요!"
+                SettingFinishState.LogoutFinish -> "다음에 또 다시 찾아주세요. \uD83D\uDE01"
+                SettingFinishState.WithdrawFinish -> "그동안 이용해주셔서 감사합니다."
                 else -> "설정 화면으로 이동해주세요."
             }
         }

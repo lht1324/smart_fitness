@@ -1,5 +1,6 @@
 package com.overeasy.smartfitness.domain.setting
 
+import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
@@ -13,4 +14,8 @@ interface SettingRepository {
     suspend fun postUsersSignUp(
         req: PostUsersSignUpReq
     ): PostUsersSignUpRes
+
+    suspend fun deleteUsers(
+        id: Int
+    ) : DeleteUsersRes
 }

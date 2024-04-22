@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PostUsersSignUpRes(
-    override val status: Int = 200,
+    override val code: Int = -1,
     @SerialName("message") override val message: String,
     @SerialName("result") val result: User? = null,
 

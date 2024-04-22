@@ -180,11 +180,16 @@ fun TasteInfoInputArea(
                 Button(
                     text = "완료",
                     onClick = {
-                        val isSpicyPreferenceChecked = spicyPreferenceList.any { (_, isChecked) -> isChecked }
-                        val isMeatPreferenceChecked = meatPreferenceList.any { (_, isChecked) -> isChecked }
-                        val isTastePreferenceChecked = tastePreferenceList.any { (_, isChecked) -> isChecked }
-                        val isActivityPreferenceChecked = activityPreferenceList.any { (_, isChecked) -> isChecked }
-                        val isFoodPreferenceChecked = foodPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isSpicyPreferenceChecked =
+                            spicyPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isMeatPreferenceChecked =
+                            meatPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isTastePreferenceChecked =
+                            tastePreferenceList.any { (_, isChecked) -> isChecked }
+                        val isActivityPreferenceChecked =
+                            activityPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isFoodPreferenceChecked =
+                            foodPreferenceList.any { (_, isChecked) -> isChecked }
 
                         val isEveryOptionSelected = isSpicyPreferenceChecked &&
                                 isMeatPreferenceChecked &&
@@ -239,7 +244,10 @@ fun TasteInfoInputArea(
             onClickConfirm = {
                 isShowSkipDialog = false
             },
-            onClickDismiss = onClickSkipTasteInput,
+            onClickDismiss = {
+                onClickSkipTasteInput()
+                isShowSkipDialog = false
+            },
             onDismissRequest = {
                 isShowSkipDialog = false
             }

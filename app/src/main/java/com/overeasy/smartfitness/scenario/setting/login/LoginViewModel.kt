@@ -6,6 +6,7 @@ import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
+import com.overeasy.smartfitness.isLettersOrDigits
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.BufferOverflow
@@ -35,10 +36,10 @@ class LoginViewModel @Inject constructor(
     val password = _password.asStateFlow()
 
     val isIdInvalid = _id.map { id ->
-        id.isEmpty()
+        !(id.length < 10 && isLettersOrDigits(id)) && id.isNotEmpty()
     }
     val isPasswordInvalid = _password.map { password ->
-        password.isEmpty()
+        password.length !in 6..15 && password.isNotEmpty()
     }
 
     private val isClickedLoginButton = MutableStateFlow(false)
@@ -74,10 +75,11 @@ class LoginViewModel @Inject constructor(
                                 password = password
                             )
                         )
-                    }.onSuccess {
+                    }.onSuccess { res ->
                         isClickedLoginButton.value = false
 
                         MainApplication.appPreference.isLogin = true
+                        MainApplication.appPreference.userId = res.result?.id?.toIntOrNull() ?: -1
 
                         _loginUiEvent.emit(LoginUiEvent.OnFinishLogin)
                     }.onFailure {

@@ -14,11 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.public.InfoInputField
 import com.overeasy.smartfitness.scenario.setting.public.SettingButton
-import com.overeasy.smartfitness.scenario.setting.public.SettingTextField
 
 @Composable
 fun UserInfoInputArea(
@@ -27,6 +25,7 @@ fun UserInfoInputArea(
     password: String,
     isIdInvalid: Boolean,
     isPasswordInvalid: Boolean,
+    finishButtonText: String = "입력 완료",
     onChangeId: (String) -> Unit,
     onChangePassword: (String) -> Unit,
     onClickFinish: () -> Unit
@@ -101,7 +100,6 @@ fun UserInfoInputArea(
             invalidText = "아이디는 10자 미만이고 영문 혹은 숫자로 만들어져야 해요.",
             isInvalid = isIdInvalid
         )
-//        Spacer(modifier = Modifier.height(10.dp))
         InfoInputField(
             value = password,
             onValueChange = onChangePassword,
@@ -113,7 +111,7 @@ fun UserInfoInputArea(
         Spacer(modifier = Modifier.height(5.dp))
         SettingButton(
             modifier = Modifier.align(Alignment.End),
-            text = "입력 완료",
+            text = finishButtonText,
             onClick = {
                 when {
                     !isIdInvalid && !isPasswordInvalid && id.isNotEmpty() && password.isNotEmpty() -> onClickFinish()
