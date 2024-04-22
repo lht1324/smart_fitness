@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.scenario.public.Dialog
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -91,6 +92,20 @@ fun RegisterScreen(
         modifier = modifier
     ) {
         currentRegisterArea()
+    }
+
+    if (isShowDialog) {
+        Dialog(
+            title = "이런! 회원가입에 실패했어요... \uD83D\uDE25",
+            description = "다시 시도 해주실 수 있을까요?",
+            confirmText = "다시 시도",
+            onClickConfirm = {
+                isShowDialog = false
+            },
+            onDismissRequest = {
+                isShowDialog = false
+            }
+        )
     }
 
     LaunchedEffect(Unit) {

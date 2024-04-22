@@ -25,7 +25,7 @@ fun FinishScreen(
                 SettingFinishState.RegisterFinish.value -> "회원가입이 완료되었어요."
                 SettingFinishState.LogoutFinish.value -> "로그아웃이 완료되었어요."
                 SettingFinishState.WithdrawFinish.value -> "탈퇴 처리가 완료되었습니다."
-                else -> "죄송합니다. 에러가 발생했네요. \uD83D\uDE25"
+                else -> "죄송합니다. 에러가 발생했네요... \uD83D\uDE25"
             }
         }
     }
