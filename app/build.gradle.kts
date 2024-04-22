@@ -117,6 +117,9 @@ dependencies {
     implementation(libs.pose.detection)
     implementation(libs.pose.detection.accurate)
 
+    // Coil
+    implementation(libs.coil.compose)
+
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

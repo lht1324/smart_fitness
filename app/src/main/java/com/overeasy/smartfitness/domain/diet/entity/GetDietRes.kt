@@ -1,14 +1,14 @@
 package com.overeasy.smartfitness.domain.diet.entity
 
-import com.overeasy.smartfitness.domain.diet.model.CategoryItem
 import com.overeasy.smartfitness.domain.base.BaseResponseModel
+import com.overeasy.smartfitness.domain.diet.model.DietRecommendResult
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GetDietCategoryRes(
-    override val code: Int,
+data class GetDietRes(
+    override val code: Int = -1,
     override val message: String,
-    val categoryList: List<CategoryItem>,
+    val result: DietRecommendResult,
 
     override val success: Boolean = false,
     override val error: String? = null,

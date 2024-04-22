@@ -29,6 +29,7 @@ suspend inline fun <reified T> HttpClient.simpleGet(
     url(baseUrl)
     block()
 }.run {
+    println("jaehoLee", "body = ${bodyAsText()}")
     Json.decodeFromString<T>(bodyAsText())
 }
 

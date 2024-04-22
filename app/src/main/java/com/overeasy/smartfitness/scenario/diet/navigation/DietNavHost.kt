@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.scenario.diet.diet.DietScreen
+import com.overeasy.smartfitness.scenario.diet.diet.FoodCategory
 import com.overeasy.smartfitness.scenario.diet.result.DietResultScreen
 import com.overeasy.smartfitness.scenario.public.Header
 
@@ -27,22 +28,35 @@ fun DietNavHost(
         }
     }
 
+    var selectedFoodCategory by remember { mutableStateOf(FoodCategory.KOREAN) }
+
     Column(
         modifier = modifier
     ) {
         Header(
             title = currentHeaderTitle,
-            isBackButtonEnabled = currentDestination != DietRoutes.Diet.route
+//            isBackButtonEnabled = currentDestination != DietRoutes.Diet.route
+            isBackButtonEnabled = false
         )
         NavHost(
             navController = navHostController,
             startDestination = DietRoutes.Diet.route
         ) {
             composable(DietRoutes.Diet.route) {
-                DietScreen()
+                DietScreen(
+                    onClickCategoryItem = { foodCategory ->
+                        selectedFoodCategory = foodCategory
+                        navHostController.navigate(DietRoutes.DietResult.route)
+                    }
+                )
             }
             composable(DietRoutes.DietResult.route) {
-                DietResultScreen()
+                DietResultScreen(
+                    foodCategory = selectedFoodCategory,
+                    onFinish = {
+                        navHostController.navigateUp()
+                    }
+                )
             }
         }
     }

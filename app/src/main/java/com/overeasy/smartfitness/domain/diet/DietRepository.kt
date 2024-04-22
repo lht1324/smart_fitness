@@ -1,7 +1,7 @@
 package com.overeasy.smartfitness.domain.diet
 
-import com.overeasy.smartfitness.domain.diet.entity.GetDietCategoryRes
+import com.overeasy.smartfitness.domain.diet.entity.GetDietRes
 
 interface DietRepository {
-    suspend fun getDietCategory(): GetDietCategoryRes
+    suspend fun getDiet(category: String): GetDietRes
 }
