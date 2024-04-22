@@ -61,6 +61,9 @@ fun LoginScreen(
             confirmText = "다시 하기",
             onClickConfirm = {
                 isShowDialog = false
+            },
+            onDismissRequest = {
+                isShowDialog = false
             }
         )
     }

@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
@@ -26,7 +27,7 @@ fun SettingButton(
         modifier = modifier
             .background(
                 color = ColorSecondary,
-                shape = AbsoluteRoundedCornerShape(20.dp)
+                shape = AbsoluteRoundedCornerShape(10.dp)
             )
             .clickable {
                 onClick()
@@ -40,7 +41,8 @@ fun SettingButton(
             color = Color.White,
             fontSize = 20.dpToSp(),
             fontWeight = FontWeight.Bold,
-            fontFamily = fontFamily
+            fontFamily = fontFamily,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.model
+package com.overeasy.smartfitness.model.ranking
 
 enum class UserTier(val value: String) {
     Master("마스터"),

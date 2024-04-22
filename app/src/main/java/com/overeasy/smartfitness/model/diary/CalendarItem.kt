@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.model
+package com.overeasy.smartfitness.model.diary
 
 data class CalendarItem(
     val isCurrentMonth: Boolean,

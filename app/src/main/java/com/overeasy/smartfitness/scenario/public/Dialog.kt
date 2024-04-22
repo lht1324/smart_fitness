@@ -23,10 +23,11 @@ fun Dialog(
     confirmText: String,
     dismissText: String? = null,
     onClickConfirm: () -> Unit,
-    onClickDismiss: (() -> Unit)? = null
+    onClickDismiss: (() -> Unit)? = null,
+    onDismissRequest: () -> Unit,
 ) {
     AlertDialog(
-        onDismissRequest = onClickDismiss ?: { },
+        onDismissRequest = onDismissRequest,
         confirmButton = {
             DialogButton(
                 text = confirmText,

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.setting.SettingRepository
+import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.BufferOverflow
@@ -68,8 +69,10 @@ class LoginViewModel @Inject constructor(
                 }.collectLatest { (id, password) ->
                     ApiRequestHelper.makeRequest {
                         settingRepository.postUsersLogin(
-                            id = id,
-                            password = password
+                            PostUsersLoginReq(
+                                username = id,
+                                password = password
+                            )
                         )
                     }.onSuccess {
                         isClickedLoginButton.value = false

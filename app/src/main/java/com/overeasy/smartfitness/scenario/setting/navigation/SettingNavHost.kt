@@ -1,6 +1,6 @@
 package com.overeasy.smartfitness.scenario.setting.navigation
 
-import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,22 +12,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.setting.finish.FinishScreen
 import com.overeasy.smartfitness.scenario.setting.finish.SettingFinishState
 import com.overeasy.smartfitness.scenario.setting.login.LoginScreen
 import com.overeasy.smartfitness.scenario.setting.logout.LogoutScreen
 import com.overeasy.smartfitness.scenario.setting.myinfo.MyInfoScreen
-import com.overeasy.smartfitness.scenario.setting.register.BodyInfoInputScreen
 import com.overeasy.smartfitness.scenario.setting.register.RegisterScreen
+import com.overeasy.smartfitness.scenario.setting.register.RegisterState
 import com.overeasy.smartfitness.scenario.setting.setting.SettingScreen
 import com.overeasy.smartfitness.scenario.setting.withdraw.WithdrawScreen
-import com.overeasy.smartfitness.showToast
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 
 @Composable
@@ -56,10 +55,13 @@ fun SettingNavHost(
                     SettingFinishState.LogoutFinish -> "로그아웃"
                     SettingFinishState.WithdrawFinish -> "탈퇴"
                 }
+
                 else -> ""
             }
         }
     }
+
+    var currentRegisterState by remember { mutableStateOf(RegisterState.UserInfoInput) }
 
     Column(
         modifier = modifier
@@ -69,7 +71,25 @@ fun SettingNavHost(
         Header(
             title = currentHeaderTitle,
             isBackButtonEnabled = currentDestination != SettingRoutes.Setting.route,
-            onClickBack = navHostController::navigateUp
+            onClickBack = {
+                println("jaehoLee", "registerState = $currentRegisterState")
+                if (currentDestination != SettingRoutes.Register.route) {
+                    navHostController.navigateUp()
+                } else {
+                    when (currentRegisterState) {
+                        RegisterState.UserInfoInput -> navHostController.navigateUp()
+                        RegisterState.NicknameInput -> currentRegisterState =
+                            RegisterState.UserInfoInput
+
+                        RegisterState.BodyInfoInput -> currentRegisterState =
+                            RegisterState.NicknameInput
+
+                        RegisterState.TasteInfoInput -> currentRegisterState =
+                            RegisterState.BodyInfoInput
+                    }
+                }
+            }
+//            onClickBack = navHostController::navigateUp
         )
         NavHost(
             navController = navHostController,
@@ -99,13 +119,33 @@ fun SettingNavHost(
                 LoginScreen(
                     onFinishLogin = {
                         isLogin = MainApplication.appPreference.isLogin
+                        finishState = SettingFinishState.LoginFinish
 
-                        navHostController.navigate(SettingRoutes.Finish.createRoute(SettingFinishState.LoginFinish.value))
+                        navHostController.navigate(
+                            SettingRoutes.Finish.createRoute(
+                                SettingFinishState.LoginFinish.value
+                            )
+                        )
                     }
                 )
             }
             composable(SettingRoutes.Register.route) {
-                RegisterScreen()
+                RegisterScreen(
+                    registerState = currentRegisterState,
+                    onChangeRegisterState = { registerState ->
+                        currentRegisterState = registerState
+                    },
+                    onFinishRegister = {
+                        isLogin = MainApplication.appPreference.isLogin
+                        finishState = SettingFinishState.RegisterFinish
+
+                        navHostController.navigate(
+                            SettingRoutes.Finish.createRoute(
+                                SettingFinishState.RegisterFinish.value
+                            )
+                        )
+                    }
+                )
             }
             composable(SettingRoutes.MyInfo.route) {
                 MyInfoScreen()
@@ -118,8 +158,22 @@ fun SettingNavHost(
             }
             composable(SettingRoutes.Finish.route) { backStackEntry ->
                 FinishScreen(
-                    finishState = backStackEntry.arguments?.getString(SettingRoutes.Finish.FINISH_STATE) ?: ""
+                    finishState = backStackEntry.arguments?.getString(SettingRoutes.Finish.FINISH_STATE)
+                        ?: ""
                 )
+            }
+        }
+    }
+
+    BackHandler {
+        if (currentDestination != SettingRoutes.Register.route) {
+            navHostController.navigateUp()
+        } else {
+            when (currentRegisterState) {
+                RegisterState.UserInfoInput -> navHostController.navigateUp()
+                RegisterState.NicknameInput -> currentRegisterState = RegisterState.UserInfoInput
+                RegisterState.BodyInfoInput -> currentRegisterState = RegisterState.NicknameInput
+                RegisterState.TasteInfoInput -> currentRegisterState = RegisterState.BodyInfoInput
             }
         }
     }

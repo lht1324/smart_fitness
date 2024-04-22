@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.domain.ranking.model.RankingItem
-import com.overeasy.smartfitness.model.UserTier
+import com.overeasy.smartfitness.model.ranking.UserTier
 import com.overeasy.smartfitness.ui.theme.ColorBronze
 import com.overeasy.smartfitness.ui.theme.ColorGold
 import com.overeasy.smartfitness.ui.theme.ColorIron

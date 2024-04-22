@@ -13,8 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.ui.theme.fontFamily
@@ -25,7 +29,8 @@ fun SettingTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "",
-    isInvalid: Boolean = false
+    isInvalid: Boolean = false,
+    isMaskedTextField: Boolean = false
 ) {
     BasicTextField(
         value = value,
@@ -36,7 +41,7 @@ fun SettingTextField(
                 color = if (isInvalid) {
                     Color.Red
                 } else {
-                    Color.LightGray
+                    Color.White
                 },
                 shape = AbsoluteRoundedCornerShape(20.dp)
             )
@@ -50,6 +55,11 @@ fun SettingTextField(
             fontWeight = FontWeight.Medium,
             fontFamily = fontFamily
         ),
+        visualTransformation = if (isMaskedTextField) {
+            PasswordVisualTransformation()
+        } else {
+            VisualTransformation.None
+        },
         decorationBox = { innerTextField: @Composable () -> Unit ->
             Box(
                 modifier = Modifier.fillMaxWidth()
@@ -83,4 +93,13 @@ fun SettingTextField(
             }
         },
     )
+}
+
+private class PasswordVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        return TransformedText(
+            AnnotatedString("*".repeat(text.text.length)),
+            OffsetMapping.Identity
+        )
+    }
 }

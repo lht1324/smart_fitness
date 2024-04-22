@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.model.CalendarItem
+import com.overeasy.smartfitness.model.diary.CalendarItem
 import com.overeasy.smartfitness.module.CalendarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

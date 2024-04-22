@@ -1,7 +1,6 @@
 package com.overeasy.smartfitness.module
 
-import com.overeasy.smartfitness.model.CalendarItem
-import com.overeasy.smartfitness.println
+import com.overeasy.smartfitness.model.diary.CalendarItem
 import java.time.LocalDate
 import java.time.YearMonth
 

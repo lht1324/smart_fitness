@@ -1,11 +1,14 @@
+@file:OptIn(InternalAPI::class)
+
 package com.overeasy.smartfitness.domain.setting.impl
 
 import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.simplePost
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.domain.setting.entity.GetUsersLoginReq
+import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
-import com.overeasy.smartfitness.println
+import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
+import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpRes
 import io.ktor.client.HttpClient
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.encodeToString
@@ -17,18 +20,13 @@ class SettingRepositoryImpl @Inject constructor(
 ) : SettingRepository {
     private val baseUrl = BuildConfig.BASE_URL
 
-    @OptIn(InternalAPI::class)
-    override suspend fun postUsersLogin(id: String, password: String): PostUsersLoginRes =
+    override suspend fun postUsersLogin(req: PostUsersLoginReq): PostUsersLoginRes =
         client.simplePost<PostUsersLoginRes>("$baseUrl/users/login") {
-            body = Json.encodeToString(
-                GetUsersLoginReq(
-                    username = id,
-                    password = password
-                )
-            )
+            body = Json.encodeToString(req)
         }
 
-    override suspend fun postUsersSignup() {
-        TODO("Not yet implemented")
-    }
+    override suspend fun postUsersSignUp(req: PostUsersSignUpReq): PostUsersSignUpRes =
+        client.simplePost("$baseUrl/users/login") {
+            body = Json.encodeToString(req)
+        }
 }

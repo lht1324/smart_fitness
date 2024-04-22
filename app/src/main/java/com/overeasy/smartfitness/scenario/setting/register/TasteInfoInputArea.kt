@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -28,23 +27,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.pxToDp
+import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
 @Composable
-fun BodyInfoInputScreen(
-    modifier: Modifier = Modifier
+fun TasteInfoInputArea(
+    modifier: Modifier = Modifier,
+    onChangeSpicyPreference: (Int) -> Unit,
+    onChangeMeatConsumption: (Boolean) -> Unit,
+    onChangeTastePreference: (String) -> Unit,
+    onChangeActivityLevel: (Int) -> Unit,
+    onChangePreferenceTypeFood: (String) -> Unit,
+    onClickSkipTasteInput: () -> Unit,
+    onFinishTasteInfoInput: () -> Unit
 ) {
+    var isShowUnfinishedDialog by remember { mutableStateOf(false) }
+    var isShowSkipDialog by remember { mutableStateOf(false) }
+
+    // 작성은 가능한데
+    // 항목 일부 미작성해도 제출 가능한지,
+    // 일단 작성 시작했으면 다 채울지
+    // 그거 짚고 가야 한다
     val scrollState = rememberScrollState()
 
     val spicyPreferenceList = remember {
         mutableStateListOf(
-            "싫어해" to false,
-            "1단계" to false,
-            "2단계" to false,
-            "3단계" to false,
-            "4단계" to false
+            "안 매움" to false,
+            "조금 매움" to false,
+            "매움" to false,
+            "아주 매움" to false
         )
     }
     val meatPreferenceList = remember {
@@ -57,16 +70,18 @@ fun BodyInfoInputScreen(
         mutableStateListOf(
             "단맛" to false,
             "짠맛" to false,
-            "신맛" to false,
-            "쓴맛" to false,
-            "감칠맛" to false,
-            "지방맛" to false,
+            "매운 맛" to false,
+            "담백한 맛" to false,
+            "느끼한 맛" to false,
+            "상관 없음" to false,
         )
     }
     val activityPreferenceList = remember {
         mutableStateListOf(
-            "응" to false,
-            "아니" to false,
+            "1단계" to false,
+            "2단계" to false,
+            "3단계" to false,
+            "4단계" to false
         )
     }
     val foodPreferenceList = remember {
@@ -74,9 +89,7 @@ fun BodyInfoInputScreen(
             "한식" to false,
             "중식" to false,
             "일식" to false,
-            "양식" to false,
-            "패스트푸드" to false,
-            "디저트" to false,
+            "양식" to false
         )
     }
 
@@ -98,6 +111,10 @@ fun BodyInfoInputScreen(
                 onClickItem = { selectedIndex ->
                     spicyPreferenceList.toList().forEachIndexed { index, (option, _) ->
                         spicyPreferenceList[index] = option to (index == selectedIndex)
+
+                        if (index == selectedIndex) {
+                            onChangeSpicyPreference(index)
+                        }
                     }
                 }
             )
@@ -108,6 +125,8 @@ fun BodyInfoInputScreen(
                 onClickItem = { selectedIndex ->
                     meatPreferenceList.toList().forEachIndexed { index, (option, _) ->
                         meatPreferenceList[index] = option to (index == selectedIndex)
+
+                        onChangeMeatConsumption(index == 0)
                     }
                 }
             )
@@ -117,6 +136,10 @@ fun BodyInfoInputScreen(
                 radioItemList = tastePreferenceList,
                 onClickItem = { selectedIndex ->
                     val (option, isSelected) = tastePreferenceList[selectedIndex]
+
+                    if (!isSelected) {
+                        onChangeTastePreference(option)
+                    }
 
                     tastePreferenceList[selectedIndex] = option to !isSelected
                 }
@@ -128,6 +151,10 @@ fun BodyInfoInputScreen(
                 onClickItem = { selectedIndex ->
                     activityPreferenceList.toList().forEachIndexed { index, (option, _) ->
                         activityPreferenceList[index] = option to (index == selectedIndex)
+
+                        if (index == selectedIndex) {
+                            onChangeActivityLevel(index)
+                        }
                     }
                 }
             )
@@ -137,6 +164,10 @@ fun BodyInfoInputScreen(
                 radioItemList = foodPreferenceList,
                 onClickItem = { selectedIndex ->
                     val (option, isSelected) = foodPreferenceList[selectedIndex]
+
+                    if (!isSelected) {
+                        onChangePreferenceTypeFood(option)
+                    }
 
                     foodPreferenceList[selectedIndex] = option to !isSelected
                 }
@@ -149,60 +180,68 @@ fun BodyInfoInputScreen(
                 Button(
                     text = "완료",
                     onClick = {
+                        val isSpicyPreferenceChecked = spicyPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isMeatPreferenceChecked = meatPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isTastePreferenceChecked = tastePreferenceList.any { (_, isChecked) -> isChecked }
+                        val isActivityPreferenceChecked = activityPreferenceList.any { (_, isChecked) -> isChecked }
+                        val isFoodPreferenceChecked = foodPreferenceList.any { (_, isChecked) -> isChecked }
 
+                        val isEveryOptionSelected = isSpicyPreferenceChecked &&
+                                isMeatPreferenceChecked &&
+                                isTastePreferenceChecked &&
+                                isActivityPreferenceChecked &&
+                                isFoodPreferenceChecked
+
+                        val isEveryOptionUnselected = !isSpicyPreferenceChecked &&
+                                !isMeatPreferenceChecked &&
+                                !isTastePreferenceChecked &&
+                                !isActivityPreferenceChecked &&
+                                !isFoodPreferenceChecked
+
+                        if (isEveryOptionSelected || isEveryOptionUnselected) {
+                            onFinishTasteInfoInput()
+                        } else {
+                            isShowUnfinishedDialog = true
+                        }
                     }
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Button(
                     text = "건너뛰기",
                     onClick = {
-
+                        isShowSkipDialog = true
                     }
                 )
             }
         }
     }
 
-    if (true) {
-        AlertDialog(
+    if (isShowUnfinishedDialog) {
+        Dialog(
+            title = "취향 입력이 실패했어요.",
+            description = "모든 항목을 1개 이상 골라야 해요.",
+            confirmText = "다시 작성하기",
+            onClickConfirm = {
+                isShowUnfinishedDialog = false
+            },
             onDismissRequest = {
-//                isShowFinishDialog = false
+                isShowUnfinishedDialog = false
+            }
+        )
+    }
+
+    if (isShowSkipDialog) {
+        Dialog(
+            title = "귀찮으세요?",
+            description = "로그인한 뒤 설정에서 내 정보에 들어가면 다시 작성하실 수 있어요!",
+            confirmText = "취소",
+            dismissText = "건너뛰기",
+            onClickConfirm = {
+                isShowSkipDialog = false
             },
-            confirmButton = {
-                Box(
-                    modifier = Modifier
-                        .clickable {
-//                                finish()
-                        }
-                        .background(
-                            color = Color.Transparent,
-                            shape = AbsoluteRoundedCornerShape(10.dp)
-                        )
-                ) {
-                    Text(
-                        text = "다시 작성하기",
-                        modifier = Modifier.padding(5.dp),
-                        fontSize = 16.dpToSp(),
-                        fontWeight = FontWeight.Light,
-                        fontFamily = fontFamily
-                    )
-                }
-            },
-            title = {
-                Text(
-                    text = "취향 입력이 실패했어요.",
-                    fontSize = 20.dpToSp(),
-                    fontWeight = FontWeight.Light,
-                    fontFamily = fontFamily
-                )
-            },
-            text = {
-                Text(
-                    text = "모든 항목을 1개 이상 골라야 해요.",
-                    fontSize = 18.dpToSp(),
-                    fontWeight = FontWeight.Light,
-                    fontFamily = fontFamily
-                )
+            onClickDismiss = onClickSkipTasteInput,
+            onDismissRequest = {
+                isShowSkipDialog = false
             }
         )
     }

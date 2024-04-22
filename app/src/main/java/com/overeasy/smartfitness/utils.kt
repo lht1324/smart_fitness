@@ -64,3 +64,20 @@ fun showToast(
     msg: String,
     duration: Int = Toast.LENGTH_SHORT
 ): Toast = Toast.makeText(context, msg, duration)
+
+fun isLettersOrDigits(chars: String): Boolean {
+    return chars.none { char ->
+        char !in 'A'..'Z' &&
+            char !in 'a'..'z' &&
+            char !in '0'..'9'  }
+}
+
+fun isLettersOrDigitsIncludeKorean(chars: String): Boolean {
+    return chars.none { char ->
+        char !in 'A'..'Z' &&
+                char !in 'a'..'z' &&
+                char !in '0'..'9' &&
+                char !in 'ㄱ'..'ㅎ' &&
+                char !in '가'..'힣'
+    }
+}

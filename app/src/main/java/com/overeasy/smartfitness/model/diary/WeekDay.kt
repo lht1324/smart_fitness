@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.model
+package com.overeasy.smartfitness.model.diary
 
 enum class WeekDay(val value: String) {
     SUNDAY("일"),

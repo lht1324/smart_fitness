@@ -25,8 +25,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
-import com.overeasy.smartfitness.model.CalendarItem
-import com.overeasy.smartfitness.model.WeekDay
+import com.overeasy.smartfitness.model.diary.CalendarItem
+import com.overeasy.smartfitness.model.diary.WeekDay
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
