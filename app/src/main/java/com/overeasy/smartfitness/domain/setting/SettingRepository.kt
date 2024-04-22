@@ -2,6 +2,8 @@ package com.overeasy.smartfitness.domain.setting
 
 import com.overeasy.smartfitness.domain.base.BaseResponse
 import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
+import com.overeasy.smartfitness.domain.setting.entity.GetUsersByIdRes
+import com.overeasy.smartfitness.domain.setting.entity.GetUsersReq
 import com.overeasy.smartfitness.domain.setting.entity.GetUsersRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
@@ -19,8 +21,12 @@ interface SettingRepository {
     ): PostUsersSignUpRes
 
     suspend fun getUsers(
-        id: Int
+        nickname: String, age: Int
     ): GetUsersRes
+
+    suspend fun getUsersById(
+        id: Int
+    ): GetUsersByIdRes
 
     suspend fun putUsers(
         req: PutUsersReq

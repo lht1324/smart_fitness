@@ -7,6 +7,8 @@ import com.overeasy.smartfitness.domain.base.BaseResponse
 import com.overeasy.smartfitness.simplePost
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
+import com.overeasy.smartfitness.domain.setting.entity.GetUsersByIdRes
+import com.overeasy.smartfitness.domain.setting.entity.GetUsersReq
 import com.overeasy.smartfitness.domain.setting.entity.GetUsersRes
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
@@ -39,7 +41,12 @@ class SettingRepositoryImpl @Inject constructor(
 
     // logout 없음 (로컬 처리)
 
-    override suspend fun getUsers(id: Int): GetUsersRes =
+    override suspend fun getUsers(nickname: String, age: Int): GetUsersRes =
+        client.simpleGet("$baseUrl/users?nickname=$nickname&age=$age") {
+
+        }
+
+    override suspend fun getUsersById(id: Int): GetUsersByIdRes =
         client.simpleGet("$baseUrl/users/$id") {
 
         }

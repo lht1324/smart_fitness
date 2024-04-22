@@ -30,6 +30,7 @@ fun SettingScreen(
     modifier: Modifier = Modifier,
     isLogin: Boolean = false,
     onClickLogin: () -> Unit,
+    onClickFindId: () -> Unit,
     onClickRegister: () -> Unit,
     onClickMyInfo: () -> Unit,
     onClickLogout: () -> Unit,
@@ -41,22 +42,28 @@ fun SettingScreen(
             .background(color = ColorPrimary),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isLogin) {
-            SettingItem(
-                text = "내 정보",
-                onClick = onClickMyInfo
-            )
-        }
         SettingItem(
             text = if (isLogin) {
-                "로그아웃"
+                "내 정보"
             } else {
                 "로그인"
             },
             onClick = if (isLogin) {
-                onClickLogout
+                onClickMyInfo
             } else {
                 onClickLogin
+            }
+        )
+        SettingItem(
+            text = if (isLogin) {
+                "로그아웃"
+            } else {
+                "아이디 찾기"
+            },
+            onClick = if (isLogin) {
+                onClickLogout
+            } else {
+                onClickFindId
             }
         )
         SettingItem(

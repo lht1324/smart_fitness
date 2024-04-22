@@ -6,10 +6,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GetUsersRes(
+data class GetUsersByIdRes(
     override val code: Int = -1,
-    override val message: String,
-    val result: String = "",
+    @SerialName("message") override val message: String,
+    @SerialName("result") val result: UserData? = null,
 
     override val success: Boolean = false,
     override val error: String? = null,

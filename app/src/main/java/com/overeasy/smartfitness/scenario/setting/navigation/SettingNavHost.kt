@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -12,12 +13,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Header
+import com.overeasy.smartfitness.scenario.setting.findid.FindIdScreen
 import com.overeasy.smartfitness.scenario.setting.finish.FinishScreen
 import com.overeasy.smartfitness.scenario.setting.finish.SettingFinishState
 import com.overeasy.smartfitness.scenario.setting.login.LoginScreen
@@ -44,9 +47,10 @@ fun SettingNavHost(
         derivedStateOf {
             when (currentDestination) {
                 SettingRoutes.Setting.route -> "설정"
-                SettingRoutes.MyInfo.route -> "내 정보"
                 SettingRoutes.Login.route -> "로그인"
+                SettingRoutes.FindId.route -> "아이디 찾기"
                 SettingRoutes.Register.route -> "회원가입"
+                SettingRoutes.MyInfo.route -> "내 정보"
                 SettingRoutes.Logout.route -> "로그아웃"
                 SettingRoutes.Withdraw.route -> "탈퇴"
                 SettingRoutes.Finish.route -> when (finishState) {
@@ -108,6 +112,9 @@ fun SettingNavHost(
                     onClickLogin = {
                         navHostController.navigate(SettingRoutes.Login.route)
                     },
+                    onClickFindId = {
+                        navHostController.navigate(SettingRoutes.FindId.route)
+                    },
                     onClickRegister = {
                         navHostController.navigate(SettingRoutes.Register.route)
                     },
@@ -128,11 +135,14 @@ fun SettingNavHost(
                         isLogin = MainApplication.appPreference.isLogin
                         finishState = SettingFinishState.LoginFinish
 
-                        navHostController.navigate(
-                            SettingRoutes.Finish.createRoute(
-                                SettingFinishState.LoginFinish.value
-                            )
-                        )
+                        navHostController.navigate(SettingRoutes.Finish.route)
+                    }
+                )
+            }
+            composable(SettingRoutes.FindId.route) {
+                FindIdScreen(
+                    onFinish = {
+                        navHostController.navigateUp()
                     }
                 )
             }

@@ -24,7 +24,7 @@ class DietViewModel @Inject constructor(
         viewModelScope.launch {
             if (MainApplication.appPreference.isLogin) {
                 ApiRequestHelper.makeRequest {
-                    settingRepository.getUsers(MainApplication.appPreference.userId)
+                    settingRepository.getUsersById(MainApplication.appPreference.userId)
                 }.onSuccess { res ->
                     if (res.result?.run { age != null && height != null && weight != null } == true) {
                         _screenState.value = DietScreenState.NORMAL

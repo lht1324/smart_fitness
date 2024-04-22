@@ -7,7 +7,6 @@ import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PutUsersReq
 import com.overeasy.smartfitness.domain.setting.model.UserData
-import com.overeasy.smartfitness.isLettersOrDigits
 import com.overeasy.smartfitness.isLettersOrDigitsIncludeKorean
 import com.overeasy.smartfitness.model.register.RegisterBodyInfo
 import com.overeasy.smartfitness.model.register.RegisterTasteInfo
@@ -21,9 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -94,7 +91,7 @@ class MyInfoViewModel @Inject constructor(
         viewModelScope.launch {
             launch(Dispatchers.IO) {
                 ApiRequestHelper.makeRequest {
-                    settingRepository.getUsers(MainApplication.appPreference.userId)
+                    settingRepository.getUsersById(MainApplication.appPreference.userId)
                 }.onSuccess { res ->
                     val userData = res.result
 
