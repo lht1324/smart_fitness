@@ -61,7 +61,8 @@ fun InfoInputField(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(2.dp))
+        //cerph.gachon.ac.kr:60008
+        Spacer(modifier = Modifier.height(1.dp))
         Text(
             text = invalidText,
             modifier = Modifier
@@ -72,11 +73,11 @@ fun InfoInputField(
             } else {
                 Color.Transparent
             },
-            fontSize = 16.dpToSp(),
+            fontSize = 12.dpToSp(),
             fontWeight = FontWeight.Medium,
             fontFamily = fontFamily,
             textAlign = TextAlign.Start
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
     }
 }

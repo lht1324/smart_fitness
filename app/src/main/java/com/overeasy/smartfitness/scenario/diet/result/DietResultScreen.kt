@@ -115,8 +115,6 @@ fun DietResultScreen(
                         color = Color.LightGray
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-                } else {
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }

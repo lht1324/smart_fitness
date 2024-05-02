@@ -1,7 +1,9 @@
 package com.overeasy.smartfitness.scenario.setting.finish
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -11,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
 @Composable
@@ -44,6 +47,8 @@ fun FinishScreen(
 
     Column(
         modifier = modifier
+            .fillMaxSize()
+            .background(color = ColorPrimary)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 24.dp)
@@ -52,7 +57,7 @@ fun FinishScreen(
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 32.dpToSp(),
+                fontSize = 28.dpToSp(),
                 fontWeight = FontWeight.Bold,
                 fontFamily = fontFamily
             )
@@ -60,7 +65,7 @@ fun FinishScreen(
             Text(
                 text = description,
                 color = Color.White,
-                fontSize = 24.dpToSp(),
+                fontSize = 20.dpToSp(),
                 fontWeight = FontWeight.Bold,
                 fontFamily = fontFamily
             )

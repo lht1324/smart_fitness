@@ -265,10 +265,10 @@ class RegisterViewModel @Inject constructor(
                 }.filter { (_, isClicked) ->
                     isClicked
                 }.collectLatest { (req, _) ->
-                    println("jaehoLee", "register req= $req")
                     ApiRequestHelper.makeRequest {
                         settingRepository.postUsersSignUp(req)
                     }.onSuccess { res ->
+                        println("jaehoLee", "onSuccess: $res")
                         ApiRequestHelper.makeRequest {
                             settingRepository.postUsersLogin(
                                 PostUsersLoginReq(
@@ -277,15 +277,16 @@ class RegisterViewModel @Inject constructor(
                                 )
                             )
                         }.onSuccess { loginRes ->
+                            println("jaehoLee", "onSuccessLogin: $loginRes")
                             MainApplication.appPreference.isLogin = true
-                            MainApplication.appPreference.userId = loginRes.result?.id?.toIntOrNull() ?: -1
+                            MainApplication.appPreference.userId = loginRes.result?.id ?: -1 // .toIntOrNull() ?: -1
 
                             _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
                         }.onFailure { loginRes ->
-                            println("jaehoLee", "onFailure res = $loginRes")
+                            println("jaehoLee", "onFailureLogin: $loginRes")
                             _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
                         }.onError { throwable ->
-                            println("jaehoLee", "onError res = ${throwable.message}")
+                            println("jaehoLee", "onErrorLogin: ${throwable.message}")
                             _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
                         }
 
@@ -293,14 +294,14 @@ class RegisterViewModel @Inject constructor(
                     }.onFailure { res ->
                         isClickedRegisterButton.value = false
 
-                        println("jaehoLee", "onFailure res = $res")
+                        println("jaehoLee", "onFailure: $res")
                         when (res.code) {
                             301 -> _registerUiEvent.emit(RegisterUiEvent.UserInfoAlreadyExist)
                             else -> _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
                         }
                     }.onError { throwable ->
                         isClickedRegisterButton.value = false
-                        println("jaehoLee", "onError throwable = ${throwable.message}")
+                        println("jaehoLee", "onError: ${throwable.message}")
                     }
                 }
             }

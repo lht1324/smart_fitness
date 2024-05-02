@@ -48,6 +48,7 @@ import com.overeasy.smartfitness.model.ScreenState
 import com.overeasy.smartfitness.scenario.diary.navigation.DiaryNavHost
 import com.overeasy.smartfitness.scenario.diet.diet.DietScreen
 import com.overeasy.smartfitness.scenario.diet.navigation.DietNavHost
+import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.ranking.navigation.RankingNavHost
 import com.overeasy.smartfitness.scenario.ranking.ranking.RankingScreen
@@ -147,65 +148,19 @@ class MainActivity : ComponentActivity() {
             }
 
             if (isShowFinishDialog) {
-                AlertDialog(
-                    onDismissRequest = {
+                Dialog(
+//                    title = "끄려고요?",
+//                    description = "운동은 하고 가는 거죠?",
+                    title = "운동은 하고 가는 거죠?",
+                    description = "켰다 끄는 건 좀 아니긴 한데...\n뭐라 하려는 건 아니에요 아 ㅋㅋ",
+                    confirmText = "아니",
+                    dismissText = "응",
+                    onClickConfirm = {
                         isShowFinishDialog = false
                     },
-                    confirmButton = {
-                        Box(
-                            modifier = Modifier
-                                .clickable {
-                                    isShowFinishDialog = false
-                                }
-                                .background(
-                                    color = Color.Transparent,
-                                    shape = AbsoluteRoundedCornerShape(10.dp)
-                                )
-                        ) {
-                            Text(
-                                text = "아니",
-                                modifier = Modifier.padding(5.dp),
-                                fontSize = 16.dpToSp(),
-                                fontWeight = FontWeight.Light,
-                                fontFamily = fontFamily
-                            )
-                        }
-                    },
-                    dismissButton = {
-                        Box(
-                            modifier = Modifier
-                                .clickable {
-                                    finish()
-                                }
-                                .background(
-                                    color = Color.Transparent,
-                                    shape = AbsoluteRoundedCornerShape(10.dp)
-                                )
-                        ) {
-                            Text(
-                                text = "응",
-                                modifier = Modifier.padding(5.dp),
-                                fontSize = 16.dpToSp(),
-                                fontWeight = FontWeight.Light,
-                                fontFamily = fontFamily
-                            )
-                        }
-                    },
-                    title = {
-                        Text(
-                            text = "끄려고요?",
-                            fontSize = 20.dpToSp(),
-                            fontWeight = FontWeight.Light,
-                            fontFamily = fontFamily
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = "운동은 하고 가는 거죠?",
-                            fontSize = 18.dpToSp(),
-                            fontWeight = FontWeight.Light,
-                            fontFamily = fontFamily
-                        )
+                    onClickDismiss = {},
+                    onDismissRequest = {
+                        isShowFinishDialog = false
                     }
                 )
             }

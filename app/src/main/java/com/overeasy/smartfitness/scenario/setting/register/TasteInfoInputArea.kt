@@ -248,6 +248,7 @@ fun TasteInfoInputArea(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 
@@ -419,7 +420,7 @@ private fun InputSection(
                         )
                     }
                     if (index != radioItemList.size - 1) {
-                        Spacer(modifier = Modifier.width(15.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                     }
                 }
             }

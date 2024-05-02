@@ -49,6 +49,7 @@ fun Dialog(
             @Composable {
                 Text(
                     text = title,
+                    color= Color.Black,
                     fontSize = 20.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
@@ -61,6 +62,7 @@ fun Dialog(
             @Composable {
                 Text(
                     text = description,
+                    color = Color.Black,
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.Normal,
                     fontFamily = fontFamily

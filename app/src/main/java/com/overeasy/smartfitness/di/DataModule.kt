@@ -58,6 +58,7 @@ object DataModule {
 //                "App-Id" to appId
 //                "App-Info" to appInfo
                 HttpHeaders.ContentType to ContentType.Application.Json
+//                HttpHeaders.AcceptCharset to Charsets.UTF_8
             }
         }
 

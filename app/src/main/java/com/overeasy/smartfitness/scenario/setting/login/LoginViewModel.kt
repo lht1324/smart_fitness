@@ -76,17 +76,20 @@ class LoginViewModel @Inject constructor(
                             )
                         )
                     }.onSuccess { res ->
+                        println("jaehoLee", "onSuccess: $res")
                         isClickedLoginButton.value = false
 
                         MainApplication.appPreference.isLogin = true
-                        MainApplication.appPreference.userId = res.result?.id?.toIntOrNull() ?: -1
+                        MainApplication.appPreference.userId = res.result?.id ?: -1 // ?.toIntOrNull() ?: -1
 
                         _loginUiEvent.emit(LoginUiEvent.OnFinishLogin)
-                    }.onFailure {
+                    }.onFailure { res ->
+                        println("jaehoLee", "onFailure: $res")
                         isClickedLoginButton.value = false
 
                         _loginUiEvent.emit(LoginUiEvent.ShowFailedDialog)
-                    }.onError {
+                    }.onError { throwable ->
+                        println("jaehoLee", "onError: ${throwable.message}")
                         isClickedLoginButton.value = false
                     }
                 }

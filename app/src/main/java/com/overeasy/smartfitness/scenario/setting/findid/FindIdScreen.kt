@@ -55,7 +55,6 @@ fun FindIdScreen(
             isInvalid = isAgeInvalid,
             invalidText = "100세 미만의 나이만 입력할 수 있어요."
         )
-        Spacer(modifier = Modifier.height(5.dp))
         SettingButton(
             modifier = Modifier.align(Alignment.End),
             text = "아이디 찾기",
