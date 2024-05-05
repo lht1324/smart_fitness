@@ -3,18 +3,19 @@ package com.overeasy.smartfitness.scenario.workout.navigation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.workout.result.WorkoutResultScreen
 import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
 
 @Composable
 fun WorkoutNavHost(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUpdateJson: (String) -> Unit,
+    onChangeHeaderHeight: (Int) -> Unit
 ) {
     val navHostController = rememberNavController()
 
@@ -33,6 +34,9 @@ fun WorkoutNavHost(
         modifier = modifier
     ) {
         Header(
+            modifier = Modifier.onSizeChanged { (_, height) ->
+                onChangeHeaderHeight(height)
+            },
             title = currentHeaderTitle,
             isBackButtonEnabled = currentDestination != WorkoutRoutes.Workout.route
         )
@@ -42,9 +46,10 @@ fun WorkoutNavHost(
         ) {
             composable(WorkoutRoutes.Workout.route) {
                 WorkoutScreen(
-                    onClick = {
+                    onClickFinish = {
                         navHostController.navigate(WorkoutRoutes.Result.route)
-                    }
+                    },
+                    onUpdateJson = onUpdateJson
                 )
             }
             composable(WorkoutRoutes.Result.route) {

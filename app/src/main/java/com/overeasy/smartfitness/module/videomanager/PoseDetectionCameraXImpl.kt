@@ -6,11 +6,15 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Size
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.MediaStoreOutputOptions
@@ -24,6 +28,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.mlkit.vision.pose.Pose
 import com.overeasy.smartfitness.model.workout.RecordingInfo
 import com.overeasy.smartfitness.model.workout.RecordingState
 import com.overeasy.smartfitness.module.posedetectionmanager.PoseDetectionManager
@@ -43,14 +48,18 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class CameraXImpl(
-    private val lifecycleOwner: LifecycleOwner,
-    private val onFinishInit: () -> Unit
+class PoseDetectionCameraXImpl(
+    private val cameraWidth: Int,
+    private val cameraHeight: Int,
+    private val onPoseDetected: (Pose) -> Unit = { },
+    private val onFinishInit: () -> Unit = { }
 ) : CameraX {
     private val _facing = MutableStateFlow(CameraSelector.LENS_FACING_BACK)
     private val _flash = MutableStateFlow(false)
     private val _recordingState = MutableStateFlow<RecordingState>(RecordingState.Idle)
     private val _recordingInfo = MutableSharedFlow<RecordingInfo>()
+
+    private lateinit var resolutionSelector: ResolutionSelector
 
     private lateinit var previewView: PreviewView
     private lateinit var preview: Preview
@@ -67,8 +76,17 @@ class CameraXImpl(
     private lateinit var poseDetectionManager: PoseDetectionManager
 
     override fun initialize(context: Context) {
+        resolutionSelector = ResolutionSelector.Builder()
+            .setResolutionStrategy(
+                ResolutionStrategy(
+                    Size(cameraWidth, cameraHeight),
+                    ResolutionStrategy.FALLBACK_RULE_NONE
+                )
+            ).build()
+
         previewView = PreviewView(context)
         preview = Preview.Builder()
+//            .setResolutionSelector(resolutionSelector)
             .build()
             .also { preview ->
                 preview.setSurfaceProvider(previewView.surfaceProvider)
@@ -78,6 +96,12 @@ class CameraXImpl(
         imageCapture = ImageCapture.Builder().build()
         executor = Executors.newSingleThreadExecutor()
         this.context = context
+
+        poseDetectionManager = PoseDetectionManager(
+            cameraExecutor = executor,
+            onPoseDetected = onPoseDetected
+        )
+
         initializeVideo()
         onFinishInit()
     }
@@ -89,9 +113,12 @@ class CameraXImpl(
         )
 
         val recorder = Recorder.Builder()
-            .setExecutor(executor).setQualitySelector(qualitySelector)
+            .setExecutor(executor)
+            .setQualitySelector(qualitySelector)
             .build()
-        videoCapture = VideoCapture.withOutput(recorder)
+
+        videoCapture = VideoCapture.Builder(recorder)
+            .build()
 
         val path =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES + "/cameraX")
@@ -115,7 +142,17 @@ class CameraXImpl(
     ) {
         unBindCamera()
 
-        val cameraSelector = CameraSelector.Builder().requireLensFacing(_facing.value).build()
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(_facing.value)
+            .build()
+
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+
+        poseDetectionManager.setImageAnalyzer(
+            imageAnalysis = imageAnalysis
+        )
 
         cameraProvider.addListener(
             {
@@ -124,9 +161,12 @@ class CameraXImpl(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
+                        imageAnalysis,
                         imageCapture,
                         videoCapture
-                    )
+                    ).apply {
+                        cameraControl.setZoomRatio(0.9f)
+                    }
                 }
             },
             executor
@@ -226,12 +266,12 @@ class CameraXImpl(
     }
 
     override fun flipCameraFacing() {
-        if (_facing.value == CameraSelector.LENS_FACING_BACK) {
-            _flash.value = false
-            _facing.value = CameraSelector.LENS_FACING_FRONT
-        } else {
-            _facing.value = CameraSelector.LENS_FACING_BACK
-        }
+//        if (_facing.value == CameraSelector.LENS_FACING_BACK) {
+//            _flash.value = false
+//            _facing.value = CameraSelector.LENS_FACING_FRONT
+//        } else {
+//            _facing.value = CameraSelector.LENS_FACING_BACK
+//        }
     }
 
     override fun turnOnOffFlash() {

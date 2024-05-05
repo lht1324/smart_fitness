@@ -6,6 +6,7 @@ coilCompose = "2.6.0"
 daggerAndroidProcessor = "2.41"
 daggerCompiler = "2.41"
 gson = "2.10.1"
+guava = "27.1-android"
 hiltAndroid = "2.49"
 hiltNavigationFragment = "1.2.0"
 kotlin = "1.9.0"
@@ -52,6 +53,7 @@ dagger-android-processor = { module = "com.google.dagger:dagger-android-processo
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "hiltAndroid" }
 dagger-compiler-v241 = { module = "com.google.dagger:dagger-compiler", version.ref = "daggerCompiler" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

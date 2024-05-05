@@ -36,7 +36,7 @@ fun Header(
         modifier = modifier
     ) {
         Box(
-            modifier = modifier
+            modifier = Modifier
                 .background(color = ColorPrimary)
         ) {
             Box(

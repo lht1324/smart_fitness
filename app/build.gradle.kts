@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.multidex)
     implementation(libs.gson)
+    implementation(libs.guava)
 
     // Kotlin
     implementation(libs.kotlinx.serialization.json)

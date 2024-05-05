@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.model
+package com.overeasy.smartfitness.model.workout
 
 sealed class RecordingState {
     data object Idle : RecordingState()

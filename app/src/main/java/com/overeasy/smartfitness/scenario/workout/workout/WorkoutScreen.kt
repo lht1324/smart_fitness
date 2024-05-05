@@ -1,58 +1,99 @@
 package com.overeasy.smartfitness.scenario.workout.workout
 
-import androidx.compose.foundation.Image
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Environment
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.overeasy.smartfitness.R
+import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.module.videomanager.VideoManager
 import com.overeasy.smartfitness.noRippleClickable
+import com.overeasy.smartfitness.println
+import com.overeasy.smartfitness.pxToDp
+import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
-import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.ColorSunday
 import com.overeasy.smartfitness.ui.theme.fontFamily
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun WorkoutScreen(
     modifier: Modifier = Modifier,
     viewModel: WorkoutViewModel = hiltViewModel(),
-    onClick: () -> Unit
+    onClickFinish: () -> Unit,
+    onUpdateJson: (String) -> Unit
 ) {
+    val context = LocalContext.current
     var isShowDialog by remember { mutableStateOf(false) }
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(color = ColorPrimary)
     ) {
-//        VideoManager.CameraX()
-        Image(
-            painter = painterResource(id = R.drawable.workout_guy),
-            modifier = Modifier.fillMaxSize(),
-            contentDescription = null
+        val bodyFrameData by viewModel.bodyFrameData.collectAsState()
+
+        var cameraWidthPx by remember { mutableIntStateOf(0) }
+        var cameraHeightPx by remember { mutableIntStateOf(0) }
+
+        VideoManager.PoseDetectionCameraX(
+            modifier = Modifier.onSizeChanged { (width, height) ->
+                if (width != cameraWidthPx) {
+                    cameraWidthPx = width
+                }
+
+                if (height != cameraHeightPx) {
+                    cameraHeightPx = height
+                }
+            },
+            onPoseDetected = { pose ->
+                viewModel.onUpdatePose(
+                    cameraWidthPx = cameraWidthPx,
+                    cameraHeightPx = cameraHeightPx,
+                    pose = pose,
+                    copy = { text ->
+                        onUpdateJson(text)
+                    }
+                )
+            }
         )
+
+        bodyFrameData?.run {
+            if (offsetList.size == 26) { // 선 갯수
+                BodyFrame(
+                    modifier = Modifier.size(
+                        width = context.pxToDp(cameraWidthPx).dp,
+                        height = context.pxToDp(cameraHeightPx).dp
+                    ),
+                    bodyFrameData = this
+                )
+            }
+        }
 //        Column(
 //            modifier = Modifier
 //                .padding(top = 20.dp, end = 20.dp)
@@ -94,8 +135,7 @@ fun WorkoutScreen(
                 .padding(bottom = 20.dp)
                 .size(100.dp)
                 .noRippleClickable {
-//                    isShowDialog = true
-                    onClick()
+                    onClickFinish()
                 }
                 .background(
                     color = Color.White,
@@ -196,5 +236,15 @@ fun WorkoutScreen(
             },
 
             )
+    }
+
+    LaunchedEffect(viewModel.workoutUiEvent) {
+        viewModel.workoutUiEvent.collectLatest { event ->
+            when (event) {
+                is WorkoutViewModel.WorkoutUiEvent.CopyText -> {
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText("label", event.text))
+                }
+            }
+        }
     }
 }

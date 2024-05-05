@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.model
+package com.overeasy.smartfitness.model.workout
 
 data class RecordingInfo(
     val duration: Long,
