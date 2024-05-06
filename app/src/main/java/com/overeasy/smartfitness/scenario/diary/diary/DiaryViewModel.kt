@@ -3,9 +3,12 @@ package com.overeasy.smartfitness.scenario.diary.diary
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
+import com.overeasy.smartfitness.domain.diary.model.Note
 import com.overeasy.smartfitness.model.diary.CalendarItem
 import com.overeasy.smartfitness.module.CalendarManager
+import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,23 +37,21 @@ class DiaryViewModel @Inject constructor(
     private val _calendarIndex = MutableStateFlow<Int?>(null)
     val calendarIndex = _calendarIndex.asStateFlow()
 
+    private val _selectedDiaryItem = MutableStateFlow<Note?>(null)
+    val selectedDiaryItem = _selectedDiaryItem.asStateFlow()
+
     init {
-        /**
-         * 1970-1 -> 0
-         * 1970-2 -> 1
-         */
         viewModelScope.launch {
             launch (Dispatchers.Default) {
                 initializeCalendar()
             }
         }
-        onCollect()
     }
 
-    private suspend fun initializeCalendar() {
+    private fun initializeCalendar() {
         val calendarList = CalendarManager.getCalendarList().map { list ->
             list.map { calendarItem ->
-                val split = calendarItem.date.split('/')
+                val split = calendarItem.date.split('-')
                 val year = split[0].toInt()
                 val month = split[1].toInt()
                 val day = split[2].toInt()
@@ -68,7 +69,7 @@ class DiaryViewModel @Inject constructor(
             monthList.find { calendarItem ->
                 val isCurrentMonth = calendarItem.isCurrentMonth
                 val isCurrent = calendarItem.date == currentFirstDayOfMonth.run {
-                    "$year/${String.format("%02d", monthValue)}/${String.format("%02d", dayOfMonth)}"
+                    "$year-${String.format("%02d", monthValue)}-${String.format("%02d", dayOfMonth)}"
                 }
 
                 isCurrentMonth && isCurrent
@@ -78,21 +79,6 @@ class DiaryViewModel @Inject constructor(
         currentYearMonth.value = YearMonth.now()
         _calendarIndex.value = currentCalendarOfMonthIndex
         _calendarList.addAll(calendarList)
-    }
-
-    private fun onCollect() {
-//        viewModelScope.launch {
-//            launch {
-//                currentEndOfMonth.collectLatest { date ->
-//                    refreshNewPagerData(date)
-//                }
-//            }
-//            launch(Dispatchers.Default) {
-//                isCalendarListEmpty.collectLatest { isEmpty ->
-//                    println("jaehoLee", "isEmptyVM = $isEmpty")
-//                }
-//            }
-//        }
     }
 
     fun onChangeMonth(isSwipedToLeft: Boolean) {
@@ -113,5 +99,27 @@ class DiaryViewModel @Inject constructor(
             }
             currentYearMonth.value = newYearMonth
         }
+    }
+
+    fun onClickCalendarItem(date: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            requestGetDiary(date)
+        }
+    }
+
+    private suspend fun requestGetDiary(date: String) {
+        ApiRequestHelper.makeRequest {
+            diaryRepository.getDiary(date)
+        }.onSuccess { res ->
+            _selectedDiaryItem.value = res.result.noteList.firstOrNull()
+        }.onFailure { res ->
+
+        }.onError { throwable ->
+            println("jaehoLee", "onError: ${throwable.message}")
+        }
+    }
+
+    sealed class DiaryUiEvent {
+
     }
 }

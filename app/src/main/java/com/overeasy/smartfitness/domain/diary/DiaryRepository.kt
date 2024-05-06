@@ -4,6 +4,6 @@ import com.overeasy.smartfitness.domain.diary.entity.GetDiaryDetailRes
 import com.overeasy.smartfitness.domain.diary.entity.GetDiaryRes
 
 interface DiaryRepository {
-    suspend fun getDiary(): GetDiaryRes
-    suspend fun getDiaryDetail(): GetDiaryDetailRes
+    suspend fun getDiary(date: String): GetDiaryRes
+    suspend fun getDiaryDetail(noteId: Int): GetDiaryDetailRes
 }

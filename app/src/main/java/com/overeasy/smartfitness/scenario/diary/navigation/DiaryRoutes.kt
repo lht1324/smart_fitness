@@ -4,13 +4,13 @@ sealed class DiaryRoutes(val route: String) {
     data object Diary : DiaryRoutes("diary")
     data object DiaryDetail : DiaryRoutes(
         route = "diary_detail?" +
-                "date={date}"
+                "note_id={note_id}"
     ) {
-        const val DATE = "date"
+        const val NOTE_ID = "note_id"
 
         fun createRoute(
             date: String
         ) = route
-            .replace("{${DATE}}", date)
+            .replace("{${NOTE_ID}}", date)
     }
 }

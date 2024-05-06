@@ -46,16 +46,16 @@ object CalendarManager {
                         isCurrentMonth = day in (lastMonthLastWeekCount + 1)..(lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount),
                         date = when (day) {
                             in 1..lastMonthLastWeekCount -> "${lastDayOfLastMonth.year}" +
-                                    "/${getFormattedNumber(lastDayOfLastMonth.monthValue)}" +
-                                    "/${getFormattedNumber(lastDayOfLastMonth.dayOfMonth - (lastMonthLastWeekCount - day))}"
+                                    "-${getFormattedNumber(lastDayOfLastMonth.monthValue)}" +
+                                    "-${getFormattedNumber(lastDayOfLastMonth.dayOfMonth - (lastMonthLastWeekCount - day))}"
 
                             in lastMonthLastWeekCount + 1..lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount -> "$year" +
-                                    "/${getFormattedNumber(month)}" +
-                                    "/${getFormattedNumber(day - lastMonthLastWeekCount)}"
+                                    "-${getFormattedNumber(month)}" +
+                                    "-${getFormattedNumber(day - lastMonthLastWeekCount)}"
 
                             else -> "${firstDayOfNextMonth.year}" + // i >= endOfMonth.dayOfMonth + lastMonthCount + 1
-                                    "/${getFormattedNumber(firstDayOfNextMonth.monthValue)}" +
-                                    "/${getFormattedNumber(day - (lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount))}"
+                                    "-${getFormattedNumber(firstDayOfNextMonth.monthValue)}" +
+                                    "-${getFormattedNumber(day - (lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount))}"
                         }
                     )
                     monthList.add(calendarItem)

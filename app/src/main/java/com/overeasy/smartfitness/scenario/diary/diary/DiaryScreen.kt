@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.domain.diary.model.Note
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItem
 import com.overeasy.smartfitness.noRippleClickable
@@ -53,7 +54,7 @@ import kotlinx.coroutines.launch
 fun DiaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel(),
-    onClickMoveToDetail: (String) -> Unit
+    onClickMoveToDetail: (Int) -> Unit
 ) {
     val currentYear by viewModel.currentYear.collectAsState(initial = 1970)
     val currentMonth by viewModel.currentMonth.collectAsState(initial = 1)
@@ -63,6 +64,7 @@ fun DiaryScreen(
         }
     }
     val calendarIndex by viewModel.calendarIndex.collectAsState()
+    val selectedDiaryItem by viewModel.selectedDiaryItem.collectAsState()
 
     if (calendarIndex != null && calendarList.isNotEmpty()) {
         val coroutineScope = rememberCoroutineScope()
@@ -95,6 +97,10 @@ fun DiaryScreen(
                     }
                 },
                 onClickItem = { calendarItem ->
+                    calendarItem?.date?.let { date ->
+                        viewModel.onClickCalendarItem(date)
+                    }
+
                     selectedCalendarItem = calendarItem
                 }
             )
@@ -102,6 +108,7 @@ fun DiaryScreen(
                 modifier = Modifier
                     .padding(bottom = 20.dp)
                     .padding(horizontal = 24.dp),
+                selectedDiaryItem = selectedDiaryItem,
                 selectedCalendarItem = selectedCalendarItem,
                 onClickMoveToDetail = onClickMoveToDetail
             )
@@ -154,8 +161,9 @@ fun DiaryScreen(
 @Composable
 private fun InfoSection(
     modifier: Modifier = Modifier,
+    selectedDiaryItem: Note?,
     selectedCalendarItem: CalendarItem?,
-    onClickMoveToDetail: (String) -> Unit
+    onClickMoveToDetail: (Int) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -188,13 +196,13 @@ private fun InfoSection(
                 .align(Alignment.TopStart)
         ) {
             Text(
-                text = if (selectedCalendarItem != null) {
-                    val splitDate = selectedCalendarItem.date.split('/')
+                text = if (selectedDiaryItem != null) {
+                    val splitDate = selectedDiaryItem.workoutDate.split('-')
                     val year = splitDate[0].toInt()
                     val month = splitDate[1].toInt()
                     val day = splitDate[2].toInt()
 
-                    selectedCalendarItem.run { "${year}년 ${month}월 ${day}일" }
+                    selectedDiaryItem.run { "${year}년 ${month}월 ${day}일" }
                 } else {
                     "운동 정보"
                 },
@@ -216,7 +224,7 @@ private fun InfoSection(
                 .padding(top = (40 + (textHeightDp / 2.0f)).dp)
                 .padding(horizontal = 20.dp)
         ) {
-            if (selectedCalendarItem != null) {
+            if (selectedDiaryItem != null) {
                 Text(
                     text = "세트 총합",
                     color = Color.White,
@@ -225,14 +233,14 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedCalendarItem.daySetCount}회",
+                    text = "${selectedDiaryItem.run { totalPerfect + totalGood + totalBad }}회",
                     color = Color.White,
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                if (selectedCalendarItem.dayCalorieIncome != null) {
+                if (selectedDiaryItem.totalKcal != null) {
                     Text(
                         text = "칼로리 섭취량",
                         color = Color.White,
@@ -241,7 +249,7 @@ private fun InfoSection(
                         fontFamily = fontFamily
                     )
                     Text(
-                        text = "${selectedCalendarItem.dayCalorieIncome} kcal",
+                        text = "${selectedDiaryItem.totalKcal} kcal",
                         color = Color.Red,
                         fontSize = 18.dpToSp(),
                         fontWeight = FontWeight.SemiBold,
@@ -257,7 +265,7 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedCalendarItem.dayCalorieUsage} kcal",
+                    text = "${selectedDiaryItem.totalKcal} kcal", // 수정
                     color = Color(0xFF08E95F),
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
@@ -273,7 +281,7 @@ private fun InfoSection(
                 )
             }
         }
-        if (selectedCalendarItem != null) {
+        if (selectedDiaryItem != null) {
             Box(
                 modifier = Modifier
                     .padding(
@@ -285,7 +293,7 @@ private fun InfoSection(
                         shape = AbsoluteRoundedCornerShape(20.dp)
                     )
                     .noRippleClickable {
-                        onClickMoveToDetail(selectedCalendarItem.date)
+                        onClickMoveToDetail(selectedDiaryItem.noteId ?: -1)
                     }
                     .align(Alignment.TopEnd)
             ) {
@@ -302,4 +310,141 @@ private fun InfoSection(
             }
         }
     }
+
+//    Box(
+//        modifier = modifier
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .padding(top = (20.0f + (textHeightDp / 2.0f)).dp)
+//                .fillMaxSize()
+//                .border(
+//                    width = 1.dp,
+//                    color = Color.White,
+//                    shape = AbsoluteRoundedCornerShape(5.dp)
+//                )
+//        )
+//        Box(
+//            modifier = Modifier
+//                .padding(start = 10.dp)
+//                .background(
+//                    color = ColorPrimary
+//                )
+//                .align(Alignment.TopStart)
+//        ) {
+//            Text(
+//                text = if (selectedCalendarItem != null) {
+//                    val splitDate = selectedCalendarItem.date.split('-')
+//                    val year = splitDate[0].toInt()
+//                    val month = splitDate[1].toInt()
+//                    val day = splitDate[2].toInt()
+//
+//                    selectedCalendarItem.run { "${year}년 ${month}월 ${day}일" }
+//                } else {
+//                    "운동 정보"
+//                },
+//                modifier = Modifier
+//                    .padding(20.dp)
+//                    .onSizeChanged { (_, height) ->
+//                        if (height != textHeight) {
+//                            textHeight = height
+//                        }
+//                    },
+//                color = Color.White,
+//                fontSize = 24.dpToSp(),
+//                fontWeight = FontWeight.ExtraBold,
+//                fontFamily = fontFamily
+//            )
+//        }
+//        Column(
+//            modifier = Modifier
+//                .padding(top = (40 + (textHeightDp / 2.0f)).dp)
+//                .padding(horizontal = 20.dp)
+//        ) {
+//            if (selectedCalendarItem != null) {
+//                Text(
+//                    text = "세트 총합",
+//                    color = Color.White,
+//                    fontSize = 20.dpToSp(),
+//                    fontWeight = FontWeight.Bold,
+//                    fontFamily = fontFamily
+//                )
+//                Text(
+//                    text = "${selectedCalendarItem.daySetCount}회",
+//                    color = Color.White,
+//                    fontSize = 18.dpToSp(),
+//                    fontWeight = FontWeight.SemiBold,
+//                    fontFamily = fontFamily
+//                )
+//                Spacer(modifier = Modifier.height(10.dp))
+//                if (selectedCalendarItem.dayCalorieIncome != null) {
+//                    Text(
+//                        text = "칼로리 섭취량",
+//                        color = Color.White,
+//                        fontSize = 20.dpToSp(),
+//                        fontWeight = FontWeight.Bold,
+//                        fontFamily = fontFamily
+//                    )
+//                    Text(
+//                        text = "${selectedCalendarItem.dayCalorieIncome} kcal",
+//                        color = Color.Red,
+//                        fontSize = 18.dpToSp(),
+//                        fontWeight = FontWeight.SemiBold,
+//                        fontFamily = fontFamily
+//                    )
+//                    Spacer(modifier = Modifier.height(10.dp))
+//                }
+//                Text(
+//                    text = "칼로리 소모량",
+//                    color = Color.White,
+//                    fontSize = 20.dpToSp(),
+//                    fontWeight = FontWeight.Bold,
+//                    fontFamily = fontFamily
+//                )
+//                Text(
+//                    text = "${selectedCalendarItem.dayCalorieUsage} kcal",
+//                    color = Color(0xFF08E95F),
+//                    fontSize = 18.dpToSp(),
+//                    fontWeight = FontWeight.SemiBold,
+//                    fontFamily = fontFamily
+//                )
+//            } else {
+//                Text(
+//                    text = "운동 정보가 존재하지 않아요.",
+//                    color = Color.White,
+//                    fontSize = 20.dpToSp(),
+//                    fontWeight = FontWeight.Bold,
+//                    fontFamily = fontFamily
+//                )
+//            }
+//        }
+//        if (selectedCalendarItem != null) {
+//            Box(
+//                modifier = Modifier
+//                    .padding(
+//                        top = (40 + (textHeightDp / 2.0f)).dp,
+//                        end = 20.dp
+//                    )
+//                    .background(
+//                        color = ColorSecondary,
+//                        shape = AbsoluteRoundedCornerShape(20.dp)
+//                    )
+//                    .noRippleClickable {
+//                        onClickMoveToDetail(selectedCalendarItem.date)
+//                    }
+//                    .align(Alignment.TopEnd)
+//            ) {
+//                Text(
+//                    text = "상세 정보",
+//                    modifier = Modifier
+//                        .padding(10.dp)
+//                        .align(Alignment.Center),
+//                    color = Color.White,
+//                    fontSize = 16.dpToSp(),
+//                    fontWeight = FontWeight.Normal,
+//                    fontFamily = fontFamily
+//                )
+//            }
+//        }
+//    }
 }

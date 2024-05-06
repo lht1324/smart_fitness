@@ -47,15 +47,14 @@ fun DiaryNavHost(
         ) {
             composable(DiaryRoutes.Diary.route) {
                 DiaryScreen(
-                    onClickMoveToDetail = { date ->
-                        navHostController.navigate(DiaryRoutes.DiaryDetail.createRoute(date))
+                    onClickMoveToDetail = { noteId ->
+                        navHostController.navigate(DiaryRoutes.DiaryDetail.createRoute(noteId.toString()))
                     }
                 )
             }
             composable(DiaryRoutes.DiaryDetail.route) { backStackEntry ->
                 DiaryDetailScreen(
-                    date = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.DATE)
-                        ?: LocalDate.now().run { "$year-${String.format("%02d", monthValue)}-${String.format("%02d", dayOfMonth)}" }
+                    noteId = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID)?.toIntOrNull() ?: -1
                 )
             }
         }
