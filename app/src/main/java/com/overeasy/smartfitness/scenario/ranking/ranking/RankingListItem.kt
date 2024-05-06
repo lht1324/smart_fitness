@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.overeasy.smartfitness.addCommaIntoNumber
+import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
 import com.overeasy.smartfitness.domain.ranking.model.RankingItem
 import com.overeasy.smartfitness.model.ranking.UserTier
 import com.overeasy.smartfitness.ui.theme.ColorBronze
@@ -24,7 +26,8 @@ import com.overeasy.smartfitness.ui.theme.ColorSilver
 @Composable
 fun RankingListItem(
     modifier: Modifier = Modifier,
-    rankingItem: RankingItem,
+    nickname: String,
+    score: Int,
     rank: Int
 ) {
     Box(
@@ -46,28 +49,19 @@ fun RankingListItem(
                 textAlign = TextAlign.Start
             )
             Text(
-                text = rankingItem.nickname,
+                text = nickname,
                 modifier = Modifier.weight(0.40f),
-                color = paintTierText(rankingItem.tier).getAlphaColorByRank(rank),
+                color = Color.White,
                 textAlign = TextAlign.Start
             )
             Text(
-                text = "${rankingItem.score}점",
+                text = "${addCommaIntoNumber(score)}점",
                 modifier = Modifier.weight(0.40f),
                 color = Color.White.getAlphaColorByRank(rank),
                 textAlign = TextAlign.End
             )
         }
     }
-}
-
-private fun paintTierText(tier: String) = when (tier) {
-    UserTier.Iron.value -> ColorIron
-    UserTier.Bronze.value -> ColorBronze
-    UserTier.Silver.value -> ColorSilver
-    UserTier.Gold.value -> ColorGold
-    UserTier.Master.value -> ColorMaster
-    else -> Color.Black
 }
 
 private fun Color.getAlphaColorByRank(rank: Int) = copy(

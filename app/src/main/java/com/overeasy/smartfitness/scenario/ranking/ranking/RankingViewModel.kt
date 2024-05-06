@@ -2,71 +2,180 @@ package com.overeasy.smartfitness.scenario.ranking.ranking
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.api.ApiRequestHelper
+import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.ranking.RankingRepository
-import com.overeasy.smartfitness.domain.ranking.model.RankingItem
+import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
+import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
+import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class RankingViewModel @Inject constructor(
     private val rankingRepository: RankingRepository
 ) : ViewModel() {
-    private val _rankingList = mutableStateListOf<RankingItem>(
-        RankingItem(
-            nickname = "김철수1",
-            score = 1000,
-            tier = "마스터"
-        ),
-        RankingItem(
-            nickname = "김철수2",
-            score = 900,
-            tier = "마스터"
-        ),
-        RankingItem(
-            nickname = "김철수3",
-            score = 700,
-            tier = "골드"
-        ),
-        RankingItem(
-            nickname = "김철수34",
-            score = 100,
-            tier = "아이언"
-        ),
-        RankingItem(
-            nickname = "김철수1345",
-            score = 300,
-            tier = "브론즈"
-        ),
-        RankingItem(
-            nickname = "김철수3566",
-            score = 200,
-            tier = "아이언"
-        ),
-        RankingItem(
-            nickname = "김철수15646",
-            score = 400,
-            tier = "브론즈"
-        ),
-        RankingItem(
-            nickname = "김철수1646",
-            score = 500,
-            tier = "실버"
-        ),
-        RankingItem(
-            nickname = "김철수18389",
-            score = 800,
-            tier = "골드"
-        ),
-        RankingItem(
-            nickname = "김철수104949",
-            score = 600,
-            tier = "실버"
-        ),
-        RankingItem(
-            nickname = "이재호",
-            score = 100,
-            tier = "아이언"
+    private val currentCategory = MutableStateFlow("")
+
+    private val _categoryList = mutableStateListOf<String>()
+    val categoryList = _categoryList
+
+    private val _rankingInfoList = mutableStateListOf<RankingInfo>()
+    val rankingInfoList = _rankingInfoList
+
+    private val _userRankingInfo = MutableStateFlow<RankingUserInfo?>(null)
+    val userRankingInfo = _userRankingInfo.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            launch(Dispatchers.IO) {
+                requestGetRankingCategory()
+            }
+            launch(Dispatchers.IO) {
+                currentCategory.filter { category ->
+                    category.isNotEmpty()
+                }.distinctUntilChanged().collectLatest { category ->
+                    requestGetRanking(category)
+
+                    if (MainApplication.appPreference.isLogin) {
+                        requestGetUserRanking(category)
+                    } else {
+                        _userRankingInfo.value = null
+                    }
+                }
+            }
+        }
+    }
+
+    fun onChangeCategory(category: String) {
+        currentCategory.value = category
+    }
+
+    private suspend fun requestGetRankingCategory() {
+        ApiRequestHelper.makeRequest {
+            rankingRepository.getRankingCategory()
+        }.onSuccess { res ->
+            _categoryList.clear()
+            if (res.result.scoreCategory.isNotEmpty()) {
+                _categoryList.addAll(res.result.scoreCategory)
+                currentCategory.value = res.result.scoreCategory[0]
+            } else {
+                _categoryList.addAll(listOf("푸쉬업", "데드리프트", "딥스", "벤치프레스", "숄더프레스"))
+                currentCategory.value = "푸쉬업"
+            }
+        }.onFailure { res ->
+            println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
+        }.onError { throwable ->
+            println("jaehoLee", "onError: ${throwable.message}")
+        }
+    }
+
+    private suspend fun requestGetRanking(category: String) {
+        val temporaryRankingList = listOf(
+            RankingInfo(
+                nickname = "김철수1",
+                score = 1000
+            ),
+            RankingInfo(
+                nickname = "김철수2",
+                score = 900
+            ),
+            RankingInfo(
+                nickname = "김철수3",
+                score = 700
+            ),
+            RankingInfo(
+                nickname = "김철수34",
+                score = 100
+            ),
+            RankingInfo(
+                nickname = "김철수1345",
+                score = 300
+            ),
+            RankingInfo(
+                nickname = "김철수3566",
+                score = 200
+            ),
+            RankingInfo(
+                nickname = "김철수15646",
+                score = 400
+            ),
+            RankingInfo(
+                nickname = "김철수1646",
+                score = 500
+            ),
+            RankingInfo(
+                nickname = "김철수18389",
+                score = 800
+            ),
+            RankingInfo(
+                nickname = "김철수104949",
+                score = 600
+            )
         )
-    )
-    val rankingList = _rankingList
+        ApiRequestHelper.makeRequest {
+            rankingRepository.getRanking(category)
+        }.onSuccess { res ->
+            _rankingInfoList.clear()
+
+            if (res.result?.rankingInfoList?.isNotEmpty() == true)
+                _rankingInfoList.addAll(res.result.rankingInfoList)
+            else
+                _rankingInfoList.addAll(temporaryRankingList)
+        }.onFailure { res ->
+            _rankingInfoList.clear()
+
+            when (res.code) {
+                307 -> {
+                    if (category == "푸쉬업" || category == "딥스" || category == "숄더프레스") {
+                        _rankingInfoList.addAll(temporaryRankingList)
+                    } else {
+                        val temp1 = temporaryRankingList.sortedBy { rankingInfo ->
+                            rankingInfo.score
+                        }
+                        val temp2 = temporaryRankingList.sortedByDescending { rankingInfo ->
+                            rankingInfo.score
+                        }.map { rankingInfo ->
+                            rankingInfo.score
+                        }
+
+                        _rankingInfoList.addAll(temp1.mapIndexed { index, rankingInfo ->
+                            rankingInfo.copy(score = temp2[index])
+                        })
+                    }
+                    /* no-op */
+                }
+            }
+            println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
+        }.onError { throwable ->
+            _rankingInfoList.clear()
+            println("jaehoLee", "onError: ${throwable.message}")
+        }
+    }
+
+    private suspend fun requestGetUserRanking(category: String) {
+        val userId = MainApplication.appPreference.userId
+
+        if (userId != -1) {
+            ApiRequestHelper.makeRequest {
+                rankingRepository.getRankingUser(userId, category)
+            }.onSuccess { res ->
+                _userRankingInfo.value = res.result
+            }.onFailure { res ->
+                println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
+            }.onError { throwable ->
+                println("jaehoLee", "onError: ${throwable.message}")
+            }
+        } else {
+            _userRankingInfo.value = null
+        }
+    }
 }

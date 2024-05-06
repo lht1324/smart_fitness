@@ -17,8 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
 import com.overeasy.smartfitness.domain.ranking.model.RankingItem
+import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
@@ -26,15 +30,12 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 @Composable
 fun RankingList(
     modifier: Modifier = Modifier,
-    rankingItemList: List<RankingItem>
+    rankingInfoList: List<RankingInfo>,
+    userRankingInfo: RankingUserInfo?,
+    currentCategory: String
 ) {
-    val scrollState = rememberScrollState()
-
     Column(
-        modifier = modifier.scrollable(
-            state = scrollState,
-            orientation = Orientation.Vertical
-        ),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -45,36 +46,49 @@ fun RankingList(
             fontFamily = fontFamily
         )
         Spacer(modifier = Modifier.height(12.dp))
-        rankingItemList.sortedByDescending { rankingItem ->
-            rankingItem.score
-        }.filterIndexed { index, _ ->
-            index != rankingItemList.size - 1
-        }.forEachIndexed { index, rankingItem ->
+        rankingInfoList.sortedByDescending { rankingInfo ->
+            rankingInfo.score
+        }.forEachIndexed { index, rankingInfo ->
             RankingListItem(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                rankingItem = rankingItem,
+                nickname = rankingInfo.nickname,
+                score = rankingInfo.score,
                 rank = index + 1
             )
 
-            if (index != rankingItemList.size - 2) {
+            if (index != rankingInfoList.size - 1) {
                 Spacer(modifier = Modifier.height(10.dp))
             }
         }
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         Ellipsis()
-        Spacer(modifier = Modifier.height(15.dp))
-        Text(
-            text = "로그인이 필요합니다.",
-            color = ColorSecondary,
-            fontSize = 24.dpToSp(),
-            fontWeight = FontWeight.Bold,
-            fontFamily = fontFamily
-        )
-//        RankingListItem(
-//            modifier = Modifier.padding(horizontal = 24.dp),
-//            rankingItem = rankingItemList.last(),
-//            rank = rankingItemList.size
-//        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (MainApplication.appPreference.isLogin) {
+            if (userRankingInfo != null) {
+                RankingListItem(
+                    nickname = userRankingInfo.nickname,
+                    score = userRankingInfo.score,
+                    rank = userRankingInfo.ranking
+                )
+            } else {
+                Text(
+                    text = "$currentCategory 운동 기록이\n존재하지 않아요.",
+                    color = ColorSecondary,
+                    fontSize = 20.dpToSp(),
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Text(
+                text = "로그인이 필요해요.",
+                color = ColorSecondary,
+                fontSize = 20.dpToSp(),
+                fontWeight = FontWeight.Bold,
+                fontFamily = fontFamily
+            )
+        }
     }
 }
 

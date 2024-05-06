@@ -17,6 +17,6 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun getDiary(date: String): GetDiaryRes =
         client.simpleGet("$baseUrl/workouts/note/workout/${MainApplication.appPreference.userId}/$date")
 
-    override suspend fun getDiaryDetail(noteId: String): GetDiaryDetailRes =
+    override suspend fun getDiaryDetail(noteId: Int): GetDiaryDetailRes =
         client.simpleGet("$baseUrl/workouts/note/$noteId")
 }

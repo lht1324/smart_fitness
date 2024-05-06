@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalPermissionsApi::class)
+
 package com.overeasy.smartfitness
 
 import android.Manifest
@@ -25,7 +27,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.model.ScreenState
 import com.overeasy.smartfitness.scenario.diary.navigation.DiaryNavHost
 import com.overeasy.smartfitness.scenario.diet.navigation.DietNavHost
@@ -117,7 +122,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isSystemInDarkTheme = isSystemInDarkTheme()
+            var isShowRequestPermissionDialog by remember { mutableStateOf(false) }
             var isShowFinishDialog by remember { mutableStateOf(false) }
+
+            val cameraPermissionState = rememberPermissionState(
+                permission = Manifest.permission.CAMERA,
+                onPermissionResult = { _ ->
+                    MainApplication.appPreference.isAlreadyRequestedCameraPermission = true
+                    isShowRequestPermissionDialog = false
+                }
+            )
 
             val pagerState = rememberPagerState(
                 pageCount = {
@@ -210,6 +224,26 @@ class MainActivity : ComponentActivity() {
                 isShowFinishDialog = !isShowFinishDialog
             }
 
+            if (isShowRequestPermissionDialog) {
+                Dialog(
+                    title = "카메라 권한을 허용해야 운동을 분석할 수 있어요.",
+                    description = "권한을 거부한 뒤 허용하고 싶다면\n" +
+                            "'앱 설정 -> 권한'에서 카메라 권한을 허용해 주세요.",
+                    confirmText = "취소",
+                    dismissText = "허용하기",
+                    onClickConfirm = {
+                        isShowRequestPermissionDialog = false
+                    },
+                    onClickDismiss = {
+                        MainApplication.appPreference.isAlreadyRequestedCameraPermission = true
+                        cameraPermissionState.launchPermissionRequest()
+                    },
+                    onDismissRequest = {
+                        isShowRequestPermissionDialog = false
+                    }
+                )
+            }
+
             if (isShowFinishDialog) {
                 Dialog(
 //                    title = "끄려고요?",
@@ -238,6 +272,12 @@ class MainActivity : ComponentActivity() {
                         SystemBarStyle.light(ColorPrimary.toArgb(), ColorPrimary.toArgb())
                     }
                 )
+
+                if (cameraPermissionState.status.shouldShowRationale) {
+                    MainApplication.appPreference.isAlreadyRequestedCameraPermission = false
+                }
+
+                isShowRequestPermissionDialog = !(MainApplication.appPreference.isAlreadyRequestedCameraPermission)
             }
         }
     }
