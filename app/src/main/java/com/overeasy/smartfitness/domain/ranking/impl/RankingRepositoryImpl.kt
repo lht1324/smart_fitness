@@ -1,10 +1,8 @@
 package com.overeasy.smartfitness.domain.ranking.impl
 
 import com.overeasy.smartfitness.BuildConfig
-import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.ranking.RankingRepository
 import com.overeasy.smartfitness.domain.ranking.entity.GetRankingCategoryRes
-import com.overeasy.smartfitness.domain.ranking.entity.GetRankingListRes
 import com.overeasy.smartfitness.domain.ranking.entity.GetRankingRes
 import com.overeasy.smartfitness.domain.ranking.entity.GetRankingUserRes
 import com.overeasy.smartfitness.simpleGet

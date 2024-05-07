@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
 import com.overeasy.smartfitness.domain.diary.model.Note
-import com.overeasy.smartfitness.model.diary.CalendarItem
+import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,13 +31,13 @@ class DiaryViewModel @Inject constructor(
         yearMonth.monthValue
     }
 
-    private val _calendarList = mutableStateListOf<List<CalendarItem>>()
+    private val _calendarList = mutableStateListOf<List<CalendarItemData>>()
     val calendarList = _calendarList
 
     private val _calendarIndex = MutableStateFlow<Int?>(null)
     val calendarIndex = _calendarIndex.asStateFlow()
 
-    private val _selectedDiaryItem = MutableStateFlow<Note?>(null)
+    private val _selectedDiaryItem = MutableStateFlow<List<Note>?>(null)
     val selectedDiaryItem = _selectedDiaryItem.asStateFlow()
 
     init {
@@ -111,9 +111,9 @@ class DiaryViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             diaryRepository.getDiary(date)
         }.onSuccess { res ->
-            _selectedDiaryItem.value = res.result.noteList.firstOrNull()
+            _selectedDiaryItem.value = res.result.noteList
         }.onFailure { res ->
-
+            println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->
             println("jaehoLee", "onError: ${throwable.message}")
         }

@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.domain.diary.model.Note
 import com.overeasy.smartfitness.dpToSp
-import com.overeasy.smartfitness.model.diary.CalendarItem
+import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
@@ -74,7 +74,7 @@ fun DiaryScreen(
                 calendarList.size
             }
         )
-        var selectedCalendarItem by remember { mutableStateOf<CalendarItem?>(null) }
+        var selectedCalendarItemData by remember { mutableStateOf<CalendarItemData?>(null) }
 
         Column(
             modifier = modifier
@@ -96,12 +96,12 @@ fun DiaryScreen(
                         }
                     }
                 },
-                onClickItem = { calendarItem ->
-                    calendarItem?.date?.let { date ->
+                onClickItem = { calendarData ->
+                    calendarData?.date?.let { date ->
                         viewModel.onClickCalendarItem(date)
                     }
 
-                    selectedCalendarItem = calendarItem
+                    selectedCalendarItemData = calendarData
                 }
             )
             InfoSection(
@@ -109,7 +109,7 @@ fun DiaryScreen(
                     .padding(bottom = 20.dp)
                     .padding(horizontal = 24.dp),
                 selectedDiaryItem = selectedDiaryItem,
-                selectedCalendarItem = selectedCalendarItem,
+                selectedCalendarItemData = selectedCalendarItemData,
                 onClickMoveToDetail = onClickMoveToDetail
             )
         }
@@ -124,7 +124,7 @@ fun DiaryScreen(
             }.map { (previous, next) ->
                 previous > next
             }.collectLatest { isSwipedToLeft ->
-                selectedCalendarItem = null
+                selectedCalendarItemData = null
 
                 viewModel.onChangeMonth(isSwipedToLeft)
             }
@@ -161,8 +161,8 @@ fun DiaryScreen(
 @Composable
 private fun InfoSection(
     modifier: Modifier = Modifier,
-    selectedDiaryItem: Note?,
-    selectedCalendarItem: CalendarItem?,
+    selectedDiaryItem: List<Note>?,
+    selectedCalendarItemData: CalendarItemData?,
     onClickMoveToDetail: (Int) -> Unit
 ) {
     val context = LocalContext.current
@@ -173,6 +173,8 @@ private fun InfoSection(
             context.pxToDp(textHeight)
         }
     }
+
+    val totalKcal = selectedDiaryItem?.sumOf { it.totalKcal ?: 0 }
 
     Box(
         modifier = modifier
@@ -196,8 +198,8 @@ private fun InfoSection(
                 .align(Alignment.TopStart)
         ) {
             Text(
-                text = if (selectedDiaryItem != null) {
-                    val splitDate = selectedDiaryItem.workoutDate.split('-')
+                text = if (selectedCalendarItemData != null) {
+                    val splitDate = selectedCalendarItemData.date.split('-')
                     val year = splitDate[0].toInt()
                     val month = splitDate[1].toInt()
                     val day = splitDate[2].toInt()
@@ -226,21 +228,23 @@ private fun InfoSection(
         ) {
             if (selectedDiaryItem != null) {
                 Text(
-                    text = "세트 총합",
+                    text = "총 운동 횟수",
                     color = Color.White,
                     fontSize = 20.dpToSp(),
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedDiaryItem.run { totalPerfect + totalGood + totalBad }}회",
+                    text = "${selectedDiaryItem.run {
+                        sumOf { it.totalPerfect + it.totalGood + it.totalBad }
+                    }}회",
                     color = Color.White,
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                if (selectedDiaryItem.totalKcal != null) {
+                if (totalKcal != null && totalKcal != 0) {
                     Text(
                         text = "칼로리 섭취량",
                         color = Color.White,
@@ -249,7 +253,7 @@ private fun InfoSection(
                         fontFamily = fontFamily
                     )
                     Text(
-                        text = "${selectedDiaryItem.totalKcal} kcal",
+                        text = "$totalKcal kcal",
                         color = Color.Red,
                         fontSize = 18.dpToSp(),
                         fontWeight = FontWeight.SemiBold,
@@ -265,7 +269,7 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedDiaryItem.totalKcal} kcal", // 수정
+                    text = "${selectedDiaryItem.sumOf { it.totalKcal ?: 0 }} kcal", // 수정
                     color = Color(0xFF08E95F),
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
@@ -281,7 +285,7 @@ private fun InfoSection(
                 )
             }
         }
-        if (selectedDiaryItem != null) {
+        if (!selectedDiaryItem.isNullOrEmpty() || selectedCalendarItemData?.date == "2024-05-07") {
             Box(
                 modifier = Modifier
                     .padding(
@@ -293,7 +297,10 @@ private fun InfoSection(
                         shape = AbsoluteRoundedCornerShape(20.dp)
                     )
                     .noRippleClickable {
-                        onClickMoveToDetail(selectedDiaryItem.noteId ?: -1)
+                        if (!selectedDiaryItem.isNullOrEmpty())
+                            onClickMoveToDetail(selectedDiaryItem.first().noteId)
+                        else
+                            onClickMoveToDetail(0)
                     }
                     .align(Alignment.TopEnd)
             ) {

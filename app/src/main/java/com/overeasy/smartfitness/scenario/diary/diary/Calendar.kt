@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
-import com.overeasy.smartfitness.model.diary.CalendarItem
+import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.model.diary.WeekDay
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
@@ -42,9 +42,9 @@ fun Calendar(
     pagerState: PagerState,
     currentYear: Int,
     currentMonth: Int,
-    calendarList: List<List<CalendarItem>>,
+    calendarList: List<List<CalendarItemData>>,
     onChangeMonth: (Boolean) -> Unit,
-    onClickItem: (CalendarItem?) -> Unit
+    onClickItem: (CalendarItemData?) -> Unit
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp
     val itemSize = (screenWidth - (24 + 24)) / 7.0f
@@ -105,7 +105,8 @@ fun Calendar(
                                         }
                                 ) {
                                     CalendarItem(
-                                        calendarItem = calendarItem,
+                                        isCurrentMonth = calendarItem.isCurrentMonth,
+                                        dayOfMonth = calendarItem.date.split('-').getOrNull(2)?.toIntOrNull() ?: 0,
                                         color = when (weekDay) {
                                             1 -> ColorSunday
                                             7 -> ColorSaturday
@@ -285,7 +286,8 @@ private fun DayOfWeekRowItem(
 @Composable
 private fun CalendarItem(
     modifier: Modifier = Modifier,
-    calendarItem: CalendarItem,
+    isCurrentMonth: Boolean,
+    dayOfMonth: Int,
     color: Color
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp
@@ -295,53 +297,14 @@ private fun CalendarItem(
         modifier = modifier
             .size(itemSize.dp)
     ) {
-        val splitDate = calendarItem.date.split('/') // year, month, day
-
         Box(
             modifier = Modifier
                 .padding(2.dp)
                 .align(Alignment.TopEnd)
         ) {
-//            Column(
-//                horizontalAlignment = Alignment.End
-//            ) {
-//                Text(
-//                    text = "${splitDate[0].toInt()}",
-//                    color = if (calendarItem.isCurrentMonth) {
-//                        color
-//                    } else {
-//                        color.copy(alpha = 0.3f)
-//                    },
-//                    fontSize = 11.dpToSp(),
-//                    fontWeight = FontWeight.Light,
-//                    fontFamily = fontFamily
-//                )
-//                Text(
-//                    text = "${splitDate[1].toInt()}",
-//                    color = if (calendarItem.isCurrentMonth) {
-//                        color
-//                    } else {
-//                        color.copy(alpha = 0.3f)
-//                    },
-//                    fontSize = 11.dpToSp(),
-//                    fontWeight = FontWeight.Light,
-//                    fontFamily = fontFamily
-//                )
-//                Text(
-//                    text = "${splitDate[2].toInt()}",
-//                    color = if (calendarItem.isCurrentMonth) {
-//                        color
-//                    } else {
-//                        color.copy(alpha = 0.3f)
-//                    },
-//                    fontSize = 11.dpToSp(),
-//                    fontWeight = FontWeight.Light,
-//                    fontFamily = fontFamily
-//                )
-//            }
             Text(
-                text = "${splitDate[2].toInt()}",
-                color = if (calendarItem.isCurrentMonth) {
+                text = "$dayOfMonth",
+                color = if (isCurrentMonth) {
                     color
                 } else {
                     color.copy(alpha = 0.3f)

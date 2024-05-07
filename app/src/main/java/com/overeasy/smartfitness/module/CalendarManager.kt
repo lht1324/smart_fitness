@@ -1,19 +1,19 @@
 package com.overeasy.smartfitness.module
 
-import com.overeasy.smartfitness.model.diary.CalendarItem
+import com.overeasy.smartfitness.model.diary.CalendarItemData
 import java.time.LocalDate
 import java.time.YearMonth
 
 object CalendarManager {
-    fun getCalendarList(): List<List<CalendarItem>> {
-        val calendarList = arrayListOf<List<CalendarItem>>()
+    fun getCalendarList(): List<List<CalendarItemData>> {
+        val calendarList = arrayListOf<List<CalendarItemData>>()
         
         val startYear = 1970
         val endYear = 2037
 
         for (year in startYear..endYear) {
             for (month in 1..12) {
-                val monthList = arrayListOf<CalendarItem>()
+                val monthList = arrayListOf<CalendarItemData>()
                 
                 val yearMonth = YearMonth.of(year, month)
                 val firstDayOfMonth = yearMonth.atDay(1)
@@ -42,7 +42,7 @@ object CalendarManager {
                 }
 
                 for (day in 1..lastMonthLastWeekCount + lastDayOfMonth.dayOfMonth + nextMonthFirstWeekCount) {
-                    val calendarItem = CalendarItem(
+                    val calendarItemData = CalendarItemData(
                         isCurrentMonth = day in (lastMonthLastWeekCount + 1)..(lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount),
                         date = when (day) {
                             in 1..lastMonthLastWeekCount -> "${lastDayOfLastMonth.year}" +
@@ -58,7 +58,7 @@ object CalendarManager {
                                     "-${getFormattedNumber(day - (lastDayOfMonth.dayOfMonth + lastMonthLastWeekCount))}"
                         }
                     )
-                    monthList.add(calendarItem)
+                    monthList.add(calendarItemData)
                 }
                 
                 calendarList.add(monthList)

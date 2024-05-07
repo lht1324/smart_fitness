@@ -52,7 +52,7 @@ class SettingRepositoryImpl @Inject constructor(
                 URLEncoder.encode(nickname, "UTF-8")
             }
         }/$age") {
-            println("jaehoLee", "nickname= $nickname, age = $age, $baseUrl/users?nickname=$nickname&age=$age")
+
         }
 
     override suspend fun getUsersById(id: Int): GetUsersByIdRes =

@@ -249,7 +249,6 @@ fun DiaryDetailScreen(
         } else {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
                     .align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

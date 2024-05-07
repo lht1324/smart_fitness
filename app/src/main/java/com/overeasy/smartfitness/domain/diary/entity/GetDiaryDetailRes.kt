@@ -11,12 +11,12 @@ data class GetDiaryDetailRes(
     override val code: Int,
     override val message: String,
 
-    val totalKcal: Int,
-    val totalPerfect: Int,
-    val totalGood: Int,
-    val totalBad: Int,
-    val totalScore: Int,
-    val workoutList: List<DiaryDetailWorkoutInfo>,
+    val totalKcal: Int = 0,
+    val totalPerfect: Int = 0,
+    val totalGood: Int = 0,
+    val totalBad: Int = 0,
+    val totalScore: Int = 0,
+    val workoutList: List<DiaryDetailWorkoutInfo> = listOf(),
 
     override val success: Boolean = false,
     override val error: String? = null,

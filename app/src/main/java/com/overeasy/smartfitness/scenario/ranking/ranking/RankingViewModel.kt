@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.ranking.RankingRepository
 import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
 import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
@@ -21,7 +22,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RankingViewModel @Inject constructor(
-    private val rankingRepository: RankingRepository
+    private val rankingRepository: RankingRepository,
+    private val exercisesRepository: ExercisesRepository
 ) : ViewModel() {
     private val currentCategory = MutableStateFlow("")
 
@@ -61,16 +63,26 @@ class RankingViewModel @Inject constructor(
 
     private suspend fun requestGetRankingCategory() {
         ApiRequestHelper.makeRequest {
-            rankingRepository.getRankingCategory()
+            exercisesRepository.getExercises()
+//            rankingRepository.getRankingCategory()
         }.onSuccess { res ->
             _categoryList.clear()
-            if (res.result.scoreCategory.isNotEmpty()) {
-                _categoryList.addAll(res.result.scoreCategory)
-                currentCategory.value = res.result.scoreCategory[0]
+
+            if (res.result?.exerciseList?.isNotEmpty() == true) {
+                _categoryList.addAll(res.result.exerciseList.map { it.exerciseName })
+                currentCategory.value = res.result.exerciseList[0].exerciseName
             } else {
                 _categoryList.addAll(listOf("푸쉬업", "데드리프트", "딥스", "벤치프레스", "숄더프레스"))
                 currentCategory.value = "푸쉬업"
             }
+
+//            if (res.result.scoreCategory.isNotEmpty()) {
+//                _categoryList.addAll(res.result.scoreCategory)
+//                currentCategory.value = res.result.scoreCategory[0]
+//            } else {
+//                _categoryList.addAll(listOf("푸쉬업", "데드리프트", "딥스", "벤치프레스", "숄더프레스"))
+//                currentCategory.value = "푸쉬업"
+//            }
         }.onFailure { res ->
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->
