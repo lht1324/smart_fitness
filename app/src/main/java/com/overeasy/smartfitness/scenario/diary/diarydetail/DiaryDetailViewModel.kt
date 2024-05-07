@@ -48,6 +48,116 @@ class DiaryDetailViewModel @Inject constructor(
                 )
             }
         }.onFailure { res ->
+            _diaryDetail.value = DiaryDetail(
+                totalKcal = 150,
+                totalPerfect = 11,
+                totalGood = 6,
+                totalBad = 3,
+                totalScore = 2400,
+                workoutList = listOf(
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 0,
+                        noteId = 0,
+                        exerciseName = "벤치프레스",
+                        setNum = 1,
+                        repeats = 10,
+                        weight = 60,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 0,
+                        noteId = 0,
+                        exerciseName = "벤치프레스",
+                        setNum = 2,
+                        repeats = 15,
+                        weight = 70,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 0,
+                        noteId = 0,
+                        exerciseName = "벤치프레스",
+                        setNum = 3,
+                        repeats = 15,
+                        weight = 80,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 0,
+                        noteId = 0,
+                        exerciseName = "벤치프레스",
+                        setNum = 4,
+                        repeats = 10,
+                        weight = 50,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 1,
+                        noteId = 1,
+                        exerciseName = "데드리프트",
+                        setNum = 1,
+                        repeats = 5,
+                        weight = 60,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 1,
+                        noteId = 1,
+                        exerciseName = "데드리프트",
+                        setNum = 2,
+                        repeats = 10,
+                        weight = 70,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 1,
+                        noteId = 1,
+                        exerciseName = "데드리프트",
+                        setNum = 3,
+                        repeats = 15,
+                        weight = 80,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 1,
+                        noteId = 1,
+                        exerciseName = "데드리프트",
+                        setNum = 4,
+                        repeats = 20,
+                        weight = 90,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 2,
+                        noteId = 2,
+                        exerciseName = "스쿼트",
+                        setNum = 1,
+                        repeats = 40,
+                        weight = 100,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 2,
+                        noteId = 2,
+                        exerciseName = "스쿼트",
+                        setNum = 2,
+                        repeats = 30,
+                        weight = 90,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 2,
+                        noteId = 2,
+                        exerciseName = "스쿼트",
+                        setNum = 3,
+                        repeats = 20,
+                        weight = 80,
+                    ),
+                    DiaryDetailWorkoutInfo(
+                        workoutId = 2,
+                        noteId = 2,
+                        exerciseName = "스쿼트",
+                        setNum = 4,
+                        repeats = 10,
+                        weight = 70,
+                    )
+                    /**
+                     * 벤치 3
+                     * 데드 4
+                     * 스쿼트 5
+                     */
+                )
+            )
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->
             println("jaehoLee", "onError: ${throwable.message}")

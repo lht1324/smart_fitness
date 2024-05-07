@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,7 @@ import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.model.diary.WeekDay
 import com.overeasy.smartfitness.noRippleClickable
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.ColorSunday
@@ -125,19 +129,19 @@ fun Calendar(
                                     }
                                 }
                                 if (week in 1..<calendarRowCount) {
-                                    Divider(
+                                    HorizontalDivider(
                                         modifier = Modifier
-                                            .width(itemSize.dp)
-                                            .height(1.dp),
+                                            .width(itemSize.dp),
+                                        thickness = 1.dp,
                                         color = Color.White
                                     )
                                 }
                             }
                             if (weekDay in 1..<weekDayCount) {
-                                Divider(
+                                VerticalDivider(
                                     modifier = Modifier
-                                        .width(1.dp)
                                         .height(itemSize.dp),
+                                    thickness = 1.dp,
                                     color = Color.White
                                 )
                             }
@@ -311,7 +315,8 @@ private fun CalendarItem(
                 },
                 fontSize = 11.dpToSp(),
                 fontWeight = FontWeight.Light,
-                fontFamily = fontFamily
+                fontFamily = fontFamily,
+                lineHeight = 1.dpToSp()
             )
         }
     }

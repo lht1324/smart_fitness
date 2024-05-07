@@ -37,8 +37,8 @@ class DiaryViewModel @Inject constructor(
     private val _calendarIndex = MutableStateFlow<Int?>(null)
     val calendarIndex = _calendarIndex.asStateFlow()
 
-    private val _selectedDiaryItem = MutableStateFlow<List<Note>?>(null)
-    val selectedDiaryItem = _selectedDiaryItem.asStateFlow()
+    private val _selectedDiaryItemList = mutableStateListOf<Note>()
+    val selectedDiaryItemList = _selectedDiaryItemList
 
     init {
         viewModelScope.launch {
@@ -111,7 +111,10 @@ class DiaryViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             diaryRepository.getDiary(date)
         }.onSuccess { res ->
-            _selectedDiaryItem.value = res.result.noteList
+            if (!(res.result?.noteList.isNullOrEmpty())) {
+                _selectedDiaryItemList.clear()
+                _selectedDiaryItemList.addAll(res.result!!.noteList)
+            }
         }.onFailure { res ->
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->

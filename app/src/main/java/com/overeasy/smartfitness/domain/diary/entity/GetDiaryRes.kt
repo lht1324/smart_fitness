@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class GetDiaryRes(
     override val code: Int = -1,
     override val message: String,
-    val result: DiaryResult,
+    val result: DiaryResult?,
 
     override val success: Boolean = false,
     override val error: String? = null,

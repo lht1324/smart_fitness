@@ -47,8 +47,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.addCommaIntoNumber
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.model.diary.ScoreType
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
+import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
@@ -73,7 +75,9 @@ fun DiaryDetailScreen(
         if (diaryDetail != null) {
             val workoutNameList by remember {
                 derivedStateOf {
-                    diaryDetail!!.workoutList.map { workoutInfo ->
+                    diaryDetail!!.workoutList.distinctBy { workoutInfo ->
+                        workoutInfo.exerciseName
+                    }.map { workoutInfo ->
                         workoutInfo.exerciseName
                     }
                 }
@@ -99,10 +103,8 @@ fun DiaryDetailScreen(
                                 }.map { workoutInfo ->
                                     workoutInfo.run { setNum to repeats }
                                 },
-//                                caloriePerEachSet = 5
+                                caloriePerEachSet = index + 5
                             )
-//                            Spacer(modifier = Modifier.height(10.dp))
-//                            DetailText(text = "소모 칼로리 = 150 kcal")
                             Spacer(modifier = Modifier.height(10.dp))
                             if (index != workoutNameList.size - 1) {
                                 HorizontalDivider(
@@ -126,17 +128,17 @@ fun DiaryDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
-                            type = "Cool",
+                            type = ScoreType.PERFECT,
                             score = diaryDetail!!.totalPerfect
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
-                            type = "Good",
+                            type = ScoreType.GOOD,
                             score = diaryDetail!!.totalGood
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
-                            type = "Not Good",
+                            type = ScoreType.NOT_GOOD,
                             score = diaryDetail!!.totalBad
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -175,7 +177,7 @@ fun DiaryDetailScreen(
                             fontWeight = FontWeight.Black
                         )
                         DetailText(
-                            text = addCommaIntoNumber(diaryDetail!!.totalScore),
+                            text = "${addCommaIntoNumber(diaryDetail!!.totalScore)}점",
                             fontSize = 18.dpToSp(),
                             fontWeight = FontWeight.Black
                         )
@@ -364,7 +366,7 @@ private fun ResultArea(
 private fun WorkoutSection(
     modifier: Modifier = Modifier,
     name: String,
-//    caloriePerEachSet: Int,
+    caloriePerEachSet: Int,
     workoutList: List<Pair<Int, Int>>
 ) {
     val context = LocalContext.current
@@ -397,17 +399,18 @@ private fun WorkoutSection(
             isClicked = !isClicked
         }
     ) {
-//        DetailText(
-//            modifier = Modifier.onSizeChanged { (_, height) ->
-//                if (dividerHeight != height) {
-//                    dividerHeight = height
-//                }
-//            },
-//            text = "$name (1회 당 $caloriePerEachSet kcal 소모)",
-//            fontSize = 18.dpToSp()
-//        )
-//        Spacer(modifier = Modifier.height(10.dp))
+        DetailText(
+            modifier = Modifier.onSizeChanged { (_, height) ->
+                if (dividerHeight != height) {
+                    dividerHeight = height
+                }
+            },
+            text = "$name (1회 $caloriePerEachSet kcal 소모)",
+            fontSize = 18.dpToSp()
+        )
+        Spacer(modifier = Modifier.height(10.dp))
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             DetailText(text = "세트 정보")
@@ -462,15 +465,15 @@ private fun WorkoutSection(
                 }
             }
         }
-//        Spacer(modifier = Modifier.height(10.dp))
-//        DetailText(text = "소모 칼로리 = $usageCalorie kcal")
+        Spacer(modifier = Modifier.height(10.dp))
+        DetailText(text = "소모 칼로리 = ${caloriePerEachSet * workoutList.sumOf { (_, count) -> count }} kcal")
     }
 }
 
 @Composable
 private fun ScoreSection(
     modifier: Modifier = Modifier,
-    type: String,
+    type: ScoreType,
     score: Int
 ) {
     Row(
@@ -478,8 +481,12 @@ private fun ScoreSection(
         verticalAlignment = Alignment.CenterVertically
     ) {
         DetailText(
-            text = type,
-            color = ColorSunday,
+            text = type.value,
+            color = when(type) {
+                ScoreType.PERFECT -> ColorSaturday
+                ScoreType.GOOD -> ColorLightGreen
+                ScoreType.NOT_GOOD -> ColorSunday
+            },
             fontSize = 18.dpToSp(),
             fontWeight = FontWeight.Black
         )
@@ -491,7 +498,14 @@ private fun ScoreSection(
             color = Color.LightGray
         )
         DetailText(
-            text = "$score",
+            text = "${score}회",
+            color = Color.White.copy(
+                alpha = when(type) {
+                    ScoreType.PERFECT -> 1.0f
+                    ScoreType.GOOD -> 0.9f
+                    ScoreType.NOT_GOOD -> 0.8f
+                }
+            ),
             fontSize = 18.dpToSp()
         )
     }

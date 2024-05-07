@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -64,7 +65,7 @@ fun DiaryScreen(
         }
     }
     val calendarIndex by viewModel.calendarIndex.collectAsState()
-    val selectedDiaryItem by viewModel.selectedDiaryItem.collectAsState()
+    val selectedDiaryItemList = remember { viewModel.selectedDiaryItemList }
 
     if (calendarIndex != null && calendarList.isNotEmpty()) {
         val coroutineScope = rememberCoroutineScope()
@@ -108,7 +109,7 @@ fun DiaryScreen(
                 modifier = Modifier
                     .padding(bottom = 20.dp)
                     .padding(horizontal = 24.dp),
-                selectedDiaryItem = selectedDiaryItem,
+                selectedDiaryItemList = selectedDiaryItemList,
                 selectedCalendarItemData = selectedCalendarItemData,
                 onClickMoveToDetail = onClickMoveToDetail
             )
@@ -161,7 +162,7 @@ fun DiaryScreen(
 @Composable
 private fun InfoSection(
     modifier: Modifier = Modifier,
-    selectedDiaryItem: List<Note>?,
+    selectedDiaryItemList: List<Note>,
     selectedCalendarItemData: CalendarItemData?,
     onClickMoveToDetail: (Int) -> Unit
 ) {
@@ -174,7 +175,7 @@ private fun InfoSection(
         }
     }
 
-    val totalKcal = selectedDiaryItem?.sumOf { it.totalKcal ?: 0 }
+    val totalKcal = selectedDiaryItemList.sumOf { it.totalKcal ?: 0 }
 
     Box(
         modifier = modifier
@@ -204,7 +205,7 @@ private fun InfoSection(
                     val month = splitDate[1].toInt()
                     val day = splitDate[2].toInt()
 
-                    selectedDiaryItem.run { "${year}년 ${month}월 ${day}일" }
+                    selectedDiaryItemList.run { "${year}년 ${month}월 ${day}일" }
                 } else {
                     "운동 정보"
                 },
@@ -226,7 +227,7 @@ private fun InfoSection(
                 .padding(top = (40 + (textHeightDp / 2.0f)).dp)
                 .padding(horizontal = 20.dp)
         ) {
-            if (selectedDiaryItem != null) {
+            if (selectedDiaryItemList.isNotEmpty()) {
                 Text(
                     text = "총 운동 횟수",
                     color = Color.White,
@@ -235,7 +236,7 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedDiaryItem.run {
+                    text = "${selectedDiaryItemList.run {
                         sumOf { it.totalPerfect + it.totalGood + it.totalBad }
                     }}회",
                     color = Color.White,
@@ -244,7 +245,7 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                if (totalKcal != null && totalKcal != 0) {
+                if (totalKcal != 0) {
                     Text(
                         text = "칼로리 섭취량",
                         color = Color.White,
@@ -269,7 +270,7 @@ private fun InfoSection(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "${selectedDiaryItem.sumOf { it.totalKcal ?: 0 }} kcal", // 수정
+                    text = "${selectedDiaryItemList.sumOf { it.totalKcal ?: 0 }} kcal", // 수정
                     color = Color(0xFF08E95F),
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
@@ -285,7 +286,8 @@ private fun InfoSection(
                 )
             }
         }
-        if (!selectedDiaryItem.isNullOrEmpty() || selectedCalendarItemData?.date == "2024-05-07") {
+        LocalDate.now().run { "$year-$monthValue-$dayOfMonth" }
+        if (selectedDiaryItemList.isNotEmpty() || selectedCalendarItemData?.date == "2024-05-07") {
             Box(
                 modifier = Modifier
                     .padding(
@@ -297,8 +299,8 @@ private fun InfoSection(
                         shape = AbsoluteRoundedCornerShape(20.dp)
                     )
                     .noRippleClickable {
-                        if (!selectedDiaryItem.isNullOrEmpty())
-                            onClickMoveToDetail(selectedDiaryItem.first().noteId)
+                        if (selectedDiaryItemList.isNotEmpty())
+                            onClickMoveToDetail(selectedDiaryItemList.first().noteId)
                         else
                             onClickMoveToDetail(0)
                     }
