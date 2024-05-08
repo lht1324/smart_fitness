@@ -371,6 +371,6 @@ class WorkoutViewModel @Inject constructor(
     }
 
     sealed class WorkoutUiEvent {
-        data class CopyText(val text: String) : WorkoutUiEvent()
+
     }
 }

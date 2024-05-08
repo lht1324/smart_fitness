@@ -8,10 +8,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.model.workout.RecordingState
 import com.overeasy.smartfitness.module.videomanager.VideoManager
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.println
@@ -49,7 +53,8 @@ fun WorkoutScreen(
 ) {
     val context = LocalContext.current
     var isShowDialog by remember { mutableStateOf(false) }
-    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+    var isRecording by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -60,6 +65,8 @@ fun WorkoutScreen(
 
         var cameraWidthPx by remember { mutableIntStateOf(0) }
         var cameraHeightPx by remember { mutableIntStateOf(0) }
+
+        var recordingState by remember { mutableStateOf<RecordingState>(RecordingState.Idle) }
 
         VideoManager.PoseDetectionCameraX(
             modifier = Modifier.onSizeChanged { (width, height) ->
@@ -80,6 +87,9 @@ fun WorkoutScreen(
                         onUpdateJson(text)
                     }
                 )
+            },
+            onChangeRecordingState = { newRecordingState ->
+                recordingState = newRecordingState
             }
         )
 
@@ -133,34 +143,42 @@ fun WorkoutScreen(
         Box(
             modifier = Modifier
                 .padding(bottom = 20.dp)
-                .size(100.dp)
+                .size(90.dp)
                 .noRippleClickable {
-                    onClickFinish()
+//                    onClickFinish()
+                    if (recordingState == RecordingState.OnRecord) {
+                        recordingState = RecordingState.Idle
+                    } else {
+                        recordingState = RecordingState.OnRecord
+                    }
                 }
                 .background(
                     color = Color.White,
                     shape = CircleShape
                 )
+                .border(
+                    width = 2.dp,
+                    color = Color.Black,
+                    shape = CircleShape
+                )
                 .align(Alignment.BottomCenter)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(90.dp)
-                    .border(
-                        width = 2.dp,
-                        color = Color.Red,
-                        shape = CircleShape
-                    )
-                    .align(Alignment.Center)
-            ) {
-                Text(
-//                    text = "시작 \uD83D\uDD25",
-                    text = "종료",
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color.Black,
-                    fontSize = 18.dpToSp(),
-                    fontWeight = FontWeight.ExtraBold,
-                    fontFamily = fontFamily
+            if (recordingState == RecordingState.Idle) {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .background(
+                            color = Color.Red,
+                            shape = CircleShape
+                        )
+                        .align(Alignment.Center)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .background(color = Color.Black)
+                        .align(Alignment.Center)
                 )
             }
         }
@@ -240,11 +258,7 @@ fun WorkoutScreen(
 
     LaunchedEffect(viewModel.workoutUiEvent) {
         viewModel.workoutUiEvent.collectLatest { event ->
-            when (event) {
-                is WorkoutViewModel.WorkoutUiEvent.CopyText -> {
-                    clipboardManager.setPrimaryClip(ClipData.newPlainText("label", event.text))
-                }
-            }
+
         }
     }
 }

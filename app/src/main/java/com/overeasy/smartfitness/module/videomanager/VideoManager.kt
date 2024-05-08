@@ -32,19 +32,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
+import com.overeasy.smartfitness.model.workout.RecordingState
 import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSunday
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 object VideoManager {
     @Composable
     fun PoseDetectionCameraX(
         modifier: Modifier = Modifier,
-        onPoseDetected: (Pose) -> Unit
+        onPoseDetected: (Pose) -> Unit,
+        onChangeRecordingState: (RecordingState) -> Unit
     ) {
         val lifecycleOwner = LocalLifecycleOwner.current
         val cameraScope = rememberCoroutineScope()
@@ -66,8 +69,11 @@ object VideoManager {
                 )
             )
         }
+
         val previewView = remember { mutableStateOf<PreviewView?>(null) }
         val facing = cameraX.getFacingState().collectAsState()
+
+        val recordingState by cameraX.getRecordingState().collectAsState()
 
         previewView.value?.let { preview ->
             Box(
@@ -105,6 +111,10 @@ object VideoManager {
             onDispose {
                 cameraX.unBindCamera()
             }
+        }
+
+        LaunchedEffect(recordingState) {
+            onChangeRecordingState(recordingState)
         }
     }
 }
