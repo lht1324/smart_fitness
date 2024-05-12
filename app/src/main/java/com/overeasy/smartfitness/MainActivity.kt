@@ -125,6 +125,8 @@ class MainActivity : ComponentActivity() {
             var isShowRequestPermissionDialog by remember { mutableStateOf(false) }
             var isShowFinishDialog by remember { mutableStateOf(false) }
 
+            var isWorkoutRunning by remember { mutableStateOf(false) }
+
             val cameraPermissionState = rememberPermissionState(
                 permission = Manifest.permission.CAMERA,
                 onPermissionResult = { _ ->
@@ -161,6 +163,9 @@ class MainActivity : ComponentActivity() {
                         onUpdateJson = { json ->
                             jsonList.add(json)
                         },
+                        onChangeIsWorkoutRunning = { isRunning ->
+                            isWorkoutRunning = isRunning
+                        },
                         onChangeHeaderHeight = {
                             if (headerHeight != it) {
                                 headerHeight = it
@@ -185,7 +190,8 @@ class MainActivity : ComponentActivity() {
                                 Tab(
                                     selected = currentPage == index,
                                     onClick = {
-                                        currentPage = index
+                                        if (!isWorkoutRunning)
+                                            currentPage = index
 
 //                                        if (currentPage == 3) {
 //                                            createFile()
@@ -244,7 +250,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            if (isShowFinishDialog) {
+            if (isShowFinishDialog && !isWorkoutRunning) {
                 Dialog(
 //                    title = "끄려고요?",
 //                    description = "운동은 하고 가는 거죠?",
@@ -288,6 +294,7 @@ fun CurrentScreen(
     modifier: Modifier = Modifier,
     stateValue: String,
     onUpdateJson: (String) -> Unit,
+    onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onChangeHeaderHeight: (Int) -> Unit
 ) = Box(
     modifier = modifier
@@ -297,6 +304,7 @@ fun CurrentScreen(
         ScreenState.DiaryScreen.value -> DiaryNavHost()
         ScreenState.MainScreen.value -> WorkoutNavHost(
             onUpdateJson = onUpdateJson,
+            onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
             onChangeHeaderHeight = onChangeHeaderHeight
         )
         ScreenState.RankingScreen.value -> RankingNavHost()

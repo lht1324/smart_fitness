@@ -3,8 +3,8 @@ package com.overeasy.smartfitness.domain.diary.impl
 import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.domain.diary.entity.GetDiaryDetailRes
-import com.overeasy.smartfitness.domain.diary.entity.GetDiaryRes
+import com.overeasy.smartfitness.domain.workout.entity.GetDiaryDetailRes
+import com.overeasy.smartfitness.domain.workout.entity.GetDiaryRes
 import com.overeasy.smartfitness.simpleGet
 import io.ktor.client.HttpClient
 import javax.inject.Inject

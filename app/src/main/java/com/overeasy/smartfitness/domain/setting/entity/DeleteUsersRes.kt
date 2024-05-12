@@ -9,10 +9,7 @@ import kotlinx.serialization.Serializable
 data class DeleteUsersRes(
     override val code: Int = -1,
     @SerialName("message") override val message: String,
-    @SerialName("result") val result: String? = null,
-
     override val success: Boolean = false,
-    override val error: String? = null,
-    override val timestamp: String? = null,
-    override val path: String? = null
+
+    @SerialName("result") val result: String? = null,
 ) : BaseResponseModel

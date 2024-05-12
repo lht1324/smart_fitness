@@ -2,12 +2,12 @@ package com.overeasy.smartfitness.scenario.workout.result
 
 import androidx.lifecycle.ViewModel
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.workout.model.Menu
-import com.overeasy.smartfitness.domain.workout.model.NutritionAmount
-import com.overeasy.smartfitness.domain.workout.model.SetCount
-import com.overeasy.smartfitness.domain.workout.model.Score
-import com.overeasy.smartfitness.domain.workout.model.Workout
-import com.overeasy.smartfitness.domain.workout.model.WorkoutResult
+import com.overeasy.smartfitness.domain.workout.model.workout.Menu
+import com.overeasy.smartfitness.domain.workout.model.workout.NutritionAmount
+import com.overeasy.smartfitness.domain.workout.model.workout.SetCount
+import com.overeasy.smartfitness.domain.workout.model.workout.Score
+import com.overeasy.smartfitness.domain.workout.model.workout.Workout
+import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

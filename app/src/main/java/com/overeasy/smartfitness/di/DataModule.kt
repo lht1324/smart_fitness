@@ -2,6 +2,8 @@ package com.overeasy.smartfitness.di
 
 import android.os.Build
 import com.overeasy.smartfitness.BuildConfig
+import com.overeasy.smartfitness.domain.ai.AiRepository
+import com.overeasy.smartfitness.domain.ai.impl.AiRepositoryImpl
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.diet.impl.DietRepositoryImpl
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
@@ -20,6 +22,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -78,6 +82,60 @@ object DataModule {
         }
     }
 
+//    @Singleton
+//    @Provides
+//    fun provideKtorFormDataHttpClient(): HttpClient = HttpClient(CIO) {
+//        val appId = BuildConfig.appId
+//        val appVersion = BuildConfig.VERSION_NAME
+//        val sdkVersion = Build.VERSION.SDK_INT
+//        val appInfo = "AOS,$appVersion,$sdkVersion"
+//
+//        install(Logging) {
+//            level = LogLevel.ALL
+//        }
+//
+//        install(ContentNegotiation) {
+//            json(
+//                Json {
+//                    prettyPrint = true
+//                    isLenient = true
+//                    ignoreUnknownKeys = true
+//                }
+//            )
+//            headers {
+////                "App-Id" to appId
+////                "App-Info" to appInfo
+//                HttpHeaders.ContentType to ContentType.Application.Json
+////                HttpHeaders.AcceptCharset to Charsets.UTF_8
+//            }
+//        }
+//
+//        install(HttpTimeout) {
+//            requestTimeoutMillis = 60000L
+//            connectTimeoutMillis = 60000L
+//            socketTimeoutMillis = 60000L
+//        }
+//
+//        defaultRequest {
+////            header("App-Id", appId)
+////            header("App-Info", appInfo)
+//            header(HttpHeaders.ContentType, ContentType.Application.Json)
+////            contentType(ContentType.Application.Json)
+//        }
+//
+//        HttpResponseValidator {
+//            handleResponseException { throwable ->
+//                SafeResponseException(
+//                    throwable = throwable,
+//                    userId = MainApp.appPref.userId.toString(),
+//                    version = Version(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
+//                    toaster = toaster,
+//                    serverThrowableHelper = serverThrowableHelper
+//                )
+//            }
+//        }
+//    }
+
     @Singleton
     @Provides
     fun provideDietRepository(client: HttpClient): DietRepository = DietRepositoryImpl(client)
@@ -101,4 +159,8 @@ object DataModule {
     @Singleton
     @Provides
     fun provideExercisesRepository(client: HttpClient): ExercisesRepository = ExercisesRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideAiRepository(client: HttpClient): AiRepository = AiRepositoryImpl(client)
 }

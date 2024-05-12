@@ -5,7 +5,4 @@ interface BaseResponseModel {
     val message: String
 
     val success: Boolean
-    val error: String?
-    val timestamp: String?
-    val path: String?
 }

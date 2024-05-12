@@ -15,6 +15,7 @@ import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
 fun WorkoutNavHost(
     modifier: Modifier = Modifier,
     onUpdateJson: (String) -> Unit,
+    onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onChangeHeaderHeight: (Int) -> Unit
 ) {
     val navHostController = rememberNavController()
@@ -46,9 +47,10 @@ fun WorkoutNavHost(
         ) {
             composable(WorkoutRoutes.Workout.route) {
                 WorkoutScreen(
-                    onClickFinish = {
+                    onFinishWorkout = {
                         navHostController.navigate(WorkoutRoutes.Result.route)
                     },
+                    onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
                     onUpdateJson = onUpdateJson
                 )
             }

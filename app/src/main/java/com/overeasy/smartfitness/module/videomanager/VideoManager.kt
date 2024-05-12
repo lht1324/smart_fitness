@@ -1,6 +1,7 @@
 package com.overeasy.smartfitness.module.videomanager
 
 import android.graphics.Bitmap
+import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -46,6 +47,7 @@ object VideoManager {
     @Composable
     fun PoseDetectionCameraX(
         modifier: Modifier = Modifier,
+        cameraController: LifecycleCameraController,
         onPoseDetected: (Pose) -> Unit,
         onChangeRecordingState: (RecordingState) -> Unit
     ) {

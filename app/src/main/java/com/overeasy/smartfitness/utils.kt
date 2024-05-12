@@ -13,6 +13,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.google.mlkit.vision.pose.Pose
+import com.google.mlkit.vision.pose.PoseLandmark
+import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
+import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
 import java.text.DecimalFormat
 
 fun println(tag: String?, msg: String) = Log.d(tag, msg)
@@ -80,4 +84,179 @@ fun isLettersOrDigitsIncludeKorean(chars: String): Boolean {
                 char !in 'ㄱ'..'ㅎ' &&
                 char !in '가'..'힣'
     }
+}
+
+fun Pose.toPoseWorkoutReq(workoutName: String): PostAiReq? = run {
+    // 모든 랜드마크 포함
+    // x, y null로 변경 가능
+    if (allPoseLandmarks.size == PoseLandmark.RIGHT_FOOT_INDEX + 1) {
+        PostAiReq(
+            workoutName = workoutName,
+
+            leftShoulder = getPoseLandmark(PoseLandmark.LEFT_SHOULDER)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightShoulder = getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftElbow = getPoseLandmark(PoseLandmark.LEFT_ELBOW)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightElbow = getPoseLandmark(PoseLandmark.RIGHT_ELBOW)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftWrist = getPoseLandmark(PoseLandmark.LEFT_WRIST)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightWrist = getPoseLandmark(PoseLandmark.RIGHT_WRIST)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftHip = getPoseLandmark(PoseLandmark.LEFT_HIP)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightHip = getPoseLandmark(PoseLandmark.RIGHT_HIP)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftKnee = getPoseLandmark(PoseLandmark.LEFT_KNEE)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightKnee = getPoseLandmark(PoseLandmark.RIGHT_KNEE)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftAnkle = getPoseLandmark(PoseLandmark.LEFT_ANKLE)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightAnkle = getPoseLandmark(PoseLandmark.RIGHT_ANKLE)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftPinky = getPoseLandmark(PoseLandmark.LEFT_PINKY)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightPinky = getPoseLandmark(PoseLandmark.RIGHT_PINKY)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftIndex = getPoseLandmark(PoseLandmark.LEFT_INDEX)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightIndex = getPoseLandmark(PoseLandmark.RIGHT_INDEX)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftThumb = getPoseLandmark(PoseLandmark.LEFT_THUMB)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightThumb = getPoseLandmark(PoseLandmark.RIGHT_THUMB)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftHeel = getPoseLandmark(PoseLandmark.LEFT_HEEL)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightHeel = getPoseLandmark(PoseLandmark.RIGHT_HEEL)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            leftFootIndex = getPoseLandmark(PoseLandmark.LEFT_FOOT_INDEX)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            },
+            rightFootIndex = getPoseLandmark(PoseLandmark.RIGHT_FOOT_INDEX)!!.position.run {
+                LandmarkCoordinate(
+                    x = x,
+                    y = y
+                ).matchResolution()
+            }
+        )
+    } else {
+        null
+    }
+}
+
+private fun LandmarkCoordinate.matchResolution(): LandmarkCoordinate {
+    /**
+     * 480 x 640
+     * to
+     * 1920 x 1080
+     * 1. 640 / 1080 = ratio
+     * 2. 1920 * ratio = smallWidth
+     * 3. (smallWidth - 480) / 2f = leftSide
+     * 4. bigRatio = 1080 / 640
+     * (x + leftSide) * bigRatio
+     * y * bigRatio
+     */
+//    val ratio = 640f / 1080f
+//    val smallWidth = 1920f * ratio
+//    val smallWidthLeftSide = (smallWidth - 480f) / 2f
+//    val bigRatio = 1080f / 640f
+//
+//    return copy(
+//        x = (x + smallWidthLeftSide) * bigRatio,
+//        y = y * bigRatio
+//    )
+    val leftAreaWidth = (1920f - 480f) / 2f
+    val topAreaHeight = (1080f - 640f) / 2f
+
+    return copy(
+        x = x + leftAreaWidth,
+        y = y + topAreaHeight
+    )
 }

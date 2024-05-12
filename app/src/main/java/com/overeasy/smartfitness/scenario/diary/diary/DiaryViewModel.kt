@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.domain.diary.model.Note
+import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.domain.diary.model.DiaryDetail
-import com.overeasy.smartfitness.domain.diary.model.DiaryDetailWorkoutInfo
+import com.overeasy.smartfitness.domain.workout.model.diary.DiaryDetail
+import com.overeasy.smartfitness.domain.workout.model.diary.DiaryDetailWorkoutInfo
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -151,6 +151,11 @@ class DiaryDetailViewModel @Inject constructor(
                         repeats = 10,
                         weight = 70,
                     )
+                    /**
+                     * 벤치 3
+                     * 데드 4
+                     * 스쿼트 5
+                     */
                     /**
                      * 벤치 3
                      * 데드 4

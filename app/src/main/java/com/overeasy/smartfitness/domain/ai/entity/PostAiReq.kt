@@ -1,8 +1,8 @@
-package com.overeasy.smartfitness.domain.workout.entity
+package com.overeasy.smartfitness.domain.ai.entity
 
-import com.overeasy.smartfitness.domain.workout.model.LandmarkCoordinate
+import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
 
-data class PostWorkoutReq(
+data class PostAiReq(
     val workoutName: String,
 
     val leftShoulder: LandmarkCoordinate,

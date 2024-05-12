@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.domain.diary.model
+package com.overeasy.smartfitness.domain.workout.model.diary
 
 import kotlinx.serialization.Serializable
 

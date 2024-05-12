@@ -8,10 +8,7 @@ import kotlinx.serialization.Serializable
 data class GetRankingUserRes(
     override val code: Int = -1,
     override val message: String,
-    val result: RankingUserInfo? = null,
-
     override val success: Boolean = false,
-    override val error: String? = null,
-    override val timestamp: String? = null,
-    override val path: String? = null
+
+    val result: RankingUserInfo? = null
 ) : BaseResponseModel
