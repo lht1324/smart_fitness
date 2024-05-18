@@ -9,6 +9,8 @@ import com.overeasy.smartfitness.domain.ai.entity.PostAiRes
 import com.overeasy.smartfitness.simplePost
 import io.ktor.client.HttpClient
 import io.ktor.util.InternalAPI
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class AiRepositoryImpl(
     private val client: HttpClient
@@ -17,6 +19,6 @@ class AiRepositoryImpl(
 
     override suspend fun postAi(req: PostAiReq): PostAiRes =
         client.simplePost(baseUrl) {
-            body = req
+            body = Json.encodeToString(req)
         }
 }

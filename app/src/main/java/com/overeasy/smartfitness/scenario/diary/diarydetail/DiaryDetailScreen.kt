@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -61,7 +62,8 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 fun DiaryDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryDetailViewModel = hiltViewModel(),
-    noteId: Int
+    noteId: Int,
+    onClickWatchExampleVideo: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -176,6 +178,7 @@ fun DiaryDetailScreen(
                             fontSize = 20.dpToSp(),
                             fontWeight = FontWeight.Black
                         )
+                        Spacer(modifier = Modifier.height(5.dp))
                         DetailText(
                             text = "${addCommaIntoNumber(diaryDetail!!.totalScore)}점",
                             fontSize = 18.dpToSp(),
@@ -186,6 +189,44 @@ fun DiaryDetailScreen(
 //                            fontSize = 18.dpToSp(),
 //                            fontWeight = FontWeight.Black
 //                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            thickness = 2.dp,
+                            color = ColorSecondary
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        DetailText(
+                            text = "운동 영상 다시 보기",
+                            fontSize = 20.dpToSp(),
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(5.dp))
+                        listOf(
+                            "1번",
+                            "2번",
+                            "3번"
+                        ).forEachIndexed { index, noteId ->
+                            val url = if (noteId == "1번") {
+                                "https://namu.wiki"
+                            } else if (noteId == "2번") {
+                                "https://naver.com"
+                            } else {
+                                "https://gachon.ac.kr"
+                            }
+                            DetailText(
+                                text = "${index + 1}번",
+                                modifier = Modifier.noRippleClickable {
+                                    onClickWatchExampleVideo(url)
+                                },
+                                fontSize = 18.dpToSp(),
+                                color = ColorSaturday,
+                                textDecoration = TextDecoration.Underline
+                            )
+                            if (noteId != "3번") {
+                                Spacer(modifier = Modifier.height(5.dp))
+                            }
+                        }
                     }
                 )
                 Spacer(modifier = Modifier.height(30.dp))
@@ -283,7 +324,8 @@ private fun DetailText(
     text: String,
     color: Color = Color.White,
     fontSize: TextUnit = 16.dpToSp(),
-    fontWeight: FontWeight = FontWeight.Bold
+    fontWeight: FontWeight = FontWeight.Bold,
+    textDecoration: TextDecoration = TextDecoration.None
 ) {
     Text(
         text = text,
@@ -291,7 +333,8 @@ private fun DetailText(
         color = color,
         fontSize = fontSize,
         fontWeight = fontWeight,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
+        textDecoration = textDecoration
     )
 }
 

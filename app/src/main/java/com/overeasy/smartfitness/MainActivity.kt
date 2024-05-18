@@ -7,6 +7,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -287,41 +288,54 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun CurrentScreen(
-    modifier: Modifier = Modifier,
-    stateValue: String,
-    onUpdateJson: (String) -> Unit,
-    onChangeIsWorkoutRunning: (Boolean) -> Unit,
-    onChangeHeaderHeight: (Int) -> Unit
-) = Box(
-    modifier = modifier
-) {
-    when (stateValue) {
-        ScreenState.DietScreen.value -> DietNavHost()
-        ScreenState.DiaryScreen.value -> DiaryNavHost()
-        ScreenState.MainScreen.value -> WorkoutNavHost(
-            onUpdateJson = onUpdateJson,
-            onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
-            onChangeHeaderHeight = onChangeHeaderHeight
-        )
-        ScreenState.RankingScreen.value -> RankingNavHost()
-        ScreenState.SettingScreen.value -> SettingNavHost()
-        else -> Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = ColorPrimary),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "화면 로딩에 실패했습니다.",
-                color = Color.White,
-                fontSize = 18.dpToSp(),
-                fontFamily = fontFamily,
-                fontWeight = FontWeight.Bold
+    @Composable
+    fun CurrentScreen(
+        modifier: Modifier = Modifier,
+        stateValue: String,
+        onUpdateJson: (String) -> Unit,
+        onChangeIsWorkoutRunning: (Boolean) -> Unit,
+        onChangeHeaderHeight: (Int) -> Unit
+    ) = Box(
+        modifier = modifier
+    ) {
+        when (stateValue) {
+            ScreenState.DietScreen.value -> DietNavHost()
+            ScreenState.DiaryScreen.value -> DiaryNavHost(
+                onClickWatchExampleVideo = { workoutId ->
+//                    val url = "${BuildConfig.BASE_URL}/exercises/video/stream/$workoutId"
+
+//                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(workoutId)))
+                }
             )
+            ScreenState.MainScreen.value -> WorkoutNavHost(
+                filesDir = filesDir,
+                onClickWatchExampleVideo = { workoutName ->
+                    val url = "${BuildConfig.BASE_URL}/exercises/video/stream/$workoutName"
+
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
+                onUpdateJson = onUpdateJson,
+                onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
+                onChangeHeaderHeight = onChangeHeaderHeight
+            )
+            ScreenState.RankingScreen.value -> RankingNavHost()
+            ScreenState.SettingScreen.value -> SettingNavHost()
+            else -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = ColorPrimary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "화면 로딩에 실패했습니다.",
+                    color = Color.White,
+                    fontSize = 18.dpToSp(),
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

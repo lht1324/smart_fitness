@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
@@ -57,6 +58,7 @@ import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.launch
 
@@ -65,6 +67,7 @@ fun WorkoutInfoInputDialog(
     modifier: Modifier = Modifier,
     workoutNameList: List<String>,
     isImeVisible: Boolean,
+    onClickWatchExampleVideo: (String) -> Unit,
     onFinish: (WorkoutInfo) -> Unit
 ) {
     val context = LocalContext.current
@@ -136,6 +139,19 @@ fun WorkoutInfoInputDialog(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "${workoutNameList[selectedWorkoutNameIndex]} 예시 영상 조회",
+                        modifier = Modifier
+                            .noRippleClickable {
+                                onClickWatchExampleVideo(workoutNameList[selectedWorkoutNameIndex])
+                            },
+                        color = ColorSaturday,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = fontFamily,
+                        textDecoration = TextDecoration.Underline
+                    )
                 }
             )
             Divider()

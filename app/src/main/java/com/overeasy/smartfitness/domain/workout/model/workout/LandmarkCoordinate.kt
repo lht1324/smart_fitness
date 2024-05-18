@@ -1,5 +1,8 @@
 package com.overeasy.smartfitness.domain.workout.model.workout
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class LandmarkCoordinate(
     val x: Float,
     val y: Float

@@ -1,8 +1,10 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, ExperimentalPermissionsApi::class)
 
 package com.overeasy.smartfitness.scenario.workout.workout
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
+import androidx.camera.core.CameraSelector
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
@@ -33,22 +35,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.dpToSp
-import com.overeasy.smartfitness.model.workout.RecordingState
-import com.overeasy.smartfitness.module.videomanager.VideoManager
+import com.overeasy.smartfitness.module.posedetectionmanager.PoseDetectionManager
 import com.overeasy.smartfitness.noRippleClickable
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSunday
 import com.overeasy.smartfitness.ui.theme.fontFamily
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import java.io.File
 
 @Composable
 fun WorkoutScreen(
     modifier: Modifier = Modifier,
     viewModel: WorkoutViewModel = hiltViewModel(),
+    filesDir: File?,
+    onClickWatchExampleVideo: (String) -> Unit,
     onFinishWorkout: () -> Unit,
     onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onUpdateJson: (String) -> Unit
@@ -59,10 +69,24 @@ fun WorkoutScreen(
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
                 CameraController.IMAGE_CAPTURE or
-                        CameraController.VIDEO_CAPTURE
+                        CameraController.VIDEO_CAPTURE or
+                        CameraController.IMAGE_ANALYSIS
             )
+//            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
+    val poseDetectionManager = remember {
+        PoseDetectionManager(cameraController)
+    }
+    var isCameraPermissionGranted by remember { mutableStateOf(false) }
+    val cameraPermissionState = rememberPermissionState(
+        permission = Manifest.permission.CAMERA,
+        onPermissionResult = { isGranted ->
+            isCameraPermissionGranted = isGranted
+            MainApplication.appPreference.isAlreadyRequestedCameraPermission = true
+        }
+    )
 
     val isImeVisible = WindowInsets.isImeVisible
 
@@ -72,7 +96,8 @@ fun WorkoutScreen(
     var cameraWidthPx by remember { mutableIntStateOf(0) }
     var cameraHeightPx by remember { mutableIntStateOf(0) }
 
-    var recordingState by remember { mutableStateOf<RecordingState>(RecordingState.Idle) }
+    var isRecording by remember { mutableStateOf(false) }
+    var isSaveEnabled by remember { mutableStateOf(false) }
 
     val isWorkoutInfoInitialized by viewModel.isWorkoutInfoInitialized.collectAsState(false)
 
@@ -82,8 +107,8 @@ fun WorkoutScreen(
 
     val currentSet by viewModel.currentSet.collectAsState()
 
-    val firstCountdownTimer by viewModel.firstCountdownTimer.collectAsState()
-    val restCountdownTimer by viewModel.restCountdownTimer.collectAsState()
+    val firstCountdownTimer by viewModel.firstCountdown.collectAsState()
+    val restCountdownTimer by viewModel.restCountdown.collectAsState()
     var restTime by remember { mutableIntStateOf(30) }
 
     val scorePerfect by viewModel.scorePerfect.collectAsState()
@@ -97,7 +122,7 @@ fun WorkoutScreen(
             .fillMaxSize()
             .background(color = ColorPrimary)
     ) {
-        VideoManager.PoseDetectionCameraX(
+        poseDetectionManager.PoseDetectionCameraX(
             modifier = Modifier.onSizeChanged { (width, height) ->
                 if (width != cameraWidthPx) {
                     cameraWidthPx = width
@@ -112,14 +137,11 @@ fun WorkoutScreen(
                     cameraWidthPx = cameraWidthPx,
                     cameraHeightPx = cameraHeightPx,
                     pose = pose,
-                    copy = { text ->
-                        onUpdateJson(text)
+                    copy = { jsonText ->
+                        if (isSaveEnabled)
+                            onUpdateJson(jsonText)
                     }
                 )
-            },
-            cameraController = cameraController,
-            onChangeRecordingState = { newRecordingState ->
-                recordingState = newRecordingState
             }
         )
 
@@ -143,54 +165,25 @@ fun WorkoutScreen(
                 totalNotGood = scoreNotGood
             )
         }
-        Box(
+        RecordingButton(
             modifier = Modifier
-                .padding(bottom = 20.dp)
-                .size(90.dp)
-                .noRippleClickable {
-//                    onClickFinish()
-                    recordingState = if (recordingState == RecordingState.OnRecord)
-                        RecordingState.Idle
-                    else
-                        RecordingState.OnRecord
-                }
-                .background(
-                    color = Color.White,
-                    shape = CircleShape
-                )
-                .border(
-                    width = 2.dp,
-                    color = Color.Black,
-                    shape = CircleShape
-                )
-                .align(Alignment.BottomCenter)
-        ) {
-            if (recordingState == RecordingState.Idle) {
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .background(
-                            color = Color.Red,
-                            shape = CircleShape
-                        )
-                        .align(Alignment.Center)
-                        .noRippleClickable {
-                            if (isWorkoutInfoInitialized) {
-                                viewModel.onClickRecordButtonWhenWorkoutInfoAlreadyExists()
-                            } else {
-                                isShowWorkoutInfoInputDialog = true
-                            }
+                .padding(bottom = 20.dp),
+            onClickButton = {
+//                isSaveEnabled = !isSaveEnabled
+                if (isCameraPermissionGranted) {
+                    if (!isRecording) {
+                        if (isWorkoutInfoInitialized) {
+                            viewModel.onClickRecordButtonWhenWorkoutInfoAlreadyExists()
+                        } else {
+                            isShowWorkoutInfoInputDialog = true
                         }
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(color = Color.Black)
-                        .align(Alignment.Center)
-                )
-            }
-        }
+                    } else {
+                        isShowFinishWorkoutDialog = true
+                    }
+                }
+            },
+            isRecording = isRecording
+        )
         if (firstCountdownTimer != null) {
             Box(
                 modifier = Modifier
@@ -243,10 +236,6 @@ fun WorkoutScreen(
                                 .background(color = Color.Black)
                         )
                         Box(
-                            // 40, 39, 38, 37, 36, ...
-                            // 1, 2, 3, 4, 5, ... 40
-                            // -time + restTime + 1
-                            // 일정 수치로 나눈 뒤 그걸 time로 곱해야 한다
                             modifier = Modifier
                                 .fillMaxWidth(loadingProgress)
                                 .height(20.dp)
@@ -282,9 +271,6 @@ fun WorkoutScreen(
 //                )
 //            }
 //        }
-        LaunchedEffect(isWorkoutRunning) {
-            onChangeIsWorkoutRunning(isWorkoutRunning)
-        }
     }
 
     if (isShowWorkoutInfoInputDialog) {
@@ -309,6 +295,7 @@ fun WorkoutScreen(
                 WorkoutInfoInputDialog(
                     workoutNameList = workoutNameList,
                     isImeVisible = isImeVisible,
+                    onClickWatchExampleVideo = onClickWatchExampleVideo,
                     onFinish = { workoutInfo ->
                         restTime = workoutInfo.restTime ?: 30
                         viewModel.setWorkoutInfo(workoutInfo)
@@ -324,6 +311,7 @@ fun WorkoutScreen(
     if (isShowFinishWorkoutDialog) {
         Dialog(
             title = "운동을 종료하시겠어요?",
+            description = "지금까지 한 운동 정보가 저장되지 않아요.",
             confirmText = "아니",
             dismissText = "응",
             onClickConfirm = {
@@ -339,14 +327,41 @@ fun WorkoutScreen(
         )
     }
 
-    BackHandler(enabled = isWorkoutRunning) {
+    BackHandler(enabled = isWorkoutRunning || firstCountdownTimer != null) {
         isShowFinishWorkoutDialog = true
+    }
+
+    LaunchedEffect(isWorkoutRunning) {
+        onChangeIsWorkoutRunning(isWorkoutRunning)
+    }
+
+    LaunchedEffect(cameraPermissionState.status.isGranted) {
+        isCameraPermissionGranted = cameraPermissionState.status.isGranted
+    }
+
+    LaunchedEffect(cameraController.isRecording) {
+        isRecording = cameraController.isRecording
     }
 
     LaunchedEffect(viewModel.workoutUiEvent) {
         viewModel.workoutUiEvent.collectLatest { event ->
             when (event) {
+                WorkoutViewModel.WorkoutUiEvent.StartRecording -> {
+                    if (cameraController.initializationFuture.isDone) {
+                        poseDetectionManager.startRecording(
+                            isCameraPermissionGranted = true,
+                            filesDir = filesDir
+                        )
+                    }
+                    delay(5000L)
+                    println("jaehoLee", "isRecording = ${cameraController.isRecording}")
+                }
+                WorkoutViewModel.WorkoutUiEvent.StopRecording -> {
+                    poseDetectionManager.stopRecording()
+                }
                 WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
+                    poseDetectionManager.stopRecording()
+
                     onFinishWorkout()
                 }
             }
@@ -369,7 +384,8 @@ private fun BoxScope.ScoreBoard(
     ) {
         Column(
             modifier = Modifier
-                .padding(20.dp)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.End
         ) {
             Text(
                 text = "${currentSet}세트",
@@ -401,6 +417,48 @@ private fun BoxScope.ScoreBoard(
                 fontSize = 24.dpToSp(),
                 fontWeight = FontWeight.ExtraBold,
                 fontFamily = fontFamily
+            )
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.RecordingButton(
+    modifier: Modifier = Modifier,
+    onClickButton: () -> Unit,
+    isRecording: Boolean
+) {
+    Box(
+        modifier = modifier
+            .size(90.dp)
+            .noRippleClickable(onClick = onClickButton)
+            .background(
+                color = Color.White,
+                shape = CircleShape
+            )
+            .border(
+                width = 2.dp,
+                color = Color.Black,
+                shape = CircleShape
+            )
+            .align(Alignment.BottomCenter)
+    ) {
+        if (!isRecording) {
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .background(
+                        color = Color.Red,
+                        shape = CircleShape
+                    )
+                    .align(Alignment.Center)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(color = Color.Black)
+                    .align(Alignment.Center)
             )
         }
     }

@@ -19,7 +19,8 @@ import java.time.LocalDate
 
 @Composable
 fun DiaryNavHost(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClickWatchExampleVideo: (String) -> Unit
 ) {
     val navHostController = rememberNavController()
 
@@ -54,7 +55,8 @@ fun DiaryNavHost(
             }
             composable(DiaryRoutes.DiaryDetail.route) { backStackEntry ->
                 DiaryDetailScreen(
-                    noteId = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID)?.toIntOrNull() ?: -1
+                    noteId = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID)?.toIntOrNull() ?: -1,
+                    onClickWatchExampleVideo = onClickWatchExampleVideo
                 )
             }
         }

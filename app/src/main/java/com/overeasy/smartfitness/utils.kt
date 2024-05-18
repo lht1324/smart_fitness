@@ -2,7 +2,6 @@ package com.overeasy.smartfitness
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
@@ -16,8 +15,15 @@ import androidx.compose.ui.unit.dp
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
+import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
 import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import java.text.DecimalFormat
+import kotlin.math.abs
+import kotlin.math.atan2
 
 fun println(tag: String?, msg: String) = Log.d(tag, msg)
 
@@ -63,12 +69,6 @@ fun Modifier.noRippleClickable(
 
 fun addCommaIntoNumber(number: Int): String = DecimalFormat("#,###").format(number)
 
-fun showToast(
-    context: Context,
-    msg: String,
-    duration: Int = Toast.LENGTH_SHORT
-): Toast = Toast.makeText(context, msg, duration)
-
 fun isLettersOrDigits(chars: String): Boolean {
     return chars.none { char ->
         char !in 'A'..'Z' &&
@@ -86,142 +86,142 @@ fun isLettersOrDigitsIncludeKorean(chars: String): Boolean {
     }
 }
 
-fun Pose.toPoseWorkoutReq(workoutName: String): PostAiReq? = run {
+fun Pose.toLandmarkInfo(workoutName: String): LandmarkInfo? = run {
     // 모든 랜드마크 포함
     // x, y null로 변경 가능
     if (allPoseLandmarks.size == PoseLandmark.RIGHT_FOOT_INDEX + 1) {
-        PostAiReq(
+        LandmarkInfo(
             workoutName = workoutName,
 
             leftShoulder = getPoseLandmark(PoseLandmark.LEFT_SHOULDER)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightShoulder = getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftElbow = getPoseLandmark(PoseLandmark.LEFT_ELBOW)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightElbow = getPoseLandmark(PoseLandmark.RIGHT_ELBOW)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftWrist = getPoseLandmark(PoseLandmark.LEFT_WRIST)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightWrist = getPoseLandmark(PoseLandmark.RIGHT_WRIST)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftHip = getPoseLandmark(PoseLandmark.LEFT_HIP)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightHip = getPoseLandmark(PoseLandmark.RIGHT_HIP)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftKnee = getPoseLandmark(PoseLandmark.LEFT_KNEE)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightKnee = getPoseLandmark(PoseLandmark.RIGHT_KNEE)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftAnkle = getPoseLandmark(PoseLandmark.LEFT_ANKLE)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightAnkle = getPoseLandmark(PoseLandmark.RIGHT_ANKLE)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftPinky = getPoseLandmark(PoseLandmark.LEFT_PINKY)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightPinky = getPoseLandmark(PoseLandmark.RIGHT_PINKY)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftIndex = getPoseLandmark(PoseLandmark.LEFT_INDEX)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightIndex = getPoseLandmark(PoseLandmark.RIGHT_INDEX)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftThumb = getPoseLandmark(PoseLandmark.LEFT_THUMB)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightThumb = getPoseLandmark(PoseLandmark.RIGHT_THUMB)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftHeel = getPoseLandmark(PoseLandmark.LEFT_HEEL)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightHeel = getPoseLandmark(PoseLandmark.RIGHT_HEEL)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             leftFootIndex = getPoseLandmark(PoseLandmark.LEFT_FOOT_INDEX)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             },
             rightFootIndex = getPoseLandmark(PoseLandmark.RIGHT_FOOT_INDEX)!!.position.run {
                 LandmarkCoordinate(
-                    x = x,
+                    x = 480 - x,
                     y = y
                 ).matchResolution()
             }
@@ -259,4 +259,28 @@ private fun LandmarkCoordinate.matchResolution(): LandmarkCoordinate {
         x = x + leftAreaWidth,
         y = y + topAreaHeight
     )
+}
+
+fun <T> Flow<T>.history(): Flow<Pair<T, T>> = run {
+    map { highestPoint ->
+        highestPoint to null
+    }.scan(null as T? to null as T?) { prev, next ->
+        prev.second to next.first
+    }.filter { (prev, next) ->
+        prev != null && next != null
+    }.map { (prev, next) ->
+        prev!! to next!!
+    }
+}
+
+fun LandmarkCoordinate.toPair() = run { x to y }
+
+fun calculateAngle(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>, pointC: Pair<Float, Float>): Float {
+    val (aX, aY) = pointA
+    val (bX, bY) = pointB
+    val (cX, cY) = pointC
+
+    val angle = atan2(cY - bY, cX - bX) - atan2(aY - bY, aX - bX)
+
+    return abs(Math.toDegrees(angle.toDouble()).toFloat())
 }

@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.AaptOptions
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -45,9 +47,9 @@ android {
 
             buildConfigField("boolean", "IS_DEBUG", "true")
 //            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"") // 에뮬
-            buildConfigField("String", "BASE_URL", "\"http://172.30.1.41:8080\"") // 집
+//            buildConfigField("String", "BASE_URL", "\"http://172.30.1.41:8080\"") // 집
 //            buildConfigField("String", "BASE_URL", "\"http://172.16.230.236:8080\"") // 학교
-//            buildConfigField("String", "BASE_URL", "\"http://ceprj.gachon.ac.kr:60008\"")
+            buildConfigField("String", "BASE_URL", "\"http://ceprj.gachon.ac.kr:60008\"")
         }
     }
     compileOptions {
@@ -68,6 +70,9 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+    androidResources {
+        noCompress.add("tflite")
     }
 }
 
@@ -121,6 +126,9 @@ dependencies {
     // Google ML Kit
     implementation(libs.pose.detection)
     implementation(libs.pose.detection.accurate)
+
+    // TensorFlow
+    implementation(libs.tensorflow.lite)
 
     // Coil
     implementation(libs.coil.compose)

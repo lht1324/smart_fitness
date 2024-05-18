@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.module.videomanager
+package com.overeasy.smartfitness.module.posedetectionmanager
 
 import android.Manifest
 import android.content.ContentValues
@@ -6,22 +6,11 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Size
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewTreeObserver
 import androidx.camera.core.Camera
-import androidx.camera.core.CameraInfoUnavailableException
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.FocusMeteringAction
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.MeteringPointFactory
 import androidx.camera.core.Preview
-import androidx.camera.core.SurfaceOrientedMeteringPointFactory
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.MediaStoreOutputOptions
@@ -35,11 +24,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.mlkit.vision.pose.Pose
 import com.overeasy.smartfitness.model.workout.RecordingInfo
 import com.overeasy.smartfitness.model.workout.RecordingState
-import com.overeasy.smartfitness.module.posedetectionmanager.PoseDetectionManager
-import com.overeasy.smartfitness.println
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,20 +41,15 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
-class PoseDetectionCameraXImpl(
-    private val cameraWidth: Int,
-    private val cameraHeight: Int,
-    private val onPoseDetected: (Pose) -> Unit = { },
-    private val onFinishInit: () -> Unit = { }
+class CameraXImpl(
+    private val lifecycleOwner: LifecycleOwner,
+    private val onFinishInit: () -> Unit
 ) : CameraX {
     private val _facing = MutableStateFlow(CameraSelector.LENS_FACING_BACK)
     private val _flash = MutableStateFlow(false)
     private val _recordingState = MutableStateFlow<RecordingState>(RecordingState.Idle)
     private val _recordingInfo = MutableSharedFlow<RecordingInfo>()
-
-    private lateinit var resolutionSelector: ResolutionSelector
 
     private lateinit var previewView: PreviewView
     private lateinit var preview: Preview
@@ -85,14 +66,6 @@ class PoseDetectionCameraXImpl(
     private lateinit var poseDetectionManager: PoseDetectionManager
 
     override fun initialize(context: Context) {
-        resolutionSelector = ResolutionSelector.Builder()
-            .setResolutionStrategy(
-                ResolutionStrategy(
-                    Size(cameraWidth, cameraHeight),
-                    ResolutionStrategy.FALLBACK_RULE_NONE
-                )
-            ).build()
-
         previewView = PreviewView(context)
         preview = Preview.Builder()
             .build()
@@ -104,12 +77,6 @@ class PoseDetectionCameraXImpl(
         imageCapture = ImageCapture.Builder().build()
         executor = Executors.newSingleThreadExecutor()
         this.context = context
-
-        poseDetectionManager = PoseDetectionManager(
-            cameraExecutor = executor,
-            onPoseDetected = onPoseDetected
-        )
-
         initializeVideo()
         onFinishInit()
     }
@@ -121,12 +88,9 @@ class PoseDetectionCameraXImpl(
         )
 
         val recorder = Recorder.Builder()
-            .setExecutor(executor)
-            .setQualitySelector(qualitySelector)
+            .setExecutor(executor).setQualitySelector(qualitySelector)
             .build()
-
-        videoCapture = VideoCapture.Builder(recorder)
-            .build()
+        videoCapture = VideoCapture.withOutput(recorder)
 
         val path =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES + "/cameraX")
@@ -150,17 +114,7 @@ class PoseDetectionCameraXImpl(
     ) {
         unBindCamera()
 
-        val cameraSelector = CameraSelector.Builder()
-            .requireLensFacing(_facing.value)
-            .build()
-
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-
-        poseDetectionManager.setImageAnalyzer(
-            imageAnalysis = imageAnalysis
-        )
+        val cameraSelector = CameraSelector.Builder().requireLensFacing(_facing.value).build()
 
         cameraProvider.addListener(
             {
@@ -169,58 +123,9 @@ class PoseDetectionCameraXImpl(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
-                        imageAnalysis,
                         imageCapture,
                         videoCapture
-                    ).apply {
-//                        cameraControl.cancelFocusAndMetering()
-//                        cameraControl.setLinearZoom(0.1f)
-                    }
-                    previewView.afterMeasured {
-                        previewView.setOnTouchListener { view, event ->
-                            return@setOnTouchListener when (event.action) {
-                                MotionEvent.ACTION_DOWN -> {
-                                    true
-                                }
-                                MotionEvent.ACTION_UP -> {
-                                    val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
-                                        previewView.width.toFloat(), previewView.height.toFloat()
-                                    )
-                                    val autoFocusPoint = factory.createPoint(event.x, event.y)
-                                    try {
-                                        camera.cameraControl.startFocusAndMetering(
-                                            FocusMeteringAction.Builder(
-                                                autoFocusPoint,
-                                                FocusMeteringAction.FLAG_AF
-                                            ).apply {
-                                                //focus only when the user tap the preview
-                                                disableAutoCancel()
-                                            }.build()
-                                        )
-                                    } catch (e: CameraInfoUnavailableException) {
-                                        println("jaehoLee", "previewViewError: ${e.localizedMessage}")
-                                    }
-                                    view.performClick()
-                                    true
-                                }
-                                else -> false // Unhandled event.
-                            }
-                        }
-//                        val autoFocusPoint = SurfaceOrientedMeteringPointFactory(1f, 1f)
-//                            .createPoint(.5f, .5f)
-//                        try {
-//                            val autoFocusAction = FocusMeteringAction.Builder(
-//                                autoFocusPoint,
-//                                FocusMeteringAction.FLAG_AF
-//                            ).apply {
-//                                //start auto-focusing after 2 seconds
-//                                setAutoCancelDuration(2, TimeUnit.SECONDS)
-//                            }.build()
-//                            camera.cameraControl.startFocusAndMetering(autoFocusAction)
-//                        } catch (e: CameraInfoUnavailableException) {
-//                            println("jaehoLee", "previewViewError: ${e.localizedMessage}")
-//                        }
-                    }
+                    )
                 }
             },
             executor
@@ -230,7 +135,33 @@ class PoseDetectionCameraXImpl(
     override fun takePicture(
         showMessage: (String) -> Unit
     ) {
-        /* no-op */
+        val path =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES + "/cameraX")
+        if (!path.exists()) path.mkdirs();
+        val photoFile = File(
+            path, SimpleDateFormat(
+                "yyyy-MM-dd-HH-mm-ss-SSS", Locale.KOREA
+            ).format(System.currentTimeMillis()) + ".jpg"
+        )
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+            imageCapture.takePicture(outputFileOptions,
+                ContextCompat.getMainExecutor(context),
+                object : ImageCapture.OnImageSavedCallback {
+                    override fun onError(error: ImageCaptureException) {
+                        error.printStackTrace()
+                    }
+
+                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                        showMessage(
+                            "Capture Success!! Image Saved at\n" +
+                                    "[${Environment.getExternalStorageDirectory().absolutePath}" +
+                                    "/${Environment.DIRECTORY_PICTURES}" +
+                                    "/cameraX]"
+                        )
+                    }
+                })
+        }
     }
 
 
@@ -253,7 +184,7 @@ class PoseDetectionCameraXImpl(
             }
             recording = videoCapture.output
                 .prepareRecording(context, mediaStoreOutput)
-//                .withAudioEnabled()
+                .withAudioEnabled()
                 .start(ContextCompat.getMainExecutor(context)) {
                     CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
                         with(it.recordingStats) {
@@ -294,11 +225,17 @@ class PoseDetectionCameraXImpl(
     }
 
     override fun flipCameraFacing() {
-        /* no-op */
+        if (_facing.value == CameraSelector.LENS_FACING_BACK) {
+            _flash.value = false
+            _facing.value = CameraSelector.LENS_FACING_FRONT
+        } else {
+            _facing.value = CameraSelector.LENS_FACING_BACK
+        }
     }
 
     override fun turnOnOffFlash() {
-        /* no-op */
+        _flash.value = !_flash.value
+        camera.cameraControl.enableTorch(_flash.value)
     }
 
     override fun unBindCamera() {
@@ -314,19 +251,4 @@ class PoseDetectionCameraXImpl(
     override fun getExecutor(): ExecutorService = executor
     override fun getPreview(): Preview = preview
     override fun getProvider(): ProcessCameraProvider = provider
-
-    inline fun View.afterMeasured(crossinline block: () -> Unit) {
-        if (measuredWidth > 0 && measuredHeight > 0) {
-            block()
-        } else {
-            viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    if (measuredWidth > 0 && measuredHeight > 0) {
-                        viewTreeObserver.removeOnGlobalLayoutListener(this)
-                        block()
-                    }
-                }
-            })
-        }
-    }
 }

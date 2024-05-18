@@ -1,6 +1,8 @@
 package com.overeasy.smartfitness.scenario.workout.result
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.model.workout.Menu
 import com.overeasy.smartfitness.domain.workout.model.workout.NutritionAmount
@@ -8,9 +10,14 @@ import com.overeasy.smartfitness.domain.workout.model.workout.SetCount
 import com.overeasy.smartfitness.domain.workout.model.workout.Score
 import com.overeasy.smartfitness.domain.workout.model.workout.Workout
 import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutResult
+import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -145,4 +152,32 @@ class WorkoutResultViewModel @Inject constructor(
     )
 
     val workoutResult = _workoutResult.asStateFlow()
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(5000L)
+            val videoDir = MainApplication.appPreference.currentVideoFileDir
+
+            videoDir?.let { dir ->
+                try {
+                    val file = File(dir)
+                    val byte = file.readBytes()
+                    println("jaehoLee", "isExistBeforeDelete = ${file.exists()}")
+                    println("jaehoLee", "length = ${byte.size}")
+
+                    delay(5000L)
+                    if(file.exists()){
+                        file.delete();
+                    }
+
+                    println("jaehoLee", "isExistAfterDelete = ${file.exists()}")
+                } catch (e: Throwable){
+                    println("jaehoLee", "error in file: ${e.message}")
+
+                }
+            }
+
+
+        }
+    }
 }

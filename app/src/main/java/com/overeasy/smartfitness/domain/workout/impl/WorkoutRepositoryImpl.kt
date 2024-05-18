@@ -12,9 +12,12 @@ import com.overeasy.smartfitness.domain.workout.entity.GetWorkoutResultRes
 import com.overeasy.smartfitness.domain.workout.entity.GetWorkoutVideoListRes
 import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutDataReq
 import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutNoteRes
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.simpleGet
 import com.overeasy.smartfitness.simplePost
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.onUpload
+import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.statement.bodyAsText
@@ -24,6 +27,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.io.File
 import javax.inject.Inject
 
 class WorkoutRepositoryImpl @Inject constructor(
@@ -46,15 +50,21 @@ class WorkoutRepositoryImpl @Inject constructor(
     override suspend fun getWorkoutVideoList(noteId: Int): GetWorkoutVideoListRes =
         client.simpleGet("$baseUrl/video/$noteId")
     override suspend fun postWorkoutVideo(noteId: Int, exerciseName: String): BaseResponse =
-        client.submitFormWithBinaryData(
-            url = "$baseUrl/video/$noteId/$exerciseName",
-            formData = formData {
-                Headers.build {
-                    append(HttpHeaders.ContentType, ContentType.Video.MP4)
+        client.simplePost("$baseUrl/video/$noteId/$exerciseName") {
+            body = MultiPartFormDataContent(
+                formData {
+                    append(
+                        "video",
+                        File(MainApplication.appPreference.currentVideoFileDir).readBytes(),
+                        Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.Video.MP4)
+                        }
+                    )
                 }
+            )
+            onUpload { bytesSentTotal, contentLength ->
+                println("jaehoLee", "TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
             }
-        ).run {
-            Json.decodeFromString<BaseResponse>(bodyAsText())
         }
 
     // API 미완

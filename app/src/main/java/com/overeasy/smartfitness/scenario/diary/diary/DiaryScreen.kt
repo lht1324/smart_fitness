@@ -38,6 +38,7 @@ import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.noRippleClickable
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
@@ -286,8 +287,7 @@ private fun InfoSection(
                 )
             }
         }
-        LocalDate.now().run { "$year-$monthValue-$dayOfMonth" }
-        if (selectedDiaryItemList.isNotEmpty() || selectedCalendarItemData?.date == "2024-05-07") {
+        if (selectedDiaryItemList.isNotEmpty() || selectedCalendarItemData?.date == LocalDate.now().run { "$year-${String.format("%02d", monthValue)}-${String.format("%02d", dayOfMonth)}" }) {
             Box(
                 modifier = Modifier
                     .padding(

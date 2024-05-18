@@ -11,6 +11,7 @@ class AppPreference @Inject constructor(
     companion object {
         private const val KEY_IS_LOGIN = "KEY_IS_LOGIN"
         private const val KEY_USER_ID = "KEY_USER_ID"
+        private const val KEY_CURRENT_VIDEO_FILE_DIR = "KEY_CURRENT_VIDEO_FILE_DIR"
         private const val KEY_IS_ALREADY_REQUESTED_CAMERA_PERMISSION = "KEY_IS_ALREADY_REQUESTED_CAMERA_PERMISSION"
     }
 
@@ -30,5 +31,12 @@ class AppPreference @Inject constructor(
         get() = getBooleanData(KEY_IS_ALREADY_REQUESTED_CAMERA_PERMISSION, false)
         set(value) {
             setData(KEY_IS_ALREADY_REQUESTED_CAMERA_PERMISSION, value)
+        }
+
+    // 영상 업로드 후 null로 초기화
+    var currentVideoFileDir: String?
+        get() = getStringData(KEY_CURRENT_VIDEO_FILE_DIR)
+        set(value) {
+            setData(KEY_CURRENT_VIDEO_FILE_DIR, value)
         }
 }

@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.module.videomanager
+package com.overeasy.smartfitness.module.posedetectionmanager
 
 import android.content.Context
 import androidx.camera.core.Preview

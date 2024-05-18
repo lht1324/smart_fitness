@@ -10,10 +10,13 @@ import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.workout.result.WorkoutResultScreen
 import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
+import java.io.File
 
 @Composable
 fun WorkoutNavHost(
     modifier: Modifier = Modifier,
+    filesDir: File?,
+    onClickWatchExampleVideo: (String) -> Unit,
     onUpdateJson: (String) -> Unit,
     onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onChangeHeaderHeight: (Int) -> Unit
@@ -39,6 +42,9 @@ fun WorkoutNavHost(
                 onChangeHeaderHeight(height)
             },
             title = currentHeaderTitle,
+            onClickBack = {
+                navHostController.navigateUp()
+            },
             isBackButtonEnabled = currentDestination != WorkoutRoutes.Workout.route
         )
         NavHost(
@@ -47,6 +53,8 @@ fun WorkoutNavHost(
         ) {
             composable(WorkoutRoutes.Workout.route) {
                 WorkoutScreen(
+                    filesDir = filesDir,
+                    onClickWatchExampleVideo = onClickWatchExampleVideo,
                     onFinishWorkout = {
                         navHostController.navigate(WorkoutRoutes.Result.route)
                     },
