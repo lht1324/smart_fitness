@@ -59,9 +59,9 @@ fun RankingList(
                 Spacer(modifier = Modifier.height(10.dp))
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Ellipsis()
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (MainApplication.appPreference.isLogin) {
             if (userRankingInfo != null) {
@@ -103,7 +103,7 @@ private fun Ellipsis(
         for (index in 1..dotCount) {
             Box(
                 modifier = Modifier
-                    .size(10.dp)
+                    .size(15.dp)
                     .background(
                         color = ColorSecondary,
                         shape = CircleShape
@@ -111,7 +111,7 @@ private fun Ellipsis(
             )
 
             if (index != dotCount) {
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }

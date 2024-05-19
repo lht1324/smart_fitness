@@ -26,7 +26,6 @@ fun NicknameInputArea(
 
     Column(
         modifier = modifier
-            .padding(horizontal = 20.dp)
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         InfoInputField(
@@ -36,7 +35,6 @@ fun NicknameInputArea(
             isInvalid = isNicknameInvalid,
             invalidText = "닉네임은 8자 이하의 영문, 숫자, 한글로 입력되어야 해요."
         )
-        Spacer(modifier = Modifier.height(10.dp))
         SettingButton(
             modifier = Modifier.align(Alignment.End),
             text = buttonText,

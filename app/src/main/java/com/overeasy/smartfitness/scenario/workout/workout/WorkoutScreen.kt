@@ -3,6 +3,7 @@
 package com.overeasy.smartfitness.scenario.workout.workout
 
 import android.Manifest
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.CameraSelector
 import androidx.camera.view.CameraController
@@ -64,6 +65,7 @@ fun WorkoutScreen(
     onUpdateJson: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as Activity
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val cameraController = remember {
         LifecycleCameraController(context).apply {

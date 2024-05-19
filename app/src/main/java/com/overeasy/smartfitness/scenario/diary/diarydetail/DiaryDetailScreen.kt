@@ -7,19 +7,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
@@ -28,7 +27,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,13 +65,14 @@ fun DiaryDetailScreen(
 ) {
     val scrollState = rememberScrollState()
 
+    val diaryDetail by viewModel.diaryDetail.collectAsState()
+    val workoutVideoDataList = remember { viewModel.workoutVideoDataList }
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(color = ColorPrimary)
     ) {
-        val diaryDetail by viewModel.diaryDetail.collectAsState()
-
         if (diaryDetail != null) {
             val workoutNameList by remember {
                 derivedStateOf {
@@ -189,42 +188,41 @@ fun DiaryDetailScreen(
 //                            fontSize = 18.dpToSp(),
 //                            fontWeight = FontWeight.Black
 //                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            thickness = 2.dp,
-                            color = ColorSecondary
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DetailText(
-                            text = "운동 영상 다시 보기",
-                            fontSize = 20.dpToSp(),
-                            fontWeight = FontWeight.Black
-                        )
-                        Spacer(modifier = Modifier.height(5.dp))
-                        listOf(
-                            "1번",
-                            "2번",
-                            "3번"
-                        ).forEachIndexed { index, noteId ->
-                            val url = if (noteId == "1번") {
-                                "https://namu.wiki"
-                            } else if (noteId == "2번") {
-                                "https://naver.com"
-                            } else {
-                                "https://gachon.ac.kr"
-                            }
-                            DetailText(
-                                text = "${index + 1}번",
-                                modifier = Modifier.noRippleClickable {
-                                    onClickWatchExampleVideo(url)
-                                },
-                                fontSize = 18.dpToSp(),
-                                color = ColorSaturday,
-                                textDecoration = TextDecoration.Underline
+                        if (workoutVideoDataList.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            HorizontalDivider(
+                                modifier = Modifier.fillMaxWidth(),
+                                thickness = 2.dp,
+                                color = ColorSecondary
                             )
-                            if (noteId != "3번") {
-                                Spacer(modifier = Modifier.height(5.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
+                            DetailText(
+                                text = "운동 영상 다시 보기",
+                                fontSize = 20.dpToSp(),
+                                fontWeight = FontWeight.Black
+                            )
+                            Spacer(modifier = Modifier.height(5.dp))
+                            workoutVideoDataList.forEachIndexed { workoutIndex, dataList ->
+                                dataList.forEachIndexed { index, (workoutName, url) ->
+                                    DetailText(
+                                        text = "$workoutName(${index + 1})",
+                                        modifier = Modifier.noRippleClickable {
+                                            onClickWatchExampleVideo(url)
+                                        },
+                                        fontSize = 18.dpToSp(),
+                                        color = ColorSaturday,
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    if (index == dataList.size - 1 && workoutIndex != workoutVideoDataList.size - 1) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            thickness = 1.dp,
+                                            color = Color.LightGray
+                                        )
+                                        Spacer(modifier = Modifier.height(5.dp))
+                                    }
+                                }
                             }
                         }
                     }
@@ -247,7 +245,7 @@ fun DiaryDetailScreen(
                             Text(
                                 text = "추천 결과 (한식)",
                                 color = Color.White,
-                                fontSize = 24.dpToSp(),
+                                fontSize = 20.dpToSp(),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = fontFamily
                             )
@@ -255,7 +253,7 @@ fun DiaryDetailScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.food_category_korean),
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(70.dp)
                                     .clip(CircleShape),
                                 contentDescription = null
                             )
@@ -396,8 +394,8 @@ private fun ResultArea(
                 text = title,
                 modifier = Modifier
                     .padding(vertical = 5.dp, horizontal = 10.dp),
-                color = ColorSecondary,
-                fontSize = 20.dpToSp(),
+                color = Color.White,
+                fontSize = 24.dpToSp(),
                 fontWeight = FontWeight.ExtraBold,
                 fontFamily = fontFamily
             )

@@ -7,7 +7,6 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -218,8 +217,8 @@ class MainActivity : ComponentActivity() {
                                             fontFamily = fontFamily
                                         )
                                     },
-                                    selectedContentColor = Color.White,
-                                    unselectedContentColor = ColorSecondary
+                                    selectedContentColor = ColorSecondary,
+                                    unselectedContentColor = Color.White
                                 )
                             }
                         }

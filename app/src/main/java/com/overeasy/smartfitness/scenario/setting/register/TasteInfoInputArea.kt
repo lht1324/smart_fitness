@@ -1,7 +1,11 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.overeasy.smartfitness.scenario.setting.register
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,20 +15,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
@@ -97,7 +108,6 @@ fun TasteInfoInputArea(
         )
     }
 
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -105,7 +115,6 @@ fun TasteInfoInputArea(
     ) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 20.dp)
                 .then(
                     if (isInRegister) {
                         Modifier.verticalScroll(state = scrollState)
@@ -115,37 +124,34 @@ fun TasteInfoInputArea(
                 )
         ) {
             Spacer(modifier = Modifier.height(20.dp))
-            InputSection(
+            InputSectionDropdown(
+                modifier = Modifier.wrapContentSize(),
                 title = "선호하는 매운 맛 단계를 골라주세요.",
-                radioItemList = spicyPreferenceList.toList(),
+                dropdownItemList = spicyPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
                     spicyPreferenceList.toList().forEachIndexed { index, _ ->
                         spicyPreferenceList[index] = spicyPreferenceList[index].copy(
                             second = index == selectedIndex
                         )
-
-                        if (index == selectedIndex) {
-                            onChangeSpicyPreference(index)
-                        }
                     }
+                    onChangeSpicyPreference(selectedIndex)
                 }
             )
             Separator()
-            InputSection(
+            InputSectionDropdown(
                 title = "고기를 드시나요?",
-                radioItemList = meatPreferenceList.toList(),
+                dropdownItemList = meatPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    meatPreferenceList.toList().forEachIndexed { index, (option, _) ->
-                        meatPreferenceList[index] = meatPreferenceList[index].copy(
+                    spicyPreferenceList.toList().forEachIndexed { index, _ ->
+                        spicyPreferenceList[index] = spicyPreferenceList[index].copy(
                             second = index == selectedIndex
                         )
-
-                        onChangeMeatConsumption(index == 0)
                     }
+                    onChangeMeatConsumption(selectedIndex == 0)
                 }
             )
             Separator()
-            InputSection(
+            InputSectionRadio(
                 title = "선호하는 맛을 골라주세요.\n(최소 1개 이상, 복수 선택 가능)",
                 radioItemList = tastePreferenceList.toList(),
                 onClickItem = { selectedIndex ->
@@ -165,23 +171,20 @@ fun TasteInfoInputArea(
                 }
             )
             Separator()
-            InputSection(
+            InputSectionDropdown(
                 title = "활동적이신 분인가요?",
-                radioItemList = activityPreferenceList.toList(),
+                dropdownItemList = activityPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
                     activityPreferenceList.toList().forEachIndexed { index, _ ->
                         activityPreferenceList[index] = activityPreferenceList[index].copy(
                             second = index == selectedIndex
                         )
-
-                        if (index == selectedIndex) {
-                            onChangeActivityLevel(index)
-                        }
                     }
+                    onChangeActivityLevel(selectedIndex)
                 }
             )
             Separator()
-            InputSection(
+            InputSectionRadio(
                 title = "선호하는 음식 종류를 골라주세요.\n(최소 1개 이상, 복수 선택 가능)",
                 radioItemList = foodPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
@@ -349,20 +352,15 @@ fun TasteInfoInputArea(
 }
 
 @Composable
-private fun InputSection(
+private fun InputSectionRadio(
     modifier: Modifier = Modifier,
     title: String,
     radioItemList: List<Pair<String, Boolean>>,
     onClickItem: (Int) -> Unit
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-    var longestTextWidth by remember { mutableIntStateOf(0) }
-    val longestTextWidthDp by remember {
-        derivedStateOf {
-            context.pxToDp(longestTextWidth)
-        }
-    }
     Column(
         modifier = modifier
     ) {
@@ -376,18 +374,12 @@ private fun InputSection(
             )
             Spacer(modifier = Modifier.height(5.dp))
             Row(
+                modifier = Modifier.horizontalScroll(state = scrollState),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 radioItemList.forEachIndexed { index, (radioItem, isSelected) ->
                     Column(
                         modifier = Modifier
-                            .then(
-                                if (longestTextWidthDp != 0f) {
-                                    Modifier // .width(longestTextWidthDp.dp)
-                                } else {
-                                    Modifier
-                                }
-                            )
                             .clickable {
                                 onClickItem(index)
                             }
@@ -409,10 +401,6 @@ private fun InputSection(
                         )
                         Text(
                             text = radioItem,
-                            modifier = Modifier.onSizeChanged { (width, _) ->
-                                if (width > longestTextWidth)
-                                    longestTextWidth = width
-                            },
                             color = Color.White,
                             fontSize = 16.dpToSp(),
                             fontWeight = FontWeight.ExtraBold,
@@ -420,12 +408,137 @@ private fun InputSection(
                         )
                     }
                     if (index != radioItemList.size - 1) {
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun InputSectionDropdown(
+    modifier: Modifier = Modifier,
+    title: String,
+    dropdownItemList: List<Pair<String, Boolean>>,
+    onClickItem: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+    ) {
+        Column {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 18.dpToSp(),
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = fontFamily
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            TasteDropdown(
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                },
+                dropdownItemList = dropdownItemList,
+                onClickItem = { selectedIndex ->
+                    onClickItem(selectedIndex)
+                    expanded = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TasteDropdown(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    dropdownItemList: List<Pair<String, Boolean>>,
+    onClickItem: (Int) -> Unit
+) {
+    var selectedText by remember { mutableStateOf("선택 안 함") }
+    val designedModifier = Modifier
+        .background(
+            color = Color.White
+        )
+        .border(
+            width = 2.dp,
+            color = Color.LightGray
+        )
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
+        modifier = modifier
+            .wrapContentSize()
+    ) {
+        TextField(
+            value = selectedText,
+            onValueChange = {},
+            modifier = designedModifier.menuAnchor(),
+            readOnly = true,
+            textStyle = TextStyle(
+                color = Color.LightGray,
+                fontSize = 16.dpToSp(),
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = fontFamily
+            ),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = TextFieldDefaults.colors().copy(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                onExpandedChange(false)
+            },
+            modifier = designedModifier
+        ) {
+            dropdownItemList.forEachIndexed { index, (dropdownItemText, _) ->
+                TasteDropdownItem(
+                    text = dropdownItemText,
+                    onClick = {
+                        onClickItem(index)
+                    }
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(dropdownItemList) {
+        selectedText = dropdownItemList.run {
+            find { (_, isSelected) ->
+                isSelected
+            }?.first ?: "선택 안 함"
+        }
+    }
+}
+
+@Composable
+private fun TasteDropdownItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = text,
+                color = Color.LightGray,
+                fontSize = 16.dpToSp(),
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = fontFamily
+            )
+        },
+        onClick = onClick,
+        modifier = modifier
+    )
 }
 
 @Composable

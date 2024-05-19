@@ -65,8 +65,9 @@ fun Calendar(
             currentMonth = currentMonth,
             onChangeMonth = onChangeMonth
         )
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
             color = ColorSecondary
         )
         HorizontalPager(state = pagerState) { page ->
@@ -195,7 +196,7 @@ private fun CalendarHeader(
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "${currentYear}년",
-                    color = ColorSecondary,
+                    color = Color.White,
                     fontSize = 24.dpToSp(),
                     fontWeight = FontWeight.Medium,
                     fontFamily = fontFamily
@@ -206,7 +207,7 @@ private fun CalendarHeader(
                     modifier = Modifier.defaultMinSize(
                         minWidth = 30.dp
                     ),
-                    color = ColorSecondary,
+                    color = Color.White,
                     fontSize = 24.dpToSp(),
                     fontWeight = FontWeight.Medium,
                     fontFamily = fontFamily

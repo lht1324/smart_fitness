@@ -69,9 +69,9 @@ object DataModule {
         }
 
         install(HttpTimeout) {
-            requestTimeoutMillis = 60000L
-            connectTimeoutMillis = 60000L
-            socketTimeoutMillis = 60000L
+            requestTimeoutMillis = 30000L
+            connectTimeoutMillis = 30000L
+            socketTimeoutMillis = 30000L
         }
 
         defaultRequest {

@@ -51,7 +51,7 @@ fun RankingListItem(
             Text(
                 text = nickname,
                 modifier = Modifier.weight(0.40f),
-                color = Color.White,
+                color = Color.White.getAlphaColorByRank(rank),
                 textAlign = TextAlign.Start
             )
             Text(

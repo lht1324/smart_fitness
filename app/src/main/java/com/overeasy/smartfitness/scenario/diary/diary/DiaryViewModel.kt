@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import java.time.YearMonth
 
@@ -48,7 +49,7 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    private fun initializeCalendar() {
+    private suspend fun initializeCalendar() = withContext(Dispatchers.Default) {
         val calendarList = CalendarManager.getCalendarList().map { list ->
             list.map { calendarItem ->
                 val split = calendarItem.date.split('-')

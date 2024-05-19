@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,7 +31,8 @@ fun SettingTextField(
     onValueChange: (String) -> Unit,
     placeholder: String = "",
     isInvalid: Boolean = false,
-    isMaskedTextField: Boolean = false
+    isMaskedTextField: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     BasicTextField(
         value = value,
@@ -41,13 +43,13 @@ fun SettingTextField(
                 color = if (isInvalid) {
                     Color.Red
                 } else {
-                    Color.White
+                    Color.LightGray
                 },
-                shape = AbsoluteRoundedCornerShape(20.dp)
+                shape = AbsoluteRoundedCornerShape(5.dp)
             )
             .background(
                 color = Color.White,
-                shape = AbsoluteRoundedCornerShape(20.dp)
+                shape = AbsoluteRoundedCornerShape(5.dp)
             ),
         textStyle = TextStyle(
             color = Color.Black,
@@ -55,6 +57,7 @@ fun SettingTextField(
             fontWeight = FontWeight.Medium,
             fontFamily = fontFamily
         ),
+        keyboardOptions = keyboardOptions,
         visualTransformation = if (isMaskedTextField) {
             PasswordVisualTransformation()
         } else {
@@ -68,17 +71,19 @@ fun SettingTextField(
                     true -> {
                         Box(
                             modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 20.dp)
+//                                .padding(vertical = 15.dp, horizontal = 20.dp)
                                 .wrapContentSize()
                         ) {
-                            innerTextField()
+                            Box(modifier = Modifier.padding(vertical = 15.dp, horizontal = 20.dp)) {
+                                innerTextField()
+                            }
                         }
                     }
 
                     false -> {
                         Text(
                             text = placeholder,
-                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 20.dp),
+                            modifier = Modifier.padding(vertical = 15.dp, horizontal = 20.dp),
                             color = Color.Gray,
                             fontSize = 20.dpToSp(),
                             fontWeight = FontWeight.Medium,

@@ -1,7 +1,9 @@
 package com.overeasy.smartfitness
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
@@ -283,4 +285,10 @@ fun calculateAngle(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>, point
     val angle = atan2(cY - bY, cX - bX) - atan2(aY - bY, aX - bX)
 
     return abs(Math.toDegrees(angle.toDouble()).toFloat())
+}
+
+fun Context.getActivity(): ComponentActivity? = when(this) {
+    is ComponentActivity -> this
+    is ContextWrapper -> baseContext.getActivity()
+    else -> null
 }

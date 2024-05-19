@@ -39,7 +39,7 @@ class RankingViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch(Dispatchers.IO) {
-                requestGetRankingCategory()
+                requestGetExercises()
             }
             launch(Dispatchers.IO) {
                 currentCategory.filter { category ->
@@ -61,7 +61,7 @@ class RankingViewModel @Inject constructor(
         currentCategory.value = category
     }
 
-    private suspend fun requestGetRankingCategory() {
+    private suspend fun requestGetExercises() {
         ApiRequestHelper.makeRequest {
             exercisesRepository.getExercises()
 //            rankingRepository.getRankingCategory()

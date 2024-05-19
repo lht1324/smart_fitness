@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +28,8 @@ fun InfoInputField(
     metric: String = "", // 단위
     isInvalid: Boolean,
     invalidText: String = "",
-    isMaskedTextField: Boolean = false
+    isMaskedTextField: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -47,7 +49,8 @@ fun InfoInputField(
                 onValueChange = onValueChange,
                 placeholder = placeholder,
                 isInvalid = isInvalid,
-                isMaskedTextField = isMaskedTextField
+                isMaskedTextField = isMaskedTextField,
+                keyboardOptions = keyboardOptions
             )
             if (metric.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(5.dp))
@@ -61,8 +64,7 @@ fun InfoInputField(
                 )
             }
         }
-        //cerph.gachon.ac.kr:60008
-        Spacer(modifier = Modifier.height(1.dp))
+        Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = invalidText,
             modifier = Modifier
@@ -76,8 +78,9 @@ fun InfoInputField(
             fontSize = 12.dpToSp(),
             fontWeight = FontWeight.Medium,
             fontFamily = fontFamily,
-            textAlign = TextAlign.Start
+            textAlign = TextAlign.Start,
+            lineHeight = 1.dpToSp()
         )
-        Spacer(modifier = Modifier.height(1.dp))
+        Spacer(modifier = Modifier.height(5.dp))
     }
 }

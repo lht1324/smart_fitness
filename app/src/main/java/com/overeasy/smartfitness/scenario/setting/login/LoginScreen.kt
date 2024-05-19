@@ -1,7 +1,9 @@
 package com.overeasy.smartfitness.scenario.setting.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
@@ -10,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.register.UserInfoInputArea
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -28,8 +31,11 @@ fun LoginScreen(
 
     Column(
         modifier = modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxSize()
+            .background(color = ColorPrimary)
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+//        Spacer(modifier = Modifier.height(20.dp))
         UserInfoInputArea(
             id = id,
             password = password,

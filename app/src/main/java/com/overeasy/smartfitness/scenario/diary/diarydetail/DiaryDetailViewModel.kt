@@ -1,11 +1,15 @@
 package com.overeasy.smartfitness.scenario.diary.diarydetail
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
+import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.model.diary.DiaryDetail
 import com.overeasy.smartfitness.domain.workout.model.diary.DiaryDetailWorkoutInfo
+import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutVideoData
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +22,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryDetailViewModel @Inject constructor(
-    private val diaryRepository: DiaryRepository
+    private val diaryRepository: DiaryRepository,
+    private val workoutRepository: WorkoutRepository
 ) : ViewModel() {
     private val _diaryDetailUiEvent = MutableSharedFlow<DiaryDetailUiEvent>()
     val diaryDetailUiEvent = _diaryDetailUiEvent.asSharedFlow()
@@ -27,9 +32,13 @@ class DiaryDetailViewModel @Inject constructor(
     private val _diaryDetail = MutableStateFlow<DiaryDetail?>(null)
     val diaryDetail = _diaryDetail.asStateFlow()
 
+    private val _workoutVideoDataList = mutableStateListOf<List<Pair<String, String>>>()
+    val workoutVideoDataList = _workoutVideoDataList
+
     fun onLoad(noteId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             requestGetDiaryDetail(noteId)
+            requestGetWorkoutVideoList(noteId)
         }
     }
 
@@ -163,6 +172,43 @@ class DiaryDetailViewModel @Inject constructor(
                      */
                 )
             )
+            println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
+        }.onError { throwable ->
+            println("jaehoLee", "onError: ${throwable.message}")
+        }
+    }
+
+    private suspend fun requestGetWorkoutVideoList(noteId: Int) {
+        ApiRequestHelper.makeRequest {
+            workoutRepository.getWorkoutVideoList(noteId)
+        }.onSuccess { res ->
+            res.result.workoutVideoList.filter { workoutVideoData ->
+                workoutVideoData.exerciseName == ""
+            }
+            val temp = res.result.workoutVideoList.map { workoutVideoData ->
+                workoutVideoData.run { exerciseName to workoutVideoId }
+            }.groupBy { (name, _) ->
+                name
+            }.mapValues { (_, dataList) ->
+                dataList.sortedBy { (_, id) -> id }
+            }.map { (_, dataList) ->
+                dataList
+            }
+
+            _workoutVideoDataList.addAll(
+                res.result.workoutVideoList.map { workoutVideoData ->
+                    workoutVideoData.run { exerciseName to workoutVideoId }
+                }.groupBy { (name, _) ->
+                    name
+                }.mapValues { (_, dataList) ->
+                    dataList.sortedBy { (_, id) -> id }
+                }.map { (_, dataList) ->
+                    dataList.map { (workoutName, videoId) ->
+                        workoutName to "${BuildConfig.BASE_URL}/workouts/video/stream/${videoId}"
+                    }
+                }
+            )
+        }.onFailure { res ->
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->
             println("jaehoLee", "onError: ${throwable.message}")

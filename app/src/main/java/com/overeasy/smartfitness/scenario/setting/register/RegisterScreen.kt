@@ -1,10 +1,15 @@
 package com.overeasy.smartfitness.scenario.setting.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.scenario.public.Dialog
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -91,6 +96,9 @@ fun RegisterScreen(
 
     Column(
         modifier = modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxSize()
+            .background(color = ColorPrimary)
     ) {
         currentRegisterArea()
     }

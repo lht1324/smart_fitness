@@ -243,6 +243,28 @@ class WorkoutViewModel @Inject constructor(
                             pointC = rightWrist.toPair()
                         )
 
+                        /*
+                        확률 맥스 찾고 그거 인덱스 찾아서 범위 잡기
+
+
+                        스쿼트
+                        0 true 4개
+                        1 ~ 4 true 3개
+                        5 ~ 10 true 2개
+                        11~14 true 1개
+                        15 true 0개
+                        무릎과 엉덩이 y가 같다고 판단하는 영역을 넘어갔다 올라오면 1회
+                        허벅지 5분의 1부터 무릎 사이 영역 찍고 올라오면 1회
+
+                        데드
+                        0이 true 5개
+                        1~5 true 4개
+                        6~15 true 3개
+                        16 ~ 25  true 2개
+                        26~30 true 1개
+                        31 true 0개
+                        무릎 위 허벅지 5분의 1 영역 찍고 리턴
+                         */
                         val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
                         val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
 

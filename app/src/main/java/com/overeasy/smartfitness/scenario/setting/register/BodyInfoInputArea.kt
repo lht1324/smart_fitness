@@ -12,10 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.public.SettingButton
 import com.overeasy.smartfitness.scenario.setting.public.SettingTextField
@@ -37,12 +40,20 @@ fun BodyInfoInputArea(
     onChangeWeight: (String) -> Unit,
     onClickFinish: () -> Unit
 ) {
+    val context = LocalContext.current
+
     var isShowSkipDialog by remember { mutableStateOf(false) }
     var isShowUnfinishedDialog by remember { mutableStateOf(false) }
 
+    var inputButtonHeightPx by remember { mutableIntStateOf(0) }
+    val inputButtonHeightDp by remember {
+        derivedStateOf {
+            context.pxToDp(inputButtonHeightPx)
+        }
+    }
+
     Column(
         modifier = modifier
-            .padding(horizontal = 20.dp)
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         BodyInfoInput(
@@ -69,12 +80,14 @@ fun BodyInfoInputArea(
             isInvalid = isWeightInvalid,
             invalidText = "30~200kg 사이의 몸무게만 입력할 수 있어요."
         )
-        Spacer(modifier = Modifier.height(5.dp))
-        Column(
+        Row(
             modifier = Modifier.align(Alignment.End)
         ) {
             SettingButton(
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.onSizeChanged { (_, height) ->
+                    if (inputButtonHeightPx != height)
+                        inputButtonHeightPx = height
+                },
                 text = buttonText,
                 onClick = {
                     val isEveryBodyInfoValid = !isAgeInvalid && !isHeightInvalid && !isWeightInvalid
@@ -88,9 +101,9 @@ fun BodyInfoInputArea(
                 }
             )
             if (isInRegister) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 SettingButton(
-                    modifier = Modifier.align(Alignment.End),
+                    modifier = Modifier.height(inputButtonHeightDp.dp),
                     text = "건너 뛰기",
                     onClick = {
                         isShowSkipDialog = true

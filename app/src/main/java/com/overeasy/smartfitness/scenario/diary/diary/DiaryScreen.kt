@@ -1,9 +1,11 @@
 package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,10 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
@@ -149,7 +154,7 @@ fun DiaryScreen(
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "데이터를 불러오는 중입니다.\n잠시만 기다려주세요...",
-                    color = ColorSecondary,
+                    color = Color.White,
                     fontSize = 24.dpToSp(),
                     fontWeight = FontWeight.ExtraBold,
                     fontFamily = fontFamily,
@@ -288,35 +293,48 @@ private fun InfoSection(
             }
         }
         if (selectedDiaryItemList.isNotEmpty() || selectedCalendarItemData?.date == LocalDate.now().run { "$year-${String.format("%02d", monthValue)}-${String.format("%02d", dayOfMonth)}" }) {
-            Box(
+            MoveToDetailButton(
                 modifier = Modifier
                     .padding(
-                        top = (40 + (textHeightDp / 2.0f)).dp,
-                        end = 20.dp
-                    )
-                    .background(
-                        color = ColorSecondary,
-                        shape = AbsoluteRoundedCornerShape(20.dp)
-                    )
-                    .noRippleClickable {
-                        if (selectedDiaryItemList.isNotEmpty())
-                            onClickMoveToDetail(selectedDiaryItemList.first().noteId)
-                        else
-                            onClickMoveToDetail(0)
-                    }
-                    .align(Alignment.TopEnd)
-            ) {
-                Text(
-                    text = "상세 정보",
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .align(Alignment.Center),
-                    color = Color.White,
-                    fontSize = 16.dpToSp(),
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = fontFamily
-                )
-            }
+                        top = (35 + (textHeightDp / 2.0f)).dp,
+                        end = 15.dp
+                    ),
+                onClick = {
+                    if (selectedDiaryItemList.isNotEmpty())
+                        onClickMoveToDetail(selectedDiaryItemList.first().noteId)
+                    else
+                        onClickMoveToDetail(0)
+                }
+            )
+//            Box(
+//                modifier = Modifier
+//                    .padding(
+//                        top = (40 + (textHeightDp / 2.0f)).dp,
+//                        end = 20.dp
+//                    )
+//                    .background(
+//                        color = ColorSecondary,
+//                        shape = AbsoluteRoundedCornerShape(20.dp)
+//                    )
+//                    .noRippleClickable {
+//                        if (selectedDiaryItemList.isNotEmpty())
+//                            onClickMoveToDetail(selectedDiaryItemList.first().noteId)
+//                        else
+//                            onClickMoveToDetail(0)
+//                    }
+//                    .align(Alignment.TopEnd)
+//            ) {
+//                Text(
+//                    text = "상세 정보",
+//                    modifier = Modifier
+//                        .padding(10.dp)
+//                        .align(Alignment.Center),
+//                    color = Color.White,
+//                    fontSize = 16.dpToSp(),
+//                    fontWeight = FontWeight.Normal,
+//                    fontFamily = fontFamily
+//                )
+//            }
         }
     }
 
@@ -456,4 +474,34 @@ private fun InfoSection(
 //            }
 //        }
 //    }
+}
+
+@Composable
+private fun BoxScope.MoveToDetailButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .background(
+                color = Color.White,
+                shape = CircleShape
+            )
+            .border(
+                width = 2.dp,
+                color = Color.LightGray,
+                shape = CircleShape
+            )
+            .noRippleClickable(onClick = onClick)
+            .align(Alignment.TopEnd)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_magnifying_glasses),
+            contentDescription = "상세 정보 이동하기",
+            modifier = Modifier
+                .size(24.dp)
+                .align(Alignment.Center)
+        )
+    }
 }

@@ -164,7 +164,7 @@ fun DietScreen(
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
                                 text = "데이터를 불러오는 중입니다.\n잠시만 기다려주세요...",
-                                color = ColorSecondary,
+                                color = Color.White,
                                 fontSize = 24.dpToSp(),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = fontFamily,
