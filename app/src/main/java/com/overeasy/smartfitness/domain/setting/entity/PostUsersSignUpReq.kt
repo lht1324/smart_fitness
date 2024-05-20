@@ -10,9 +10,11 @@ data class PostUsersSignUpReq(
     val age: Int?,
     val weight: Float?,
     val height: Float?,
+    val gender: String,
     val spicyPreference: Int?,
     val meatConsumption: Boolean?,
     val tastePreference: String?,
     val activityLevel: Int?,
-    val preferenceTypeFood: String?
+    val preferenceTypeFood: String?,
+    val preferenceFoods: String?
 )

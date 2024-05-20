@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.register.BodyInfoInputArea
 import com.overeasy.smartfitness.scenario.setting.register.NicknameInputArea
@@ -60,7 +61,9 @@ fun MyInfoScreen(
             .background(color = ColorPrimary)
     ) {
         Column(
-            modifier = Modifier.verticalScroll(state = scrollState)
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .verticalScroll(state = scrollState)
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             SectionTitle(
@@ -92,6 +95,13 @@ fun MyInfoScreen(
                 age = bodyInfo.age ?: "",
                 height = bodyInfo.height ?: "",
                 weight = bodyInfo.weight ?: "",
+                selectedGenderIndex = when (bodyInfo.gender) {
+                    "male" -> 0
+                    "female" -> 1
+                    else -> null
+                }.apply {
+                    println("jaehoLee", "gender = ${bodyInfo.gender}, $this")
+                },
                 isAgeInvalid = isAgeInvalid,
                 isHeightInvalid = isHeightInvalid,
                 isWeightInvalid = isWeightInvalid,
@@ -114,6 +124,12 @@ fun MyInfoScreen(
                         isBodyInfoChanged = true
 
                     viewModel.onChangeWeight(value)
+                },
+                onChangeGender = { selectedIndex ->
+                    if (!isBodyInfoChanged)
+                        isBodyInfoChanged = true
+
+                    viewModel.onChangeGender(selectedIndex)
                 },
                 onClickFinish = {
                     if (isBodyInfoChanged) {
@@ -212,7 +228,7 @@ private fun SectionTitle(
     text: String
 ) {
     Column(
-        modifier = modifier.padding(horizontal = 20.dp)
+        modifier = modifier
     ) {
         Text(
             text = text,

@@ -72,6 +72,7 @@ fun RegisterScreen(
                         onChangeAge = viewModel::onChangeAge,
                         onChangeHeight = viewModel::onChangeHeight,
                         onChangeWeight = viewModel::onChangeWeight,
+                        onChangeGender = viewModel::onChangeGender,
                         isAgeInvalid = isAgeInvalid,
                         isHeightInvalid = isHeightInvalid,
                         isWeightInvalid = isWeightInvalid,

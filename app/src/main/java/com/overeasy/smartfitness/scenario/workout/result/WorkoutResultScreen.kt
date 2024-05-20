@@ -61,7 +61,8 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 @Composable
 fun WorkoutResultScreen(
     modifier: Modifier = Modifier,
-    viewModel: WorkoutResultViewModel = hiltViewModel()
+    viewModel: WorkoutResultViewModel = hiltViewModel(),
+    noteId: Int
 ) {
     val scrollState = rememberScrollState()
     val workoutResult by viewModel.workoutResult.collectAsState()

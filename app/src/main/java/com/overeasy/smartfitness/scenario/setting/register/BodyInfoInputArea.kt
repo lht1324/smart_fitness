@@ -1,5 +1,8 @@
 package com.overeasy.smartfitness.scenario.setting.register
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +29,7 @@ import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.public.SettingButton
 import com.overeasy.smartfitness.scenario.setting.public.SettingTextField
+import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
 @Composable
@@ -30,14 +38,16 @@ fun BodyInfoInputArea(
     age: String,
     height: String,
     weight: String,
+    selectedGenderIndex: Int? = null,
     isAgeInvalid: Boolean,
     isHeightInvalid: Boolean,
     isWeightInvalid: Boolean,
     isInRegister: Boolean = true,
-    buttonText: String = "신체 정보\n입력하기",
+    buttonText: String = "완료",
     onChangeAge: (String) -> Unit,
     onChangeHeight: (String) -> Unit,
     onChangeWeight: (String) -> Unit,
+    onChangeGender: (Int) -> Unit,
     onClickFinish: () -> Unit
 ) {
     val context = LocalContext.current
@@ -50,6 +60,13 @@ fun BodyInfoInputArea(
         derivedStateOf {
             context.pxToDp(inputButtonHeightPx)
         }
+    }
+
+    val genderList = remember {
+        mutableStateListOf(
+            "남자" to false,
+            "여자" to false
+        )
     }
 
     Column(
@@ -80,37 +97,47 @@ fun BodyInfoInputArea(
             isInvalid = isWeightInvalid,
             invalidText = "30~200kg 사이의 몸무게만 입력할 수 있어요."
         )
+        Spacer(modifier = Modifier.height(5.dp))
         Row(
-            modifier = Modifier.align(Alignment.End)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            SettingButton(
-                modifier = Modifier.onSizeChanged { (_, height) ->
-                    if (inputButtonHeightPx != height)
-                        inputButtonHeightPx = height
-                },
-                text = buttonText,
-                onClick = {
-                    val isEveryBodyInfoValid = !isAgeInvalid && !isHeightInvalid && !isWeightInvalid
-                    val isEveryBodyInfoNotEmpty = age.isNotEmpty() && height.isNotEmpty() && weight.isNotEmpty()
-
-                    if (isEveryBodyInfoValid && isEveryBodyInfoNotEmpty) {
-                        onClickFinish()
-                    } else {
-                        isShowUnfinishedDialog = true
+            Text(
+                text = "성별",
+                color = Color.White,
+                fontSize = 18.dpToSp(),
+                fontWeight = FontWeight.ExtraBold
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            RadioList(
+                radioItemList = genderList,
+                onClickItem = { selectedIndex ->
+                    genderList.toList().forEachIndexed { index, (gender, _) ->
+                        genderList[index] = gender to (index == selectedIndex)
                     }
+                    onChangeGender(selectedIndex)
                 }
             )
-            if (isInRegister) {
-                Spacer(modifier = Modifier.width(10.dp))
-                SettingButton(
-                    modifier = Modifier.height(inputButtonHeightDp.dp),
-                    text = "건너 뛰기",
-                    onClick = {
-                        isShowSkipDialog = true
-                    }
-                )
-            }
         }
+
+        SettingButton(
+            modifier = Modifier
+                .onSizeChanged { (_, height) ->
+                    if (inputButtonHeightPx != height)
+                        inputButtonHeightPx = height
+                }
+                .align(Alignment.End),
+            text = buttonText,
+            onClick = {
+                val isEveryBodyInfoValid = !isAgeInvalid && !isHeightInvalid && !isWeightInvalid
+                val isEveryBodyInfoNotEmpty = age.isNotEmpty() && height.isNotEmpty() && weight.isNotEmpty()
+
+                if (isEveryBodyInfoValid && isEveryBodyInfoNotEmpty) {
+                    onClickFinish()
+                } else {
+                    isShowUnfinishedDialog = true
+                }
+            }
+        )
     }
 
     if (isShowSkipDialog) {
@@ -141,6 +168,12 @@ fun BodyInfoInputArea(
                 isShowUnfinishedDialog = false
             }
         )
+    }
+
+    LaunchedEffect(selectedGenderIndex) {
+        genderList.toList().forEachIndexed { index, (gender, _) ->
+            genderList[index] = gender to (selectedGenderIndex == index)
+        }
     }
 }
 
@@ -195,5 +228,54 @@ private fun BodyInfoInput(
             textAlign = TextAlign.Start
         )
         Spacer(modifier = Modifier.height(2.dp))
+    }
+}
+
+@Composable
+private fun RadioList(
+    modifier: Modifier = Modifier,
+    radioItemList: List<Pair<String, Boolean>>,
+    onClickItem: (Int) -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    Row(
+        modifier = modifier.horizontalScroll(state = scrollState),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        radioItemList.forEachIndexed { index, (radioItem, isSelected) ->
+            Column(
+                modifier = Modifier
+                    .clickable {
+                        onClickItem(index)
+                    }
+                    .background(
+                        color = Color.Transparent,
+                        shape = AbsoluteRoundedCornerShape(5.dp)
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                RadioButton(
+                    selected = isSelected,
+                    onClick = {
+                        onClickItem(index)
+                    },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = ColorSecondary,
+                        unselectedColor = ColorSecondary
+                    )
+                )
+                Text(
+                    text = radioItem,
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
+                )
+            }
+            if (index != radioItemList.size - 1) {
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+        }
     }
 }

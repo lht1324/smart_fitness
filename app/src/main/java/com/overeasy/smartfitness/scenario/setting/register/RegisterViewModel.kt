@@ -47,7 +47,8 @@ class RegisterViewModel @Inject constructor(
         RegisterBodyInfo(
             age = null,
             height = null,
-            weight = null
+            weight = null,
+            gender = null
         )
     )
 
@@ -58,6 +59,7 @@ class RegisterViewModel @Inject constructor(
             tastePreference = null,
             activityLevel = null,
             preferenceTypeFood = null,
+            preferenceFoods = null
         )
     )
 
@@ -79,21 +81,21 @@ class RegisterViewModel @Inject constructor(
         val (spicyPreference, meatConsumption, tastePreference, activityLevel, preferenceTypeFood) = tasteInfo
 
         val isSkippedBodyInfoInput = age.isNullOrEmpty() || height.isNullOrEmpty() || weight.isNullOrEmpty()
-        val isSkippedTasteInfoInput = spicyPreference == null ||
-                meatConsumption == null ||
-                tastePreference == null ||
-                activityLevel == null ||
+        val isSkippedTasteInfoInput = spicyPreference == null &&
+                meatConsumption == null &&
+                tastePreference == null &&
                 preferenceTypeFood == null
 
-        if (!isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
-            bodyInfo to tasteInfo
-        } else if (isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
-            null to tasteInfo
-        } else if (!isSkippedBodyInfoInput && isSkippedTasteInfoInput) {
-            bodyInfo to null
-        } else {
-            null to null
-        }
+        bodyInfo to tasteInfo
+//        if (!isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
+//            bodyInfo to tasteInfo
+//        } else if (isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
+//            null to tasteInfo
+//        } else if (!isSkippedBodyInfoInput && isSkippedTasteInfoInput) {
+//            bodyInfo to null
+//        } else {
+//            null to null
+//        }
     }
 
     private val postUsersSignUpReq =
@@ -107,14 +109,16 @@ class RegisterViewModel @Inject constructor(
                 username = id,
                 password = password,
                 nickname = nickname,
-                age = bodyInfo?.age?.toIntOrNull(),
-                weight = bodyInfo?.weight?.toFloatOrNull(),
-                height = bodyInfo?.height?.toFloatOrNull(),
-                spicyPreference = tasteInfo?.spicyPreference,
-                meatConsumption = tasteInfo?.meatConsumption,
-                tastePreference = tasteInfo?.tastePreference,
-                activityLevel = tasteInfo?.activityLevel,
-                preferenceTypeFood = tasteInfo?.preferenceTypeFood,
+                age = bodyInfo.age?.toIntOrNull(),
+                weight = bodyInfo.weight?.toFloatOrNull(),
+                height = bodyInfo.height?.toFloatOrNull(),
+                gender = "male",
+                spicyPreference = tasteInfo.spicyPreference,
+                meatConsumption = tasteInfo.meatConsumption,
+                tastePreference = tasteInfo.tastePreference,
+                activityLevel = tasteInfo.activityLevel,
+                preferenceTypeFood = tasteInfo.preferenceTypeFood,
+                preferenceFoods = "불고기"
             )
         }
 
@@ -211,6 +215,15 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
+    fun onChangeGender(selectedIndex: Int) {
+        _bodyInfo.value = bodyInfo.value.copy(
+            gender = if (selectedIndex == 0)
+                "male"
+            else
+                "female"
+        )
+    }
+
     fun onChangeSpicyPreference(value: Int) {
         tasteInfo.value = tasteInfo.value.copy(
             spicyPreference = value
@@ -233,6 +246,7 @@ class RegisterViewModel @Inject constructor(
         tasteInfo.value = tasteInfo.value.copy(
             activityLevel = value
         )
+        println("jaehoLee", "onChangeActivity = $value, ${tasteInfo.value.activityLevel}")
     }
 
     fun onChangePreferenceTypeFood(value: String) {
@@ -242,11 +256,10 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onClickSkipTasteInfo() {
-        tasteInfo.value = RegisterTasteInfo(
+        tasteInfo.value = tasteInfo.value.copy(
             spicyPreference = null,
             meatConsumption = null,
             tastePreference = null,
-            activityLevel = null,
             preferenceTypeFood = null
         )
 
@@ -265,6 +278,7 @@ class RegisterViewModel @Inject constructor(
                 }.filter { (_, isClicked) ->
                     isClicked
                 }.collectLatest { (req, _) ->
+                    println("jaehoLee", "SignUpReq = $req")
                     ApiRequestHelper.makeRequest {
                         settingRepository.postUsersSignUp(req)
                     }.onSuccess { res ->

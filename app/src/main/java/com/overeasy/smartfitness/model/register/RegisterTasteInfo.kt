@@ -5,5 +5,6 @@ data class RegisterTasteInfo(
     val meatConsumption: Boolean?,
     val tastePreference: String?,
     val activityLevel: Int?,
-    val preferenceTypeFood: String?
+    val preferenceTypeFood: String?,
+    val preferenceFoods: String?
 )

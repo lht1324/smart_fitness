@@ -48,8 +48,13 @@ fun DiaryNavHost(
         ) {
             composable(DiaryRoutes.Diary.route) {
                 DiaryScreen(
-                    onClickMoveToDetail = { noteId ->
-                        navHostController.navigate(DiaryRoutes.DiaryDetail.createRoute(noteId.toString()))
+                    onClickMoveToDetail = { noteId, date ->
+                        navHostController.navigate(
+                            DiaryRoutes.DiaryDetail.createRoute(
+                                noteId = noteId,
+                                date = date
+                            )
+                        )
                     }
                 )
             }

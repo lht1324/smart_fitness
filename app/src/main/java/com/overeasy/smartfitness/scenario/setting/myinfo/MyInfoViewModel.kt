@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -41,7 +43,8 @@ class MyInfoViewModel @Inject constructor(
         RegisterBodyInfo(
             age = null,
             height = null,
-            weight = null
+            weight = null,
+            gender = null
         )
     )
 
@@ -52,6 +55,7 @@ class MyInfoViewModel @Inject constructor(
             tastePreference = null,
             activityLevel = null,
             preferenceTypeFood = null,
+            preferenceFoods = null
         )
     )
 
@@ -95,23 +99,27 @@ class MyInfoViewModel @Inject constructor(
                 }.onSuccess { res ->
                     val userData = res.result
 
-                    userDataFlow.value = userData
+                    userData?.run {
+                        userDataFlow.value = this
 
-                    _nickname.value = userData?.nickname ?: ""
+                        _nickname.value = nickname
 
-                    _bodyInfo.value = RegisterBodyInfo(
-                        age = userData?.age?.toString(),
-                        height = userData?.height?.toString(),
-                        weight = userData?.weight?.toString()
-                    )
+                        _bodyInfo.value = RegisterBodyInfo(
+                            age = userData.age.toString(),
+                            height = userData.height.toString(),
+                            weight = userData.weight.toString(),
+                            gender = userData.gender
+                        )
 
-                    _tasteInfo.value = RegisterTasteInfo(
-                        spicyPreference = userData?.spicyPreference,
-                        meatConsumption = userData?.meatConsumption,
-                        tastePreference = userData?.tastePreference,
-                        activityLevel = userData?.activityLevel,
-                        preferenceTypeFood = userData?.preferenceTypeFood
-                    )
+                        _tasteInfo.value = RegisterTasteInfo(
+                            spicyPreference = userData.spicyPreference,
+                            meatConsumption = userData.meatConsumption,
+                            tastePreference = userData.tastePreference,
+                            activityLevel = userData.activityLevel,
+                            preferenceTypeFood = userData.preferenceTypeFood,
+                            preferenceFoods = userData.preferenceFoods
+                        )
+                    } ?: _myInfoUiEvent.emit(MyInfoUiEvent.OnFailureChangeInfo)
                 }.onFailure { res ->
                     println("jaehoLee", "onFailure: $res")
                 }.onError { throwable ->
@@ -131,11 +139,13 @@ class MyInfoViewModel @Inject constructor(
                         age = userDataFlow.value?.age,
                         height = userDataFlow.value?.height,
                         weight = userDataFlow.value?.weight,
+                        gender = userDataFlow.value?.gender,
                         spicyPreference = userDataFlow.value?.spicyPreference,
                         meatConsumption = userDataFlow.value?.meatConsumption,
                         tastePreference = userDataFlow.value?.tastePreference,
                         activityLevel = userDataFlow.value?.activityLevel,
                         preferenceTypeFood = userDataFlow.value?.preferenceTypeFood,
+                        preferenceFoods = userDataFlow.value?.preferenceFoods
                     )
                 }
             }
@@ -152,11 +162,13 @@ class MyInfoViewModel @Inject constructor(
                         age = bodyInfo.age?.toIntOrNull(),
                         height = bodyInfo.height?.toFloatOrNull(),
                         weight = bodyInfo.weight?.toFloatOrNull(),
+                        gender = bodyInfo.gender,
                         spicyPreference = userDataFlow.value?.spicyPreference,
                         meatConsumption = userDataFlow.value?.meatConsumption,
                         tastePreference = userDataFlow.value?.tastePreference,
                         activityLevel = userDataFlow.value?.activityLevel,
                         preferenceTypeFood = userDataFlow.value?.preferenceTypeFood,
+                        preferenceFoods = userDataFlow.value?.preferenceFoods
                     )
                 }
             }
@@ -173,11 +185,13 @@ class MyInfoViewModel @Inject constructor(
                         age = userDataFlow.value?.age,
                         height = userDataFlow.value?.height,
                         weight = userDataFlow.value?.weight,
+                        gender = userDataFlow.value?.gender,
                         spicyPreference = tasteInfo.spicyPreference,
                         meatConsumption = tasteInfo.meatConsumption,
                         tastePreference = tasteInfo.tastePreference,
                         activityLevel = tasteInfo.activityLevel,
                         preferenceTypeFood = tasteInfo.preferenceTypeFood,
+                        preferenceFoods = tasteInfo.preferenceFoods,
                     )
                 }
             }
@@ -201,27 +215,33 @@ class MyInfoViewModel @Inject constructor(
         age: Int? = null,
         height: Float? = null,
         weight: Float? = null,
+        gender: String? = null,
         spicyPreference: Int? = null,
         meatConsumption: Boolean? = null,
         tastePreference: String? = null,
         activityLevel: Int? = null,
-        preferenceTypeFood: String? = null
+        preferenceTypeFood: String? = null,
+        preferenceFoods: String? = null
     ) {
         ApiRequestHelper.makeRequest {
             println("jaehoLee", "spicy = $spicyPreference, meat = $meatConsumption, taste = $tastePreference, act = $activityLevel, food = $preferenceTypeFood")
             settingRepository.putUsers(
                 PutUsersReq(
-                    id = MainApplication.appPreference.userId,
+                    userId = MainApplication.appPreference.userId,
                     nickname = nickname,
                     height = height,
                     weight = weight,
                     age = age,
+                    gender = gender,
                     spicyPreference = spicyPreference,
                     meatConsumption = meatConsumption,
                     tastePreference = tastePreference,
                     activityLevel = activityLevel,
-                    preferenceTypeFood = preferenceTypeFood
-                )
+                    preferenceTypeFood = preferenceTypeFood,
+                    preferenceFoods = preferenceFoods
+                ).apply {
+                    println("jaehoLee", "put req = ${Json.encodeToString(this)}")
+                }
             )
         }.onSuccess { res ->
             _myInfoUiEvent.emit(MyInfoUiEvent.OnSuccessChangeInfo)
@@ -300,6 +320,15 @@ class MyInfoViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    fun onChangeGender(selectedIndex: Int) {
+        _bodyInfo.value = bodyInfo.value.copy(
+            gender = if (selectedIndex == 0)
+                "male"
+            else
+                "female"
+        )
     }
 
     fun onChangeSpicyPreference(value: Int) {

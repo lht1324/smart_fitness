@@ -156,26 +156,26 @@ class WorkoutResultViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             delay(5000L)
-            val videoDir = MainApplication.appPreference.currentVideoFileDir
-
-            videoDir?.let { dir ->
-                try {
-                    val file = File(dir)
-                    val byte = file.readBytes()
-                    println("jaehoLee", "isExistBeforeDelete = ${file.exists()}")
-                    println("jaehoLee", "length = ${byte.size}")
-
-                    delay(5000L)
-                    if(file.exists()){
-                        file.delete();
-                    }
-
-                    println("jaehoLee", "isExistAfterDelete = ${file.exists()}")
-                } catch (e: Throwable){
-                    println("jaehoLee", "error in file: ${e.message}")
-
-                }
-            }
+//            val videoDir = MainApplication.appPreference.currentVideoFileDir
+//
+//            videoDir?.let { dir ->
+//                try {
+//                    val file = File(dir)
+//                    val byte = file.readBytes()
+//                    println("jaehoLee", "isExistBeforeDelete = ${file.exists()}")
+//                    println("jaehoLee", "length = ${byte.size}")
+//
+//                    delay(5000L)
+//                    if(file.exists()){
+//                        file.delete();
+//                    }
+//
+//                    println("jaehoLee", "isExistAfterDelete = ${file.exists()}")
+//                } catch (e: Throwable){
+//                    println("jaehoLee", "error in file: ${e.message}")
+//
+//                }
+//            }
 
 
         }

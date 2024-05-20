@@ -7,12 +7,14 @@ import kotlinx.serialization.Serializable
 data class UserData(
     val username: String,
     val nickname: String,
-    val age: Int? = null,
-    val height: Float? = null,
-    val weight: Float? = null,
+    val age: Int,
+    val height: Float,
+    val weight: Float,
+    val gender: String,
     val spicyPreference: Int? = null,
     val meatConsumption: Boolean? = null,
     val tastePreference: String? = null,
-    val activityLevel: Int? = null,
-    val preferenceTypeFood: String? = null
+    val activityLevel: Int,
+    val preferenceTypeFood: String? = null,
+    val preferenceFoods: String?
 )

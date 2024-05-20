@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -60,12 +62,11 @@ fun WorkoutScreen(
     viewModel: WorkoutViewModel = hiltViewModel(),
     filesDir: File?,
     onClickWatchExampleVideo: (String) -> Unit,
-    onFinishWorkout: () -> Unit,
+    onFinishWorkout: (Int) -> Unit,
     onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onUpdateJson: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as Activity
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val cameraController = remember {
         LifecycleCameraController(context).apply {
@@ -79,7 +80,10 @@ fun WorkoutScreen(
         }
     }
     val poseDetectionManager = remember {
-        PoseDetectionManager(cameraController)
+        PoseDetectionManager(
+            context = context,
+            cameraController = cameraController
+        )
     }
     var isCameraPermissionGranted by remember { mutableStateOf(false) }
     val cameraPermissionState = rememberPermissionState(
@@ -118,6 +122,7 @@ fun WorkoutScreen(
     val scoreNotGood by viewModel.scoreNotGood.collectAsState()
 
     val isWorkoutRunning by viewModel.isWorkoutRunning.collectAsState()
+    val isLoadingFinishWorkout by viewModel.isLoadingFinishWorkout.collectAsState()
 
     Box(
         modifier = modifier
@@ -248,31 +253,33 @@ fun WorkoutScreen(
                 }
             }
         }
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(color = Color.Black.copy(alpha = 0.3f))
-//        ) {
-//            Column(
-//                modifier = Modifier.align(Alignment.Center),
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                CircularProgressIndicator(
-//                    modifier = Modifier.size(100.dp),
-//                    color = ColorSaturday,
-//                    strokeWidth = 15.dp
-//                )
-//                Spacer(modifier = Modifier.height(10.dp))
-//                Text(
-//                    text = "AI가 운동 결과를 열심히 분석 중이에요.\n잠시만 기다려주세요...",
-//                    color = Color.White,
-//                    fontSize = 24.dpToSp(),
-//                    fontWeight = FontWeight.ExtraBold,
-//                    fontFamily = fontFamily,
-//                    textAlign = TextAlign.Center
-//                )
-//            }
-//        }
+        if (isLoadingFinishWorkout) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = ColorPrimary)
+            ) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(100.dp),
+                        color = ColorSaturday,
+                        strokeWidth = 15.dp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "AI가 운동 결과를 열심히 분석 중이에요.\n잠시만 기다려주세요...",
+                        color = Color.White,
+                        fontSize = 24.dpToSp(),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = fontFamily,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
     }
 
     if (isShowWorkoutInfoInputDialog) {
@@ -361,10 +368,10 @@ fun WorkoutScreen(
                 WorkoutViewModel.WorkoutUiEvent.StopRecording -> {
                     poseDetectionManager.stopRecording()
                 }
-                WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
+                is WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
                     poseDetectionManager.stopRecording()
 
-                    onFinishWorkout()
+                    onFinishWorkout(event.noteId)
                 }
             }
         }

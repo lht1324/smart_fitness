@@ -2,6 +2,8 @@
 
 package com.overeasy.smartfitness.module.posedetectionmanager
 
+import android.annotation.SuppressLint
+import android.content.Context
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.video.FileOutputOptions
@@ -17,13 +19,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
@@ -36,15 +37,19 @@ import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 class PoseDetectionManager(
+    private val context: Context,
     private val cameraController: LifecycleCameraController
 ) {
     private var recording: Recording? = null
     private val cameraExecutor by lazy {
+        ContextCompat.getMainExecutor(context)
+    }
+    private val poseDetectionExecutor by lazy {
         Executors.newSingleThreadExecutor()
     }
     private val options by lazy {
         AccuratePoseDetectorOptions.Builder()
-            .setExecutor(cameraExecutor)
+            .setExecutor(poseDetectionExecutor)
             .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
             .build()
     }
@@ -93,7 +98,7 @@ class PoseDetectionManager(
 
         LaunchedEffect(Unit) {
             cameraController.setImageAnalysisAnalyzer(
-                cameraExecutor
+                poseDetectionExecutor
             ) { imageProxy ->
                 val rotationDegrees = imageProxy.imageInfo.rotationDegrees
 
@@ -124,6 +129,7 @@ class PoseDetectionManager(
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun startRecording(
         isCameraPermissionGranted: Boolean,
         filesDir: File?
@@ -138,7 +144,6 @@ class PoseDetectionManager(
                     String.format("%02d", nano).take(5)
         }
         val outputFile = File(filesDir, "$dateString.mp4")
-        println("jaehoLee", "date = $dateString, file = $outputFile, dir = $filesDir")
         if (!isCameraPermissionGranted) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions

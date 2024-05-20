@@ -33,13 +33,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
-import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
@@ -63,6 +61,7 @@ fun TasteInfoInputArea(
     onFinishTasteInfoInput: () -> Unit
 ) {
     var isShowUnfinishedDialog by remember { mutableStateOf(false) }
+    var isShowNeedEssentialDialog by remember { mutableStateOf(false) }
     var isShowSkipDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
@@ -124,6 +123,35 @@ fun TasteInfoInputArea(
                 )
         ) {
             Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "필수 입력",
+                color = Color.White,
+                fontSize = 20.dpToSp(),
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = fontFamily
+            )
+            Separator()
+            InputSectionDropdown(
+                title = "활동적이신 분인가요?",
+                dropdownItemList = activityPreferenceList.toList(),
+                onClickItem = { selectedIndex ->
+                    activityPreferenceList.toList().forEachIndexed { index, _ ->
+                        activityPreferenceList[index] = activityPreferenceList[index].copy(
+                            second = index == selectedIndex
+                        )
+                    }
+                    onChangeActivityLevel(selectedIndex)
+                }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "선택 입력",
+                color = Color.White,
+                fontSize = 20.dpToSp(),
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = fontFamily
+            )
+            Separator()
             InputSectionDropdown(
                 modifier = Modifier.wrapContentSize(),
                 title = "선호하는 매운 맛 단계를 골라주세요.",
@@ -142,8 +170,8 @@ fun TasteInfoInputArea(
                 title = "고기를 드시나요?",
                 dropdownItemList = meatPreferenceList.toList(),
                 onClickItem = { selectedIndex ->
-                    spicyPreferenceList.toList().forEachIndexed { index, _ ->
-                        spicyPreferenceList[index] = spicyPreferenceList[index].copy(
+                    meatPreferenceList.toList().forEachIndexed { index, _ ->
+                        meatPreferenceList[index] = meatPreferenceList[index].copy(
                             second = index == selectedIndex
                         )
                     }
@@ -168,19 +196,6 @@ fun TasteInfoInputArea(
                     }
 
                     onChangeTastePreference(result)
-                }
-            )
-            Separator()
-            InputSectionDropdown(
-                title = "활동적이신 분인가요?",
-                dropdownItemList = activityPreferenceList.toList(),
-                onClickItem = { selectedIndex ->
-                    activityPreferenceList.toList().forEachIndexed { index, _ ->
-                        activityPreferenceList[index] = activityPreferenceList[index].copy(
-                            second = index == selectedIndex
-                        )
-                    }
-                    onChangeActivityLevel(selectedIndex)
                 }
             )
             Separator()
@@ -234,8 +249,16 @@ fun TasteInfoInputArea(
                                 !isActivityPreferenceChecked &&
                                 !isFoodPreferenceChecked
 
-                        if (isEveryOptionSelected || isEveryOptionUnselected) {
+                        val isEssentialOptionSelectedOnly = isActivityPreferenceChecked &&
+                                !isSpicyPreferenceChecked &&
+                                !isMeatPreferenceChecked &&
+                                !isTastePreferenceChecked &&
+                                !isFoodPreferenceChecked
+
+                        if (isEveryOptionSelected || isEssentialOptionSelectedOnly) {
                             onFinishTasteInfoInput()
+                        } else if (isEveryOptionUnselected) {
+                            isShowNeedEssentialDialog = true
                         } else {
                             isShowUnfinishedDialog = true
                         }
@@ -253,6 +276,20 @@ fun TasteInfoInputArea(
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
+    }
+
+    if (isShowNeedEssentialDialog) {
+        Dialog(
+            title = "취향 입력이 실패했어요.",
+            description = "필수 항목은 전부 골라야 해요.",
+            confirmText = "다시 작성하기",
+            onClickConfirm = {
+                isShowNeedEssentialDialog = false
+            },
+            onDismissRequest = {
+                isShowNeedEssentialDialog = false
+            }
+        )
     }
 
     if (isShowUnfinishedDialog) {
@@ -433,7 +470,7 @@ private fun InputSectionDropdown(
                 text = title,
                 color = Color.White,
                 fontSize = 18.dpToSp(),
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 fontFamily = fontFamily
             )
             Spacer(modifier = Modifier.height(5.dp))

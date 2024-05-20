@@ -38,8 +38,21 @@ class DiaryViewModel @Inject constructor(
     private val _calendarIndex = MutableStateFlow<Int?>(null)
     val calendarIndex = _calendarIndex.asStateFlow()
 
-    private val _selectedDiaryItemList = mutableStateListOf<Note>()
-    val selectedDiaryItemList = _selectedDiaryItemList
+    private val workoutDiaryItemList = mutableStateListOf<Note>()
+
+    private val _noteIdList = MutableStateFlow<List<Int>>(listOf())
+    val noteIdList = _noteIdList.asStateFlow()
+
+    private val _totalPerfect = MutableStateFlow(0)
+    val totalPerfect = _totalPerfect.asStateFlow()
+    private val _totalGood = MutableStateFlow(0)
+    val totalGood = _totalGood.asStateFlow()
+    private val _totalNotGood = MutableStateFlow(0)
+    val totalNotGood = _totalNotGood.asStateFlow()
+    private val _totalScore = MutableStateFlow(0)
+    val totalScore = _totalScore.asStateFlow()
+    private val _totalKcal = MutableStateFlow(0)
+    val totalKcal = _totalKcal.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -113,8 +126,35 @@ class DiaryViewModel @Inject constructor(
             diaryRepository.getDiary(date)
         }.onSuccess { res ->
             if (!(res.result?.noteList.isNullOrEmpty())) {
-                _selectedDiaryItemList.clear()
-                _selectedDiaryItemList.addAll(res.result!!.noteList)
+                val noteList = res.result!!.noteList
+
+                _noteIdList.value = noteList.map { note ->
+                    note.noteId
+                }
+
+                _totalPerfect.value = noteList.sumOf { note ->
+                    note.totalPerfect
+                }
+
+                _totalGood.value = noteList.sumOf { note ->
+                    note.totalGood
+                }
+
+                _totalNotGood.value = noteList.sumOf { note ->
+
+                    note.totalBad
+                }
+                _totalScore.value = noteList.sumOf { note ->
+                    note.totalScore
+                }
+                _totalKcal.value = noteList.filter { note ->
+                    note.totalKcal != null
+                }.sumOf { note ->
+                    note.totalKcal!!
+                }
+
+//                _workoutDiaryItemList.clear()
+//                _workoutDiaryItemList.addAll(res.result!!.noteList)
             }
         }.onFailure { res ->
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")

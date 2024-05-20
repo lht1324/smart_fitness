@@ -61,15 +61,23 @@ fun WorkoutNavHost(
                 WorkoutScreen(
                     filesDir = filesDir,
                     onClickWatchExampleVideo = onClickWatchExampleVideo,
-                    onFinishWorkout = {
-                        navHostController.navigate(WorkoutRoutes.Result.route)
+                    onFinishWorkout = { noteId ->
+                        navHostController.navigate(WorkoutRoutes.Result.createRoute(noteId))
                     },
                     onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
                     onUpdateJson = onUpdateJson
                 )
             }
-            composable(WorkoutRoutes.Result.route) {
-                WorkoutResultScreen()
+            composable(WorkoutRoutes.Result.route) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getInt(WorkoutRoutes.Result.NOTE_ID) ?: -1
+
+                if (noteId != -1) {
+                    WorkoutResultScreen(
+                        noteId = noteId
+                    )
+                } else {
+                    navHostController.navigateUp()
+                }
             }
         }
     }
