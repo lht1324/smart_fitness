@@ -49,6 +49,7 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 fun DietInfoInputArea(
     modifier: Modifier = Modifier,
     menuList: List<String>,
+    preferenceFoods: String?,
     onChangePreferenceFoods: (String) -> Unit,
     onFinishRegister: () -> Unit
 ) {
@@ -170,8 +171,12 @@ fun DietInfoInputArea(
 
     LaunchedEffect(menuList) {
         if (menuList.isNotEmpty()) {
+            val preferenceFoodList = preferenceFoods?.split(',')
+
             menuSelectStateList.addAll(
-                menuList.map { false }
+                menuList.map { menu ->
+                    preferenceFoodList?.contains(menu) == true
+                }
             )
         }
     }

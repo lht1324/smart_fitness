@@ -104,6 +104,7 @@ fun RegisterScreen(
                     )
                     RegisterState.DietInfoInput -> DietInfoInputArea(
                         menuList = menuList.toList(),
+                        preferenceFoods = tasteInfo.preferenceFoods,
                         onChangePreferenceFoods = viewModel::onChangePreferenceFoods,
                         onFinishRegister = viewModel::onClickRegister
                     )
