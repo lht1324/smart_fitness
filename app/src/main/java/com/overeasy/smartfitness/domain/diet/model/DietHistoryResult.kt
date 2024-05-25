@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DietHistoryResult(
-    @SerializedName("dietList") val dietHistoryList: List<DietHistory>
+    val dietList: List<DietHistory>
 )

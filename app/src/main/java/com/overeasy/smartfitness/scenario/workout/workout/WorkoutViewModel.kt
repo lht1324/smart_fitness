@@ -319,7 +319,7 @@ class WorkoutViewModel @Inject constructor(
 
                         landmarkInfoList.value += landmarkInfo
 
-//                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPoint.value}, ${isReachedLowestPoint.value}, ${isReachedLastHighestPoint.value}")
+                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
                     }
                 }
             }
@@ -343,35 +343,6 @@ class WorkoutViewModel @Inject constructor(
 //                        frameDataList.size * 12 * 2
 //                    )
                     val inputData = getNormalizedFrameFloatArray(frameDataList)
-
-//                    frameDataList.forEachIndexed { index, landmarkInfo ->
-//                        val expandedIndex = (index + 1) * 24
-//
-//                        inputData[expandedIndex - 24] = landmarkInfo.leftShoulder.x
-//                        inputData[expandedIndex - 23] = landmarkInfo.leftShoulder.y
-//                        inputData[expandedIndex - 22] = landmarkInfo.rightShoulder.x
-//                        inputData[expandedIndex - 21] = landmarkInfo.rightShoulder.y
-//                        inputData[expandedIndex - 20] = landmarkInfo.leftElbow.x
-//                        inputData[expandedIndex - 19] = landmarkInfo.leftElbow.y
-//                        inputData[expandedIndex - 18] = landmarkInfo.rightElbow.x
-//                        inputData[expandedIndex - 17] = landmarkInfo.rightElbow.y
-//                        inputData[expandedIndex - 16] = landmarkInfo.leftWrist.x
-//                        inputData[expandedIndex - 15] = landmarkInfo.leftWrist.y
-//                        inputData[expandedIndex - 14] = landmarkInfo.rightWrist.x
-//                        inputData[expandedIndex - 13] = landmarkInfo.rightWrist.y
-//                        inputData[expandedIndex - 12] = landmarkInfo.leftHip.x
-//                        inputData[expandedIndex - 11] = landmarkInfo.leftHip.y
-//                        inputData[expandedIndex - 10] = landmarkInfo.rightHip.x
-//                        inputData[expandedIndex - 9] = landmarkInfo.rightHip.y
-//                        inputData[expandedIndex - 8] = landmarkInfo.leftKnee.x
-//                        inputData[expandedIndex - 7] = landmarkInfo.leftKnee.y
-//                        inputData[expandedIndex - 6] = landmarkInfo.rightKnee.x
-//                        inputData[expandedIndex - 5] = landmarkInfo.rightKnee.y
-//                        inputData[expandedIndex - 4] = landmarkInfo.leftAnkle.x
-//                        inputData[expandedIndex - 3] = landmarkInfo.leftAnkle.y
-//                        inputData[expandedIndex - 2] = landmarkInfo.rightAnkle.x
-//                        inputData[expandedIndex - 1] = landmarkInfo.rightAnkle.y
-//                    }
                     val inputBuffer = ByteBuffer.allocateDirect(1 * 8 * 24 * 5 * Float.SIZE_BYTES).apply {
                         order(ByteOrder.nativeOrder())
                     }
@@ -396,22 +367,6 @@ class WorkoutViewModel @Inject constructor(
                         prediction == highestPrediction
                     }
 
-                    val trueCount = frameDataList.map { landmarkInfo ->
-                        landmarkInfo.run {
-                            listOf(
-                                (leftShoulder.y < leftHip.y && leftHip.y < leftKnee.y),
-                                (leftElbow.x < leftWrist.x),
-                                (leftShoulder.x < leftElbow.x),
-                                (leftWrist.y > leftShoulder.y),
-                                (leftShoulder.y < leftElbow.y)
-                            ).count { isSatisfied ->
-                                isSatisfied
-                            }
-                        }
-                    }.sumOf { trueCount ->
-                        trueCount
-                    } / frameDataList.size
-
                     println("jaehoLee", "selectedPrediction = ${predictionList.toList()}")
                     println("jaehoLee", "selectedPredictionIndex = $selectedPredictionIndex, $highestPrediction")
 
@@ -435,9 +390,14 @@ class WorkoutViewModel @Inject constructor(
                      *                         31 true 0개
                      */
 
+//                    when (selectedPredictionIndex) {
+//                        in 0..5 -> _scorePerfect.value += 1
+//                        in 6..25 -> _scoreGood.value += 1
+//                        in 26..31 -> _scoreNotGood.value += 1
+//                    }
                     when (selectedPredictionIndex) {
-                        in 0..5 -> _scorePerfect.value += 1
-                        in 6..25 -> _scoreGood.value += 1
+                        in 0..15 -> _scorePerfect.value += 1
+                        in 16..25 -> _scoreGood.value += 1
                         in 26..31 -> _scoreNotGood.value += 1
                     }
 

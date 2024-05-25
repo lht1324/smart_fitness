@@ -13,8 +13,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.overeasy.smartfitness.scenario.diary.diarydetail.DiaryDetailScreen
 import com.overeasy.smartfitness.scenario.public.Header
-import com.overeasy.smartfitness.scenario.workout.result.WorkoutResultScreen
 import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
 import java.io.File
 
@@ -72,8 +72,14 @@ fun WorkoutNavHost(
                 val noteId = backStackEntry.arguments?.getInt(WorkoutRoutes.Result.NOTE_ID) ?: -1
 
                 if (noteId != -1) {
-                    WorkoutResultScreen(
-                        noteId = noteId
+//                    WorkoutResultScreen(
+//                        noteId = noteId
+//                    )
+                    DiaryDetailScreen(
+                        noteId = noteId,
+                        onClickWatchExampleVideo = {
+
+                        }
                     )
                 } else {
                     navHostController.navigateUp()

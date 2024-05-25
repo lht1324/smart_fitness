@@ -86,7 +86,8 @@ class WorkoutRepositoryImpl @Inject constructor(
             )
             onUpload { bytesSentTotal, contentLength ->
                 onProgress(bytesSentTotal, contentLength)
-                println("jaehoLee", "Ktor Multipart (onUpload): TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
+                if (contentLength - bytesSentTotal <= 10L)
+                    println("jaehoLee", "Ktor Multipart (onUpload): TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
             }
         }
 

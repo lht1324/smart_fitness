@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package com.overeasy.smartfitness.scenario.diary.diarydetail
 
 import androidx.compose.animation.AnimatedVisibility
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +52,7 @@ import com.overeasy.smartfitness.addCommaIntoNumber
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.ScoreType
 import com.overeasy.smartfitness.noRippleClickable
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
@@ -61,12 +66,14 @@ fun DiaryDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryDetailViewModel = hiltViewModel(),
     noteId: Int,
+    noteDate: String? = null,
     onClickWatchExampleVideo: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
     val diaryDetail by viewModel.diaryDetail.collectAsState()
     val workoutVideoDataList = remember { viewModel.workoutVideoDataList }
+    val dietHistoryList = remember { viewModel.dietHistoryList }
 
     Box(
         modifier = modifier
@@ -116,13 +123,7 @@ fun DiaryDetailScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
                         }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            thickness = 2.dp,
-                            color = ColorSecondary
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Separator()
                         DetailText(
                             text = "점수", // sumOf
                             fontSize = 18.dpToSp()
@@ -142,36 +143,7 @@ fun DiaryDetailScreen(
                             type = ScoreType.NOT_GOOD,
                             score = diaryDetail!!.totalBad
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            thickness = 2.dp,
-                            color = ColorSecondary
-                        )
-//                    Spacer(modifier = Modifier.height(10.dp))
-//                    DetailText(
-//                        text = "식단 추천을 받으면 보너스 점수를 받을 수 있어요.", // sumOf
-//                        color = Color.LightGray,
-//                        fontSize = 14.dpToSp(),
-//                        fontWeight = FontWeight.ExtraBold
-//                    )
-                        Spacer(modifier = Modifier.height(10.dp))
-//                        DetailText(
-//                            text = "총 소모 칼로리", // sumOf
-//                            fontSize = 20.dpToSp(),
-//                            fontWeight = FontWeight.Black
-//                        )
-//                        DetailText(
-//                            text = "550 kcal", // sumOf
-//                            fontSize = 18.dpToSp(),
-//                            fontWeight = FontWeight.Black
-//                        )
-//                        DetailText(
-//                            text = "550 + 1,800 (기초대사량) = 2,350 kcal", // sumOf
-//                            fontSize = 18.dpToSp(),
-//                            fontWeight = FontWeight.Black
-//                        )
-                        Spacer(modifier = Modifier.height(5.dp))
+                        Separator()
                         DetailText(
                             text = "총점", // sumOf
                             fontSize = 20.dpToSp(),
@@ -183,11 +155,6 @@ fun DiaryDetailScreen(
                             fontSize = 18.dpToSp(),
                             fontWeight = FontWeight.Black
                         )
-//                        DetailText(
-//                            text = "2,400 + 600 = 3,000",
-//                            fontSize = 18.dpToSp(),
-//                            fontWeight = FontWeight.Black
-//                        )
                         if (workoutVideoDataList.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(10.dp))
                             HorizontalDivider(
@@ -207,6 +174,7 @@ fun DiaryDetailScreen(
                                     DetailText(
                                         text = "$workoutName(${index + 1})",
                                         modifier = Modifier.noRippleClickable {
+                                            com.overeasy.smartfitness.println("jaehoLee", "clicked url")
                                             onClickWatchExampleVideo(url)
                                         },
                                         fontSize = 18.dpToSp(),
@@ -231,58 +199,103 @@ fun DiaryDetailScreen(
                 ResultArea(
                     title = "식단",
                     contents = {
-                        val list = listOf(
-                            "탄수화물" to "10g",
-                            "단백질" to "10g",
-                            "지방" to "10g",
-                            "당" to "10g",
-                            "나트륨" to "10g",
-                            "콜레스테롤" to "10g"
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        if (dietHistoryList.isNotEmpty()) {
                             Text(
-                                text = "추천 결과 (한식)",
+                                text = "추천 결과",
                                 color = Color.White,
                                 fontSize = 20.dpToSp(),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = fontFamily
                             )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Image(
-                                painter = painterResource(id = R.drawable.food_category_korean),
+                            Separator()
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                dietHistoryList.forEach { (foodName, calorie, foodCount) ->
+                                    FoodInfo(
+                                        foodName = foodName,
+                                        calorie = calorie,
+                                        foodCount = foodCount
+                                    )
+                                }
+                            }
+                            Separator()
+                            Text(
+                                text = "총 섭취 칼로리",
+                                color = Color.White,
+                                fontSize = 20.dpToSp(),
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = fontFamily
+                            )
+                            Separator()
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                dietHistoryList.map { (_, calorie, foodCount) ->
+//                                    "${String.format("%.2f", calorie)} × $foodCount"
+                                    "${calorie * foodCount.toFloat()}"
+                                }.forEachIndexed { index, calorieUsage ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "+",
+                                            color = if (index != 0) {
+                                                Color.White
+                                            } else {
+                                                Color.Transparent
+                                            },
+                                            fontSize = 16.dpToSp(),
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = fontFamily
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = calorieUsage,
+                                            color = Color.White,
+                                            fontSize = 16.dpToSp(),
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = fontFamily
+                                        )
+                                    }
+                                }
+                            }
+                            Separator()
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "=",
+                                    color = Color.White,
+                                    fontSize = 16.dpToSp(),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = fontFamily
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "${
+                                        dietHistoryList.sumOf { (_, calorie, foodCount) ->
+                                            (calorie * foodCount.toFloat()).toDouble()
+                                        }.toFloat()
+                                    } kcal",
+                                    color = Color.White,
+                                    fontSize = 18.dpToSp(),
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = fontFamily
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "식단을 추천받지 않았어요.",
                                 modifier = Modifier
-                                    .size(70.dp)
-                                    .clip(CircleShape),
-                                contentDescription = null
+                                    .padding(vertical = 20.dp)
+                                    .align(Alignment.CenterHorizontally),
+                                color = Color.White,
+                                fontSize = 20.dpToSp(),
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = fontFamily
                             )
                         }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        DietSection(
-                            name = "흑미밥",
-                            ingredientList = list
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DietSection(
-                            name = "미역국",
-                            ingredientList = list
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DietSection(
-                            name = "김치제육볶음",
-                            ingredientList = list
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DietSection(
-                            name = "미역줄기무침",
-                            ingredientList = list
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DietSection(
-                            name = "배추김치",
-                            ingredientList = list
-                        )
                     }
                 )
                 Spacer(modifier = Modifier.height(20.dp))
@@ -312,7 +325,8 @@ fun DiaryDetailScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.onLoad(noteId)
+        println("jaehoLee", "noteId = $noteId")
+        viewModel.onLoad(noteId, noteDate)
     }
 }
 
@@ -553,93 +567,84 @@ private fun ScoreSection(
 }
 
 @Composable
-private fun DietSection(
+private fun FoodInfo(
     modifier: Modifier = Modifier,
-    name: String,
-    ingredientList: List<Pair<String, String>>
+    foodName: String,
+    calorie: Float,
+    foodCount: Int
 ) {
-    val context = LocalContext.current
-
-    var isClicked by remember { mutableStateOf(false) }
-
-    var dividerHeight by remember { mutableIntStateOf(0) }
-    val dividerHeightDp by remember {
-        derivedStateOf {
-            context.pxToDp(dividerHeight)
-        }
-    }
-    var maxIngredientTextWidth by remember { mutableIntStateOf(0) }
-    val maxIngredientTextWidthDp by remember {
-        derivedStateOf {
-            context.pxToDp(maxIngredientTextWidth)
-        }
-    }
-
-    val degree by animateFloatAsState(
-        targetValue = if (isClicked) 180f else 0f,
-        animationSpec = tween(
-            easing = FastOutSlowInEasing
-        ),
-        label = ""
-    )
-
-    Column(
-        modifier = modifier.noRippleClickable {
-            isClicked = !isClicked
-        }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = ColorPrimary,
+                shape = AbsoluteRoundedCornerShape(5.dp)
+            )
+            .border(
+                width = 2.dp,
+                color = Color.LightGray,
+                shape = AbsoluteRoundedCornerShape(5.dp)
+            )
     ) {
         Row(
+            modifier = Modifier
+                .padding(vertical = 5.dp, horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DetailText(
-                modifier = Modifier.onSizeChanged { (_, height) ->
-                    if (dividerHeight != height) {
-                        dividerHeight = height
-                    }
-                },
-                text = name
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Image(
-                painter = painterResource(id = R.drawable.ic_arrrow_down),
-                modifier = Modifier
-                    .size(16.dp)
-                    .rotate(degree),
-                contentDescription = null
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        AnimatedVisibility(
-            visible = isClicked
-        ) {
-            Column {
-                ingredientList.forEachIndexed { index, (name, value) ->
-                    Row {
-                        DetailText(
-                            modifier = Modifier
-                                .onSizeChanged { (width, _) ->
-                                    if (width > maxIngredientTextWidth) {
-                                        maxIngredientTextWidth = width
-                                    }
-                                }
-                                .then(
-                                    if (maxIngredientTextWidth > 0) {
-                                        Modifier.width(maxIngredientTextWidthDp.dp)
-                                    } else {
-                                        Modifier
-                                    }
-                                ),
-                            text = name,
-                            fontSize = 14.dpToSp()
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        DetailText(
-                            text = value,
-                            fontSize = 14.dpToSp()
-                        )
-                    }
-                }
+            Column(
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = foodName,
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = fontFamily
+                )
+                Text(
+                    text = "× $foodCount",
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = fontFamily
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "$calorie kcal",
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = fontFamily
+                )
+                Text(
+                    text = "( = ${calorie * foodCount.toFloat()}) kcal",
+                    color = Color.White,
+                    fontSize = 16.dpToSp(),
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = fontFamily
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun Separator(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+    ) {
+        Spacer(modifier = Modifier.height(10.dp))
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 2.dp,
+            color = ColorSecondary
+        )
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }

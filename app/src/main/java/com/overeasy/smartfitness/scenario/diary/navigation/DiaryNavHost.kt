@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.diary.diary.DiaryScreen
 import com.overeasy.smartfitness.scenario.diary.diarydetail.DiaryDetailScreen
 import com.overeasy.smartfitness.scenario.public.Header
@@ -64,6 +65,7 @@ fun DiaryNavHost(
             composable(DiaryRoutes.DiaryDetail.route) { backStackEntry ->
                 DiaryDetailScreen(
                     noteId = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID)?.toIntOrNull() ?: -1,
+                    noteDate = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.DATE),
                     onClickWatchExampleVideo = onClickWatchExampleVideo
                 )
             }

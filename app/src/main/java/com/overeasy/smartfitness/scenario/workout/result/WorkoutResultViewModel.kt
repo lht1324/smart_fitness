@@ -188,7 +188,7 @@ class WorkoutResultViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             workoutRepository.getWorkoutNoteDetail(noteId)
         }.onSuccess { res ->
-
+            res.result
         }.onFailure {
 
         }

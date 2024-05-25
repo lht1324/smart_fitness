@@ -38,7 +38,8 @@ class DiaryViewModel @Inject constructor(
     private val _calendarIndex = MutableStateFlow<Int?>(null)
     val calendarIndex = _calendarIndex.asStateFlow()
 
-    private val workoutDiaryItemList = mutableStateListOf<Note>()
+    private val _selectedCalendarItemData = MutableStateFlow<CalendarItemData?>(null)
+    val selectedCalendarItemData = _selectedCalendarItemData.asStateFlow()
 
     private val _noteIdList = MutableStateFlow<List<Int>>(listOf())
     val noteIdList = _noteIdList.asStateFlow()
@@ -93,6 +94,10 @@ class DiaryViewModel @Inject constructor(
         currentYearMonth.value = YearMonth.now()
         _calendarIndex.value = currentCalendarOfMonthIndex
         _calendarList.addAll(calendarList)
+    }
+
+    fun onChangeSelectedCalendarData(calendarData: CalendarItemData?) {
+        _selectedCalendarItemData.value = calendarData
     }
 
     fun onChangeMonth(isSwipedToLeft: Boolean) {

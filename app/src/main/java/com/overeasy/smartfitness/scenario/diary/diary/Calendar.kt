@@ -47,6 +47,7 @@ fun Calendar(
     currentYear: Int,
     currentMonth: Int,
     calendarList: List<List<CalendarItemData>>,
+    selectedCalendarItemData: CalendarItemData? = null,
     onChangeMonth: (Boolean) -> Unit,
     onClickItem: (CalendarItemData?) -> Unit
 ) {
@@ -97,11 +98,13 @@ fun Calendar(
                                     modifier = Modifier
                                         .noRippleClickable {
                                             if (!isSelectedPage || !isSelectedDayOfMonth) {
+                                                println("jaehoLee", "select non-null")
                                                 selectedPage = page
                                                 selectedDayOfMonth = dayOfMonth
 
                                                 onClickItem(calendarItem)
                                             } else {
+                                                println("jaehoLee", "select null")
                                                 selectedPage = null
                                                 selectedDayOfMonth = null
 
@@ -119,7 +122,8 @@ fun Calendar(
                                         }
                                     )
 
-                                    if (isSelectedPage && isSelectedDayOfMonth) {
+                                    if ((isSelectedPage && isSelectedDayOfMonth) ||
+                                        (selectedCalendarItemData?.date == calendarItem.date)) {
                                         Box(
                                             modifier = Modifier
                                                 .size(itemSize.dp)

@@ -1,26 +1,22 @@
 package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -41,14 +37,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.overeasy.smartfitness.R
-import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.model.diary.ScoreType
@@ -57,7 +50,6 @@ import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
-import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.ColorSunday
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
@@ -94,7 +86,7 @@ fun DiaryScreen(
                 calendarList.size
             }
         )
-        var selectedCalendarItemData by remember { mutableStateOf<CalendarItemData?>(null) }
+        val selectedCalendarItemData by viewModel.selectedCalendarItemData.collectAsState()
 
         Column(
             modifier = modifier
@@ -107,6 +99,7 @@ fun DiaryScreen(
                 currentYear = currentYear,
                 currentMonth = currentMonth,
                 calendarList = calendarList,
+                selectedCalendarItemData = selectedCalendarItemData,
                 onChangeMonth = { isSwipeToLeft ->
                     coroutineScope.launch {
                         if (isSwipeToLeft) {
@@ -121,7 +114,7 @@ fun DiaryScreen(
                         viewModel.onClickCalendarItem(date)
                     }
 
-                    selectedCalendarItemData = calendarData
+                    viewModel.onChangeSelectedCalendarData(calendarData)
                 }
             )
             InfoSection(
@@ -153,8 +146,7 @@ fun DiaryScreen(
             }.map { (previous, next) ->
                 previous > next
             }.collectLatest { isSwipedToLeft ->
-                selectedCalendarItemData = null
-
+                viewModel.onChangeSelectedCalendarData(null)
                 viewModel.onChangeMonth(isSwipedToLeft)
             }
         }
@@ -342,19 +334,6 @@ private fun InfoSection(
                 )
             }
         }
-//        if (selectedDiaryItemList.isNotEmpty() || selectedCalendarItemData?.date == LocalDate.now().run { "$year-${String.format("%02d", monthValue)}-${String.format("%02d", dayOfMonth)}" }) {
-//        if (!isNotExistWorkoutInfo && selectedCalendarItemData != null) {
-//            MoveToDetailButton(
-//                modifier = Modifier
-//                    .padding(
-//                        top = (35 + (textHeightDp / 2.0f)).dp,
-//                        end = 15.dp
-//                    ),
-//                onClick = {
-//                    onClickMoveToDetail(selectedCalendarItemData.noteId)
-//                }
-//            )
-//        }
         LaunchedEffect(
             totalPerfect,
             totalGood,
@@ -368,36 +347,6 @@ private fun InfoSection(
                     totalScore == -1 &&
                     totalKcal == 0
         }
-    }
-}
-
-@Composable
-private fun BoxScope.MoveToDetailButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .size(36.dp)
-            .background(
-                color = Color.White,
-                shape = CircleShape
-            )
-            .border(
-                width = 2.dp,
-                color = Color.LightGray,
-                shape = CircleShape
-            )
-            .noRippleClickable(onClick = onClick)
-            .align(Alignment.TopEnd)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_magnifying_glasses),
-            contentDescription = "상세 정보 이동하기",
-            modifier = Modifier
-                .size(24.dp)
-                .align(Alignment.Center)
-        )
     }
 }
 
