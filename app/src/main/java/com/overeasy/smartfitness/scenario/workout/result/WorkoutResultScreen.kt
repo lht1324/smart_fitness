@@ -168,24 +168,6 @@ fun WorkoutResultScreen(
                         fontSize = 18.dpToSp(),
                         fontWeight = FontWeight.ExtraBold
                     )
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = ColorSecondary,
-                                shape = AbsoluteRoundedCornerShape(10.dp)
-                            )
-                            .align(Alignment.End)
-                    ) {
-                        Text(
-                            text = "운동 영상\n저장하기",
-                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 15.dp),
-                            color = Color.White,
-                            fontSize = 18.dpToSp(),
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = fontFamily,
-                            textAlign = TextAlign.Center
-                        )
-                    }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             )

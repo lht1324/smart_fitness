@@ -19,6 +19,7 @@ suspend inline fun <reified T> HttpClient.simplePost(
     url(baseUrl)
     block()
 }.run {
+    println("jaehoLee", "bodyPost = ${bodyAsText()}")
     Json.decodeFromString<T>(bodyAsText())
 }
 
@@ -29,7 +30,7 @@ suspend inline fun <reified T> HttpClient.simpleGet(
     url(baseUrl)
     block()
 }.run {
-    println("jaehoLee", "body = ${bodyAsText()}")
+    println("jaehoLee", "bodyGet = ${bodyAsText()}")
     Json.decodeFromString<T>(bodyAsText())
 }
 

@@ -43,13 +43,13 @@ class DiaryViewModel @Inject constructor(
     private val _noteIdList = MutableStateFlow<List<Int>>(listOf())
     val noteIdList = _noteIdList.asStateFlow()
 
-    private val _totalPerfect = MutableStateFlow(0)
+    private val _totalPerfect = MutableStateFlow(-1)
     val totalPerfect = _totalPerfect.asStateFlow()
-    private val _totalGood = MutableStateFlow(0)
+    private val _totalGood = MutableStateFlow(-1)
     val totalGood = _totalGood.asStateFlow()
-    private val _totalNotGood = MutableStateFlow(0)
+    private val _totalNotGood = MutableStateFlow(-1)
     val totalNotGood = _totalNotGood.asStateFlow()
-    private val _totalScore = MutableStateFlow(0)
+    private val _totalScore = MutableStateFlow(-1)
     val totalScore = _totalScore.asStateFlow()
     private val _totalKcal = MutableStateFlow(0)
     val totalKcal = _totalKcal.asStateFlow()
@@ -126,7 +126,15 @@ class DiaryViewModel @Inject constructor(
             diaryRepository.getDiary(date)
         }.onSuccess { res ->
             if (!(res.result?.noteList.isNullOrEmpty())) {
-                val noteList = res.result!!.noteList
+                val noteList = res.result!!.noteList.filter { note ->
+                    val isInvalidNote = note.totalPerfect == 0 &&
+                            note.totalGood == 0 &&
+                            note.totalBad == 0 &&
+                            note.totalScore == 0 &&
+                            (note.totalKcal == null || note.totalKcal == 0)
+
+                    !isInvalidNote
+                }
 
                 _noteIdList.value = noteList.map { note ->
                     note.noteId
@@ -135,23 +143,27 @@ class DiaryViewModel @Inject constructor(
                 _totalPerfect.value = noteList.sumOf { note ->
                     note.totalPerfect
                 }
-
                 _totalGood.value = noteList.sumOf { note ->
                     note.totalGood
                 }
-
                 _totalNotGood.value = noteList.sumOf { note ->
-
                     note.totalBad
                 }
                 _totalScore.value = noteList.sumOf { note ->
                     note.totalScore
                 }
+
                 _totalKcal.value = noteList.filter { note ->
                     note.totalKcal != null
                 }.sumOf { note ->
                     note.totalKcal!!
                 }
+
+                println("jaehoLee", "totalPerfect = ${totalPerfect.value}")
+                println("jaehoLee", "totalGood = ${totalGood.value}")
+                println("jaehoLee", "totalNotGood = ${totalNotGood.value}")
+                println("jaehoLee", "totalScore = ${totalScore.value}")
+                println("jaehoLee", "totalKcal = ${totalKcal.value}")
 
 //                _workoutDiaryItemList.clear()
 //                _workoutDiaryItemList.addAll(res.result!!.noteList)

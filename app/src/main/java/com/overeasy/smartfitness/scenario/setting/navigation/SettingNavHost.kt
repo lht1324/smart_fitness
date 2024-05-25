@@ -97,6 +97,9 @@ fun SettingNavHost(
 
                         RegisterState.TasteInfoInput -> currentRegisterState =
                             RegisterState.BodyInfoInput
+
+                        RegisterState.DietInfoInput -> currentRegisterState =
+                            RegisterState.TasteInfoInput
                     }
                 }
             }
@@ -200,6 +203,7 @@ fun SettingNavHost(
                 RegisterState.NicknameInput -> currentRegisterState = RegisterState.UserInfoInput
                 RegisterState.BodyInfoInput -> currentRegisterState = RegisterState.NicknameInput
                 RegisterState.TasteInfoInput -> currentRegisterState = RegisterState.BodyInfoInput
+                RegisterState.DietInfoInput -> currentRegisterState = RegisterState.TasteInfoInput
             }
         }
     }

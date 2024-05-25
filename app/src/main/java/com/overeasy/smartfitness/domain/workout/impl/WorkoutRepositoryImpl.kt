@@ -16,7 +16,10 @@ import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.simpleGet
 import com.overeasy.smartfitness.simplePost
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.onDownload
 import io.ktor.client.plugins.onUpload
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -24,10 +27,15 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.net.URLEncoder
 import javax.inject.Inject
 
 class WorkoutRepositoryImpl @Inject constructor(
@@ -46,24 +54,39 @@ class WorkoutRepositoryImpl @Inject constructor(
     override suspend fun postWorkoutNote(userId: Int): PostWorkoutNoteRes =
         client.simplePost("$baseUrl/note/$userId")
     override suspend fun postWorkoutData(req: PostWorkoutDataReq): BaseResponse =
-        client.simplePost("$baseUrl/note/workout")
+        client.simplePost("$baseUrl/note/workout") {
+            body = Json.encodeToString(req)
+        }
     override suspend fun getWorkoutVideoList(noteId: Int): GetWorkoutVideoListRes =
         client.simpleGet("$baseUrl/video/$noteId")
-    override suspend fun postWorkoutVideo(noteId: Int, exerciseName: String): BaseResponse =
-        client.simplePost("$baseUrl/video/$noteId/$exerciseName") {
+    override suspend fun postWorkoutVideo(
+        noteId: Int,
+        exerciseName: String,
+        videoFileDir: String,
+        onProgress: (Long, Long) -> Unit
+    ): BaseResponse =
+        client.simplePost("$baseUrl/video/$noteId/${
+            withContext(Dispatchers.IO) {
+                URLEncoder.encode(exerciseName, "UTF-8")
+            }
+        }") {
+            timeout {
+                requestTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+                connectTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+                socketTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
+            }
+            contentType(ContentType.MultiPart.FormData)
             body = MultiPartFormDataContent(
                 formData {
                     append(
                         "video",
-                        File(MainApplication.appPreference.currentVideoFileDir).readBytes(),
-                        Headers.build {
-                            append(HttpHeaders.ContentType, ContentType.Video.MP4)
-                        }
+                        File(videoFileDir).readBytes()
                     )
                 }
             )
             onUpload { bytesSentTotal, contentLength ->
-                println("jaehoLee", "TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
+                onProgress(bytesSentTotal, contentLength)
+                println("jaehoLee", "Ktor Multipart (onUpload): TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
             }
         }
 

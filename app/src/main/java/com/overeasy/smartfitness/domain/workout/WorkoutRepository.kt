@@ -17,7 +17,12 @@ interface WorkoutRepository {
     suspend fun postWorkoutNote(userId: Int): PostWorkoutNoteRes
     suspend fun postWorkoutData(req: PostWorkoutDataReq): BaseResponse
     suspend fun getWorkoutVideoList(noteId: Int): GetWorkoutVideoListRes
-    suspend fun postWorkoutVideo(noteId: Int, exerciseName: String): BaseResponse
+    suspend fun postWorkoutVideo(
+        noteId: Int,
+        exerciseName: String,
+        videoFileDir: String,
+        onProgress: (Long, Long) -> Unit
+    ): BaseResponse
 
     // API 미완
 //    suspend fun getWorkoutResult(): GetWorkoutResultRes

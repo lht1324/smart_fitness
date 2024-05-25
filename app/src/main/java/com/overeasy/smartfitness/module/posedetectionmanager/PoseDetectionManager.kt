@@ -6,8 +6,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
@@ -97,6 +102,7 @@ class PoseDetectionManager(
         }
 
         LaunchedEffect(Unit) {
+            cameraController.videoCaptureQualitySelector = QualitySelector.from(Quality.SD)
             cameraController.setImageAnalysisAnalyzer(
                 poseDetectionExecutor
             ) { imageProxy ->

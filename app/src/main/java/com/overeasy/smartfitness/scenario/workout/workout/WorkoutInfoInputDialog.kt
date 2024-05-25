@@ -140,18 +140,20 @@ fun WorkoutInfoInputDialog(
                         }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "${workoutNameList[selectedWorkoutNameIndex]} 예시 영상 조회",
-                        modifier = Modifier
-                            .noRippleClickable {
-                                onClickWatchExampleVideo(workoutNameList[selectedWorkoutNameIndex])
-                            },
-                        color = ColorSaturday,
-                        fontSize = 18.dpToSp(),
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = fontFamily,
-                        textDecoration = TextDecoration.Underline
-                    )
+                    if (workoutNameList.isNotEmpty()) {
+                        Text(
+                            text = "${workoutNameList[selectedWorkoutNameIndex]} 예시 영상 조회",
+                            modifier = Modifier
+                                .noRippleClickable {
+                                    onClickWatchExampleVideo(workoutNameList[selectedWorkoutNameIndex])
+                                },
+                            color = ColorSaturday,
+                            fontSize = 18.dpToSp(),
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = fontFamily,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    }
                 }
             )
             Divider()

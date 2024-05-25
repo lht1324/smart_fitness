@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class Note(
     val noteId: Int,
     val userId: Int,
-    val workoutDate: String,
+    val workoutDate: List<Int>,
     val totalScore: Int,
     val totalKcal: Int?,
     val totalPerfect: Int,

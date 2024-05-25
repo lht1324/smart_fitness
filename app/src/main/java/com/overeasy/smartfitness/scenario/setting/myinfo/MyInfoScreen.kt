@@ -95,13 +95,7 @@ fun MyInfoScreen(
                 age = bodyInfo.age ?: "",
                 height = bodyInfo.height ?: "",
                 weight = bodyInfo.weight ?: "",
-                selectedGenderIndex = when (bodyInfo.gender) {
-                    "male" -> 0
-                    "female" -> 1
-                    else -> null
-                }.apply {
-                    println("jaehoLee", "gender = ${bodyInfo.gender}, $this")
-                },
+                gender = bodyInfo.gender ?: "",
                 isAgeInvalid = isAgeInvalid,
                 isHeightInvalid = isHeightInvalid,
                 isWeightInvalid = isWeightInvalid,

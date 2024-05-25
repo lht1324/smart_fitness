@@ -1,11 +1,11 @@
 package com.overeasy.smartfitness.scenario.setting.register
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
@@ -15,6 +15,7 @@ import com.overeasy.smartfitness.model.register.RegisterBodyInfo
 import com.overeasy.smartfitness.model.register.RegisterTasteInfo
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -22,26 +23,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.text.DecimalFormat
 import javax.inject.Inject
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val settingRepository: SettingRepository
+    private val settingRepository: SettingRepository,
+    private val foodsRepository: FoodsRepository
 ) : ViewModel() {
     private val _registerUiEvent = MutableSharedFlow<RegisterUiEvent>()
     val registerUiEvent = _registerUiEvent.asSharedFlow()
 
     private val _id = MutableStateFlow("")
+    val id = _id.asStateFlow()
     private val _password = MutableStateFlow("")
+    val password = _password.asStateFlow()
 
     private val _nickname = MutableStateFlow("")
+    val nickname = _nickname.asStateFlow()
 
     private val _bodyInfo = MutableStateFlow(
         RegisterBodyInfo(
@@ -51,8 +52,9 @@ class RegisterViewModel @Inject constructor(
             gender = null
         )
     )
+    val bodyInfo = _bodyInfo.asStateFlow()
 
-    private val tasteInfo = MutableStateFlow(
+    private val _tasteInfo = MutableStateFlow(
         RegisterTasteInfo(
             spicyPreference = null,
             meatConsumption = null,
@@ -62,63 +64,48 @@ class RegisterViewModel @Inject constructor(
             preferenceFoods = null
         )
     )
+    val tasteInfo = _tasteInfo.asStateFlow()
 
-    val id = _id.asStateFlow()
-    val password = _password.asStateFlow()
+    private val essentialInfo = combine(id, password, nickname, bodyInfo) { id, password, nickname, bodyInfo ->
+        Triple(id, password, nickname) to bodyInfo
+    }.filter { (_, bodyInfo) ->
+        val (age, height, weight, gender) = bodyInfo
 
-    val nickname = _nickname.asStateFlow()
-
-    val bodyInfo = _bodyInfo.asStateFlow()
-
-    private val essentialInfo = combine(id, password, nickname) { id, password, nickname ->
-        Triple(id, password, nickname)
+        !age.isNullOrEmpty() && !weight.isNullOrEmpty() && !height.isNullOrEmpty() && !gender.isNullOrEmpty()
     }
 
-    private val nonEssentialInfo = combine(bodyInfo, tasteInfo) { bodyInfo, tasteInfo ->
-        bodyInfo to tasteInfo
-    }.map { (bodyInfo, tasteInfo) ->
-        val (age, height, weight) = bodyInfo
-        val (spicyPreference, meatConsumption, tastePreference, activityLevel, preferenceTypeFood) = tasteInfo
+    private val nonEssentialInfo = tasteInfo.filter { tasteInfo ->
+        val (_, _, _, activityLevel, _, preferenceFoods) = tasteInfo
 
-        val isSkippedBodyInfoInput = age.isNullOrEmpty() || height.isNullOrEmpty() || weight.isNullOrEmpty()
-        val isSkippedTasteInfoInput = spicyPreference == null &&
-                meatConsumption == null &&
-                tastePreference == null &&
-                preferenceTypeFood == null
+        println("jaehoLee", "foods = $preferenceFoods")
 
-        bodyInfo to tasteInfo
-//        if (!isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
-//            bodyInfo to tasteInfo
-//        } else if (isSkippedBodyInfoInput && !isSkippedTasteInfoInput) {
-//            null to tasteInfo
-//        } else if (!isSkippedBodyInfoInput && isSkippedTasteInfoInput) {
-//            bodyInfo to null
-//        } else {
-//            null to null
-//        }
+        tasteInfo.activityLevel
+        activityLevel != null && !preferenceFoods.isNullOrEmpty()
     }
 
     private val postUsersSignUpReq =
         combine(essentialInfo, nonEssentialInfo) { essentialInfo, nonEssentialInfo ->
             essentialInfo to nonEssentialInfo
         }.map { (essentialInfo, nonEssentialInfo) ->
-            val (id, password, nickname) = essentialInfo
-            val (bodyInfo, tasteInfo) = nonEssentialInfo
+            val (userInfo, bodyInfo) = essentialInfo
+
+            val (id, password, nickname) = userInfo
+            val tasteInfo = nonEssentialInfo
 
             PostUsersSignUpReq(
                 username = id,
                 password = password,
                 nickname = nickname,
-                age = bodyInfo.age?.toIntOrNull(),
-                weight = bodyInfo.weight?.toFloatOrNull(),
-                height = bodyInfo.height?.toFloatOrNull(),
-                gender = "male",
+                age = bodyInfo.age!!.toInt(),
+                weight = bodyInfo.weight!!.toFloat(),
+                height = bodyInfo.height!!.toFloat(),
+                gender = bodyInfo.gender!!,
                 spicyPreference = tasteInfo.spicyPreference,
                 meatConsumption = tasteInfo.meatConsumption,
                 tastePreference = tasteInfo.tastePreference,
-                activityLevel = tasteInfo.activityLevel,
+                activityLevel = tasteInfo.activityLevel!!,
                 preferenceTypeFood = tasteInfo.preferenceTypeFood,
-                preferenceFoods = "불고기"
+                preferenceFoods = tasteInfo.preferenceFoods
             )
         }
 
@@ -150,6 +137,9 @@ class RegisterViewModel @Inject constructor(
     }
 
     private val isClickedRegisterButton = MutableStateFlow(false)
+
+    private val _menuList = mutableStateListOf<String>()
+    val menuList = _menuList
 
     fun onChangeId(value: String) {
         _id.value = value
@@ -225,38 +215,43 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onChangeSpicyPreference(value: Int) {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             spicyPreference = value
         )
     }
 
     fun onChangeMeatConsumption(value: Boolean) {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             meatConsumption = value
         )
     }
 
     fun onChangeTastePreference(value: String) {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             tastePreference = value
         )
     }
 
     fun onChangeActivityLevel(value: Int) {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             activityLevel = value
         )
-        println("jaehoLee", "onChangeActivity = $value, ${tasteInfo.value.activityLevel}")
     }
 
     fun onChangePreferenceTypeFood(value: String) {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             preferenceTypeFood = value
         )
     }
 
+    fun onChangePreferenceFoods(value: String) {
+        _tasteInfo.value = _tasteInfo.value.copy(
+            preferenceFoods = value
+        )
+    }
+
     fun onClickSkipTasteInfo() {
-        tasteInfo.value = tasteInfo.value.copy(
+        _tasteInfo.value = _tasteInfo.value.copy(
             spicyPreference = null,
             meatConsumption = null,
             tastePreference = null,
@@ -272,6 +267,9 @@ class RegisterViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            launch(Dispatchers.IO) {
+                requestGetFoodsInit()
+            }
             launch {
                 combine(postUsersSignUpReq, isClickedRegisterButton) { req, isClicked ->
                     req to isClicked
@@ -279,46 +277,113 @@ class RegisterViewModel @Inject constructor(
                     isClicked
                 }.collectLatest { (req, _) ->
                     println("jaehoLee", "SignUpReq = $req")
-                    ApiRequestHelper.makeRequest {
-                        settingRepository.postUsersSignUp(req)
-                    }.onSuccess { res ->
-                        println("jaehoLee", "onSuccess: $res")
-                        ApiRequestHelper.makeRequest {
-                            settingRepository.postUsersLogin(
-                                PostUsersLoginReq(
-                                    username = req.username,
-                                    password = req.password
-                                )
-                            )
-                        }.onSuccess { loginRes ->
-                            println("jaehoLee", "onSuccessLogin: $loginRes")
-                            MainApplication.appPreference.isLogin = true
-                            MainApplication.appPreference.userId = loginRes.result?.id ?: -1 // .toIntOrNull() ?: -1
-
-                            _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
-                        }.onFailure { loginRes ->
-                            println("jaehoLee", "onFailureLogin: $loginRes")
-                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
-                        }.onError { throwable ->
-                            println("jaehoLee", "onErrorLogin: ${throwable.message}")
-                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
-                        }
-
-                        isClickedRegisterButton.value = false
-                    }.onFailure { res ->
-                        isClickedRegisterButton.value = false
-
-                        println("jaehoLee", "onFailure: $res")
-                        when (res.code) {
-                            301 -> _registerUiEvent.emit(RegisterUiEvent.UserInfoAlreadyExist)
-                            else -> _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
-                        }
-                    }.onError { throwable ->
-                        isClickedRegisterButton.value = false
-                        println("jaehoLee", "onError: ${throwable.message}")
-                    }
+                    requestPostUsersSignUp(req)
+//                    ApiRequestHelper.makeRequest {
+//                        settingRepository.postUsersSignUp(req)
+//                    }.onSuccess { res ->
+//                        println("jaehoLee", "onSuccess: $res")
+//                        ApiRequestHelper.makeRequest {
+//                            settingRepository.postUsersLogin(
+//                                PostUsersLoginReq(
+//                                    username = req.username,
+//                                    password = req.password
+//                                )
+//                            )
+//                        }.onSuccess { loginRes ->
+//                            println("jaehoLee", "onSuccessLogin: $loginRes")
+//                            MainApplication.appPreference.isLogin = true
+//                            MainApplication.appPreference.userId = loginRes.result?.id ?: -1 // .toIntOrNull() ?: -1
+//
+//                            _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
+//                        }.onFailure { loginRes ->
+//                            println("jaehoLee", "onFailureLogin: $loginRes")
+//                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+//                        }.onError { throwable ->
+//                            println("jaehoLee", "onErrorLogin: ${throwable.message}")
+//                            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+//                        }
+//
+//                        isClickedRegisterButton.value = false
+//                    }.onFailure { res ->
+//                        isClickedRegisterButton.value = false
+//
+//                        println("jaehoLee", "onFailure: $res")
+//                        when (res.code) {
+//                            301 -> _registerUiEvent.emit(RegisterUiEvent.UserInfoAlreadyExist)
+//                            else -> _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+//                        }
+//                    }.onError { throwable ->
+//                        isClickedRegisterButton.value = false
+//                        println("jaehoLee", "onError: ${throwable.message}")
+//                    }
                 }
             }
+        }
+    }
+
+    private suspend fun requestPostUsersSignUp(req: PostUsersSignUpReq) {
+        ApiRequestHelper.makeRequest {
+            settingRepository.postUsersSignUp(req)
+        }.onSuccess { res ->
+            println("jaehoLee", "onSuccess: $res")
+
+            requestPostUsersLogin(
+                userName = req.username,
+                password = req.password
+            )
+            isClickedRegisterButton.value = false
+        }.onFailure { res ->
+            isClickedRegisterButton.value = false
+
+            println("jaehoLee", "onFailure: $res")
+            when (res.code) {
+                301 -> _registerUiEvent.emit(RegisterUiEvent.UserInfoAlreadyExist)
+                else -> _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+            }
+        }.onError { throwable ->
+            isClickedRegisterButton.value = false
+            println("jaehoLee", "onError: ${throwable.message}")
+        }
+    }
+
+    private suspend fun requestPostUsersLogin(
+        userName: String,
+        password: String
+    ) {
+        ApiRequestHelper.makeRequest {
+            settingRepository.postUsersLogin(
+                PostUsersLoginReq(
+                    username = userName,
+                    password = password
+                )
+            )
+        }.onSuccess { loginRes ->
+            println("jaehoLee", "onSuccessLogin: $loginRes")
+            MainApplication.appPreference.isLogin = true
+            MainApplication.appPreference.userId = loginRes.result?.id ?: -1 // .toIntOrNull() ?: -1
+
+            _registerUiEvent.emit(RegisterUiEvent.OnFinishRegister)
+        }.onFailure { loginRes ->
+            println("jaehoLee", "onFailureLogin: $loginRes")
+            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+        }.onError { throwable ->
+            println("jaehoLee", "onErrorLogin: ${throwable.message}")
+            _registerUiEvent.emit(RegisterUiEvent.ShowFailedDialog)
+        }
+    }
+
+    private suspend fun requestGetFoodsInit() {
+        ApiRequestHelper.makeRequest {
+            foodsRepository.getFoodsInit()
+        }.onSuccess { res ->
+            val mappedList = res.result.map { menuData -> menuData.foodName }
+
+            menuList.clear()
+            menuList.addAll(mappedList)
+        }.onFailure { res ->
+            println("jaehoLee", "onFailure(requestGetFoodsInit()): ${res.message}") // 코드 없음
+        }.onError { throwable ->
+            println("jaehoLee", "onError(requestGetFoodsInit()): ${throwable.message}")
         }
     }
 

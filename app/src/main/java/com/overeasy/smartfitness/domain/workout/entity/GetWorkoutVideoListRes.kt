@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GetWorkoutVideoListRes(
-    override val code: Int,
+    override val code: Int = -1,
     override val message: String,
     override val success: Boolean,
 

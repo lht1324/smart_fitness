@@ -11,6 +11,8 @@ import com.overeasy.smartfitness.domain.diary.DiaryRepository
 import com.overeasy.smartfitness.domain.diary.impl.DiaryRepositoryImpl
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.exercises.impl.ExercisesRepositoryImpl
+import com.overeasy.smartfitness.domain.foods.FoodsRepository
+import com.overeasy.smartfitness.domain.foods.impl.FoodsRepositoryImpl
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.impl.WorkoutRepositoryImpl
 import com.overeasy.smartfitness.domain.ranking.RankingRepository
@@ -114,4 +116,8 @@ object DataModule {
     @Singleton
     @Provides
     fun provideAiRepository(client: HttpClient): AiRepository = AiRepositoryImpl(client)
+
+    @Singleton
+    @Provides
+    fun provideFoodsRepository(client: HttpClient): FoodsRepository = FoodsRepositoryImpl(client)
 }

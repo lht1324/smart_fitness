@@ -28,8 +28,6 @@ fun DietNavHost(
         }
     }
 
-    var selectedFoodCategory by remember { mutableStateOf(FoodCategory.KOREAN) }
-
     Column(
         modifier = modifier
     ) {
@@ -44,15 +42,13 @@ fun DietNavHost(
         ) {
             composable(DietRoutes.Diet.route) {
                 DietScreen(
-                    onClickCategoryItem = { foodCategory ->
-                        selectedFoodCategory = foodCategory
+                    onFinish = {
                         navHostController.navigate(DietRoutes.DietResult.route)
                     }
                 )
             }
             composable(DietRoutes.DietResult.route) {
                 DietResultScreen(
-                    foodCategory = selectedFoodCategory,
                     onFinish = {
                         navHostController.navigateUp()
                     }

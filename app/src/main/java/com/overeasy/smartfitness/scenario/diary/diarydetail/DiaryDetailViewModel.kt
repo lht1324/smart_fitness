@@ -46,7 +46,7 @@ class DiaryDetailViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             diaryRepository.getDiaryDetail(noteId)
         }.onSuccess { res ->
-            _diaryDetail.value = res.run {
+            _diaryDetail.value = res.result.run {
                 DiaryDetail(
                     totalKcal = totalKcal,
                     totalPerfect = totalPerfect,

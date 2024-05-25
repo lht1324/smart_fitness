@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.setting.public.SettingButton
@@ -38,7 +39,7 @@ fun BodyInfoInputArea(
     age: String,
     height: String,
     weight: String,
-    selectedGenderIndex: Int? = null,
+    gender: String,
     isAgeInvalid: Boolean,
     isHeightInvalid: Boolean,
     isWeightInvalid: Boolean,
@@ -170,11 +171,26 @@ fun BodyInfoInputArea(
         )
     }
 
-    LaunchedEffect(selectedGenderIndex) {
-        genderList.toList().forEachIndexed { index, (gender, _) ->
-            genderList[index] = gender to (selectedGenderIndex == index)
+    LaunchedEffect(gender) {
+        println("jaehoLee", "first = ${genderList.all { (_, isSelected) -> !isSelected }}, second = ${gender.isNotEmpty()}, $gender")
+        if (gender.isNotEmpty()) {
+            val selectedIndex = if (gender == "male") {
+                0
+            } else {
+                1
+            }
+
+            val (selectedGender, _) = genderList[selectedIndex]
+
+            genderList[selectedIndex] = selectedGender to true
         }
     }
+
+//    LaunchedEffect(selectedGenderIndex) {
+//        genderList.toList().forEachIndexed { index, (gender, _) ->
+//            genderList[index] = gender to (selectedGenderIndex == index)
+//        }
+//    }
 }
 
 @Composable

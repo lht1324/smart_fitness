@@ -2,6 +2,7 @@ package com.overeasy.smartfitness.scenario.workout.result
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.model.workout.Menu
@@ -11,6 +12,7 @@ import com.overeasy.smartfitness.domain.workout.model.workout.Score
 import com.overeasy.smartfitness.domain.workout.model.workout.Workout
 import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutResult
 import com.overeasy.smartfitness.println
+import com.overeasy.smartfitness.scenario.workout.workout.WorkoutViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -155,6 +157,7 @@ class WorkoutResultViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+
             delay(5000L)
 //            val videoDir = MainApplication.appPreference.currentVideoFileDir
 //
@@ -177,6 +180,16 @@ class WorkoutResultViewModel @Inject constructor(
 //                }
 //            }
 
+
+        }
+    }
+
+    private suspend fun requestGetDiary(noteId: Int) {
+        ApiRequestHelper.makeRequest {
+            workoutRepository.getWorkoutNoteDetail(noteId)
+        }.onSuccess { res ->
+
+        }.onFailure {
 
         }
     }

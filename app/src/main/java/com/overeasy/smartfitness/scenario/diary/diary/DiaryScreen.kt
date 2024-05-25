@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
@@ -48,12 +51,14 @@ import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
+import com.overeasy.smartfitness.model.diary.ScoreType
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
+import com.overeasy.smartfitness.ui.theme.ColorSunday
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -70,11 +75,7 @@ fun DiaryScreen(
 ) {
     val currentYear by viewModel.currentYear.collectAsState(initial = 1970)
     val currentMonth by viewModel.currentMonth.collectAsState(initial = 1)
-    val calendarList by remember {
-        derivedStateOf {
-            viewModel.calendarList.toList()
-        }
-    }
+    val calendarList = remember { viewModel.calendarList }
     val calendarIndex by viewModel.calendarIndex.collectAsState()
 
     val noteIdList by viewModel.noteIdList.collectAsState()
@@ -125,7 +126,8 @@ fun DiaryScreen(
             )
             InfoSection(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 20.dp),
                 noteIdList = noteIdList,
                 totalPerfect = totalPerfect,
                 totalGood = totalGood,
@@ -139,7 +141,6 @@ fun DiaryScreen(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(20.dp))
         }
 
         LaunchedEffect(pagerState) {
@@ -208,15 +209,7 @@ private fun InfoSection(
         }
     }
 
-    val isNotExistWorkoutInfo by remember {
-        derivedStateOf {
-            totalPerfect == -1 &&
-                    totalGood == -1 &&
-                    totalNotGood == -1 &&
-                    totalScore == -1 &&
-                    totalKcal == 0
-        }
-    }
+    var isNotExistWorkoutInfo by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -269,7 +262,7 @@ private fun InfoSection(
                 .padding(horizontal = 20.dp)
                 .verticalScroll(state = scrollState)
         ) {
-            if (isNotExistWorkoutInfo) {
+            if (!isNotExistWorkoutInfo) {
                 Text(
                     text = "총 운동 횟수",
                     color = Color.White,
@@ -277,6 +270,7 @@ private fun InfoSection(
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily
                 )
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = "${totalPerfect + totalGood + totalNotGood}회",
                     color = Color.White,
@@ -284,31 +278,24 @@ private fun InfoSection(
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
                 )
-//                if (totalKcal != 0) {
-//                    Text(
-//                        text = "칼로리 섭취량",
-//                        color = Color.White,
-//                        fontSize = 20.dpToSp(),
-//                        fontWeight = FontWeight.Bold,
-//                        fontFamily = fontFamily
-//                    )
-//                    Text(
-//                        text = "$totalKcal kcal",
-//                        color = Color.Red,
-//                        fontSize = 18.dpToSp(),
-//                        fontWeight = FontWeight.SemiBold,
-//                        fontFamily = fontFamily
-//                    )
-//                    Spacer(modifier = Modifier.height(10.dp))
-//                }
-                if (totalKcal != 0) {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth(),
-                        thickness = 1.dp,
-                        color = Color.LightGray
+                if (!(totalPerfect == 0 && totalGood == 0 && totalNotGood == 0)) {
+                    Separator()
+                    Text(
+                        text = "점수",
+                        color = Color.White,
+                        fontSize = 20.dpToSp(),
+                        fontWeight = FontWeight.Black,
+                        fontFamily = fontFamily
                     )
                     Spacer(modifier = Modifier.height(5.dp))
+                    Score(type = ScoreType.PERFECT, score = totalPerfect)
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Score(type = ScoreType.GOOD, score = totalGood)
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Score(type = ScoreType.NOT_GOOD, score = totalNotGood)
+                }
+                if (totalKcal != 0) {
+                    Separator()
                     Text(
                         text = "칼로리 소모량",
                         color = Color.White,
@@ -316,6 +303,7 @@ private fun InfoSection(
                         fontWeight = FontWeight.Bold,
                         fontFamily = fontFamily
                     )
+                    Spacer(modifier = Modifier.height(5.dp))
                     Text(
                         text = "$totalKcal kcal", // 수정
                         color = ColorLightGreen,
@@ -325,19 +313,13 @@ private fun InfoSection(
                     )
                 }
                 if (noteIdList.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth(),
-                        thickness = 1.dp,
-                        color = Color.LightGray
-                    )
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Separator()
                     Column(
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         noteIdList.forEachIndexed { index, noteId ->
                             Text(
-                                text = "${index + 1}번 운동 상세 정보 확인하기",
+                                text = "${index + 1}번째 운동 상세 정보 확인하기",
                                 modifier = Modifier.noRippleClickable {
                                     onClickMoveToDetail(noteId)
                                 },
@@ -373,6 +355,19 @@ private fun InfoSection(
 //                }
 //            )
 //        }
+        LaunchedEffect(
+            totalPerfect,
+            totalGood,
+            totalNotGood,
+            totalScore,
+            totalKcal
+        ) {
+            isNotExistWorkoutInfo = totalPerfect == -1 &&
+                    totalGood == -1 &&
+                    totalNotGood == -1 &&
+                    totalScore == -1 &&
+                    totalKcal == 0
+        }
     }
 }
 
@@ -403,5 +398,65 @@ private fun BoxScope.MoveToDetailButton(
                 .size(24.dp)
                 .align(Alignment.Center)
         )
+    }
+}
+
+@Composable
+private fun Score(
+    modifier: Modifier = Modifier,
+    type: ScoreType,
+    score: Int
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = when (type) {
+                ScoreType.PERFECT -> "Perfect"
+                ScoreType.GOOD -> "Good"
+                ScoreType.NOT_GOOD -> "Not Good"
+            },
+            color = when (type) {
+                ScoreType.PERFECT -> ColorSaturday
+                ScoreType.GOOD -> ColorLightGreen
+                ScoreType.NOT_GOOD -> ColorSunday
+            },
+            fontSize = 16.dpToSp(),
+            fontWeight = FontWeight.Black,
+            fontFamily = fontFamily
+        )
+        HorizontalDivider(
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .width(5.dp),
+            thickness = 1.dp,
+            color = Color.LightGray
+        )
+        Text(
+            text = "$score",
+            color = Color.LightGray,
+            fontSize = 16.dpToSp(),
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = fontFamily
+        )
+    }
+}
+
+@Composable
+private fun Separator(
+    modifier: Modifier = Modifier,
+    spaceHeight: Int = 20
+) {
+    Column(
+        modifier = modifier
+    ) {
+        Spacer(modifier = Modifier.height((spaceHeight / 2).dp))
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
+            color = Color.LightGray
+        )
+        Spacer(modifier = Modifier.height((spaceHeight / 2).dp))
     }
 }

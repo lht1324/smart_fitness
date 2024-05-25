@@ -40,7 +40,10 @@ fun DiaryNavHost(
     ) {
         Header(
             title = currentHeaderTitle,
-            isBackButtonEnabled = currentDestination != DiaryRoutes.Diary.route
+            isBackButtonEnabled = currentDestination != DiaryRoutes.Diary.route,
+            onClickBack = {
+                navHostController.navigateUp()
+            }
         )
         NavHost(
             navController = navHostController,

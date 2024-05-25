@@ -6,6 +6,8 @@ import android.Manifest
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
@@ -123,6 +125,8 @@ fun WorkoutScreen(
 
     val isWorkoutRunning by viewModel.isWorkoutRunning.collectAsState()
     val isLoadingFinishWorkout by viewModel.isLoadingFinishWorkout.collectAsState()
+
+    val uploadLoadingProgress by viewModel.uploadLoadingProgress.collectAsState()
 
     Box(
         modifier = modifier
@@ -277,6 +281,38 @@ fun WorkoutScreen(
                         fontFamily = fontFamily,
                         textAlign = TextAlign.Center
                     )
+                    if (uploadLoadingProgress != null) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(20.dp)
+                                    .background(color = Color.Black)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = uploadLoadingProgress!!)
+                                    .height(20.dp)
+                                    .background(color = Color.White)
+                                    .align(Alignment.CenterStart)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = "${String.format("%.2f", uploadLoadingProgress!! * 100f)}%",
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            color = Color.White,
+                            fontSize = 20.dpToSp(),
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = fontFamily
+                        )
+                    }
                 }
             }
         }
@@ -350,6 +386,7 @@ fun WorkoutScreen(
 
     LaunchedEffect(cameraController.isRecording) {
         isRecording = cameraController.isRecording
+        viewModel.setIsRecording(cameraController.isRecording)
     }
 
     LaunchedEffect(viewModel.workoutUiEvent) {
@@ -362,14 +399,12 @@ fun WorkoutScreen(
                             filesDir = filesDir
                         )
                     }
-                    delay(5000L)
-                    println("jaehoLee", "isRecording = ${cameraController.isRecording}")
                 }
                 WorkoutViewModel.WorkoutUiEvent.StopRecording -> {
                     poseDetectionManager.stopRecording()
                 }
                 is WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
-                    poseDetectionManager.stopRecording()
+//                    poseDetectionManager.stopRecording()
 
                     onFinishWorkout(event.noteId)
                 }

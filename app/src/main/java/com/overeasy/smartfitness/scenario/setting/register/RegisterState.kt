@@ -4,5 +4,6 @@ enum class RegisterState {
     UserInfoInput,
     NicknameInput,
     BodyInfoInput,
-    TasteInfoInput
+    TasteInfoInput,
+    DietInfoInput
 }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
@@ -46,11 +47,11 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 @Composable
 fun TasteInfoInputArea(
     modifier: Modifier = Modifier,
-    spicyPreference: Int? = null,
-    meatConsumption: Boolean? = null,
-    tastePreference: String? = null,
-    activityLevel: Int? = null,
-    preferenceTypeFood: String? = null,
+    spicyPreference: Int?,
+    meatConsumption: Boolean?,
+    tastePreference: String?,
+    activityLevel: Int?,
+    preferenceTypeFood: String?,
     isInRegister: Boolean = true,
     onChangeSpicyPreference: (Int) -> Unit,
     onChangeMeatConsumption: (Boolean) -> Unit,
@@ -90,12 +91,13 @@ fun TasteInfoInputArea(
             "상관 없음" to false,
         )
     }
+    // title = "활동적이신 분인가요?",
     val activityPreferenceList = remember {
         mutableStateListOf(
-            "1단계" to false,
-            "2단계" to false,
-            "3단계" to false,
-            "4단계" to false
+            "의자와 한몸" to false,
+            "많이는 아님" to false,
+            "운동 좋아하는 사람" to false,
+            "지치는 게 뭐지?" to false
         )
     }
     val foodPreferenceList = remember {

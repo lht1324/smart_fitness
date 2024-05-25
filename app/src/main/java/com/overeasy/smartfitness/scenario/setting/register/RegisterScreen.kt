@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import kotlinx.coroutines.flow.collectLatest
@@ -29,6 +30,7 @@ fun RegisterScreen(
     val nickname by viewModel.nickname.collectAsState()
 
     val bodyInfo by viewModel.bodyInfo.collectAsState()
+    val tasteInfo by viewModel.tasteInfo.collectAsState()
 
     val isIdInvalid by viewModel.isIdInvalid.collectAsState(initial = false)
     val isPasswordInvalid by viewModel.isPasswordInvalid.collectAsState(initial = false)
@@ -38,6 +40,8 @@ fun RegisterScreen(
     val isAgeInvalid by viewModel.isAgeInvalid.collectAsState(initial = false)
     val isHeightInvalid by viewModel.isHeightInvalid.collectAsState(initial = false)
     val isWeightInvalid by viewModel.isWeightInvalid.collectAsState(initial = false)
+
+    val menuList = remember { viewModel.menuList }
 
     var currentRegisterState by remember { mutableStateOf(RegisterState.UserInfoInput) }
     val currentRegisterArea by remember {
@@ -69,6 +73,7 @@ fun RegisterScreen(
                         age = bodyInfo.age ?: "",
                         height = bodyInfo.height ?: "",
                         weight = bodyInfo.weight ?: "",
+                        gender = bodyInfo.gender ?: "",
                         onChangeAge = viewModel::onChangeAge,
                         onChangeHeight = viewModel::onChangeHeight,
                         onChangeWeight = viewModel::onChangeWeight,
@@ -82,13 +87,25 @@ fun RegisterScreen(
                     )
 
                     RegisterState.TasteInfoInput -> TasteInfoInputArea(
+                        spicyPreference = tasteInfo.spicyPreference,
+                        meatConsumption = tasteInfo.meatConsumption,
+                        tastePreference = tasteInfo.tastePreference,
+                        activityLevel = tasteInfo.activityLevel,
+                        preferenceTypeFood = tasteInfo.preferenceTypeFood,
                         onChangeSpicyPreference = viewModel::onChangeSpicyPreference,
                         onChangeMeatConsumption = viewModel::onChangeMeatConsumption,
                         onChangeTastePreference = viewModel::onChangeTastePreference,
                         onChangeActivityLevel = viewModel::onChangeActivityLevel,
                         onChangePreferenceTypeFood = viewModel::onChangePreferenceTypeFood,
                         onClickSkipTasteInput = viewModel::onClickSkipTasteInfo,
-                        onFinishTasteInfoInput = viewModel::onClickRegister
+                        onFinishTasteInfoInput = {
+                            currentRegisterState = RegisterState.DietInfoInput
+                        }
+                    )
+                    RegisterState.DietInfoInput -> DietInfoInputArea(
+                        menuList = menuList.toList(),
+                        onChangePreferenceFoods = viewModel::onChangePreferenceFoods,
+                        onFinishRegister = viewModel::onClickRegister
                     )
                 }
             }
