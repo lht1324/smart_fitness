@@ -1,9 +1,7 @@
 package com.overeasy.smartfitness
 
 import android.content.Context
-import android.content.ContextWrapper
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
-import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
 import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +21,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
 import java.text.DecimalFormat
-import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.abs
 import kotlin.math.atan2

@@ -1,7 +1,7 @@
 package com.overeasy.smartfitness.domain.diet.entity
 
 import com.overeasy.smartfitness.domain.base.BaseResponseModel
-import com.overeasy.smartfitness.domain.diet.model.DietRecommendResult
+import com.overeasy.smartfitness.domain.diet.dto.DietRecommendResult
 import kotlinx.serialization.Serializable
 
 @Serializable

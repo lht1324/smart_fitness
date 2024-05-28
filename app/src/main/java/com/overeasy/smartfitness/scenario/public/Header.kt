@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
-import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
 @Composable
@@ -75,11 +74,11 @@ fun Header(
             }
         }
         if (isDividerEnabled) {
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp),
-                color = ColorSecondary
+                    .height(1.dp),
+                color = Color(0xFF919191)
             )
         }
     }

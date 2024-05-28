@@ -13,15 +13,17 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.HorizontalDivider
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -62,11 +65,9 @@ import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import dagger.hilt.android.AndroidEntryPoint
-import io.ktor.util.date.getTimeMillis
 import java.io.BufferedWriter
 import java.io.IOException
 import java.io.OutputStreamWriter
-import java.time.LocalDateTime
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -78,7 +79,7 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "text/json"
-            putExtra(Intent.EXTRA_TITLE, LocalDateTime.now().run { "${String.format("%02d", year)}/${String.format("%02d", monthValue + 1)}/${String.format("%02d", dayOfMonth)}_${String.format("%02d", hour)}:${String.format("%02d", minute)}:${String.format("%02d", second)}:${String.format("%02d", getTimeMillis())}.json" })
+            putExtra(Intent.EXTRA_TITLE, "${getDateString()}.json")
         }
         startActivityForResult(intent, WRITE_REQUEST_CODE)
     }
@@ -145,7 +146,6 @@ class MainActivity : ComponentActivity() {
                 state.value
             }
             var currentPage by remember { mutableIntStateOf(2) }
-//            var currentPage by remember { mutableIntStateOf(3) }
             var headerHeight by remember { mutableIntStateOf(0) }
 
             val screenHeight = LocalConfiguration.current.screenHeightDp
@@ -174,15 +174,18 @@ class MainActivity : ComponentActivity() {
                     )
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
-                        thickness = 2.dp,
-                        color = ColorSecondary
+                        thickness = 0.5.dp,
+                        color = Color(0xFF919191)
                     )
                     TabRow(
                         selectedTabIndex = pagerState.currentPage,
-                        containerColor = ColorPrimary,
+                        containerColor = Color(0xFF454747),
                         contentColor = ColorSecondary,
                         indicator = { _ ->
-                            SecondaryIndicator( height = 1.dp, color = Color.Transparent)
+                            SecondaryIndicator(
+                                height = 1.dp,
+                                color = Color.Transparent
+                            )
                         }
                     ) {
                         tabItemList.forEachIndexed { index, tabItem ->
@@ -198,10 +201,6 @@ class MainActivity : ComponentActivity() {
 //                                        }
                                     },
                                     modifier = Modifier
-                                        .border(
-                                            width = 0.5.dp,
-                                            color = ColorSecondary
-                                        )
                                         .onSizeChanged { (_, height) ->
                                             val heightDp = pxToDp(height)
 
@@ -210,15 +209,30 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
                                     text = {
-                                        Text(
-                                            text = tabItem,
-                                            fontSize = 12.dpToSp(),
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = fontFamily
-                                        )
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Image(
+                                                painter = painterResource(
+                                                    getTabIconByScreenState(
+                                                        isSelected = currentPage == index,
+                                                        screenState = ScreenState.entries[index]
+                                                    )
+                                                ),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Text(
+                                                text = tabItem,
+                                                fontSize = 12.dpToSp(),
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = fontFamily
+                                            )
+                                        }
                                     },
-                                    selectedContentColor = ColorSecondary,
-                                    unselectedContentColor = Color.White
+                                    selectedContentColor = Color.White,
+                                    unselectedContentColor = Color(0xFF919191)
                                 )
                             }
                         }
@@ -301,19 +315,14 @@ class MainActivity : ComponentActivity() {
         when (stateValue) {
             ScreenState.DietScreen.value -> DietNavHost()
             ScreenState.DiaryScreen.value -> DiaryNavHost(
-                onClickWatchExampleVideo = { workoutId ->
-//                    val url = "${BuildConfig.BASE_URL}/exercises/video/stream/$workoutId"
-
-//                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(workoutId)))
+                onClickWatchExampleVideo = { videoUrl ->
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
                 }
             )
             ScreenState.MainScreen.value -> WorkoutNavHost(
                 filesDir = filesDir,
-                onClickWatchExampleVideo = { workoutName ->
-                    val url = "${BuildConfig.BASE_URL}/exercises/video/stream/$workoutName"
-
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                onClickWatchExampleVideo = { videoUrl ->
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
                 },
                 onUpdateJson = onUpdateJson,
                 onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
@@ -336,5 +345,33 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+}
+
+private fun getTabIconByScreenState(isSelected: Boolean, screenState: ScreenState) = when (screenState) {
+    ScreenState.DietScreen -> if (isSelected) {
+        R.drawable.ic_food_selected
+    } else {
+        R.drawable.ic_food_unselected
+    }
+    ScreenState.DiaryScreen -> if (isSelected) {
+        R.drawable.ic_calendar_selected
+    } else {
+        R.drawable.ic_calendar_unselected
+    }
+    ScreenState.MainScreen -> if (isSelected) {
+        R.drawable.ic_fitness_selected
+    } else {
+        R.drawable.ic_fitness_unselected
+    }
+    ScreenState.RankingScreen -> if (isSelected) {
+        R.drawable.ic_ranking_selected
+    } else {
+        R.drawable.ic_ranking_unselected
+    }
+    ScreenState.SettingScreen -> if (isSelected) {
+        R.drawable.ic_setting_selected
+    } else {
+        R.drawable.ic_setting_unselected
     }
 }

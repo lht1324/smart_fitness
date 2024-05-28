@@ -30,6 +30,20 @@ fun BodyFrame(
                 strokeWidth = strokeWidth
             )
         }
+        bodyFrameData.offsetList.distinctBy { (x, _) ->
+            x
+        }.forEach { (x, _) ->
+            drawCircle(
+                color = Color.White,
+                radius = 10.0f,
+                center = x
+            )
+            drawCircle(
+                color = Color.Red,
+                radius = 8.0f,
+                center = x
+            )
+        }
     }
 
     LaunchedEffect(bodyFrameData.offsetList) {

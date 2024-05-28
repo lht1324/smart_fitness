@@ -13,6 +13,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.diary.diarydetail.DiaryDetailScreen
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
@@ -62,6 +63,7 @@ fun WorkoutNavHost(
                     filesDir = filesDir,
                     onClickWatchExampleVideo = onClickWatchExampleVideo,
                     onFinishWorkout = { noteId ->
+                        println("jaehoLee", "noteId onFinish = $noteId")
                         navHostController.navigate(WorkoutRoutes.Result.createRoute(noteId))
                     },
                     onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
@@ -69,17 +71,13 @@ fun WorkoutNavHost(
                 )
             }
             composable(WorkoutRoutes.Result.route) { backStackEntry ->
-                val noteId = backStackEntry.arguments?.getInt(WorkoutRoutes.Result.NOTE_ID) ?: -1
+                val noteId = backStackEntry.arguments?.getString(WorkoutRoutes.Result.NOTE_ID)?.toIntOrNull() ?: -1
 
                 if (noteId != -1) {
-//                    WorkoutResultScreen(
-//                        noteId = noteId
-//                    )
                     DiaryDetailScreen(
                         noteId = noteId,
-                        onClickWatchExampleVideo = {
-
-                        }
+                        isCameFromWorkout = true,
+                        onClickWatchExampleVideo = onClickWatchExampleVideo
                     )
                 } else {
                     navHostController.navigateUp()

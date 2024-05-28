@@ -15,8 +15,8 @@ import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.foods.impl.FoodsRepositoryImpl
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.impl.WorkoutRepositoryImpl
-import com.overeasy.smartfitness.domain.ranking.RankingRepository
-import com.overeasy.smartfitness.domain.ranking.impl.RankingRepositoryImpl
+import com.overeasy.smartfitness.domain.ranking.ScoreRepository
+import com.overeasy.smartfitness.domain.ranking.impl.ScoreRepositoryImpl
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.impl.SettingRepositoryImpl
 import com.overeasy.smartfitness.module.tensorflowmanager.TensorFlowManager
@@ -103,7 +103,7 @@ object DataModule {
 
     @Singleton
     @Provides
-    fun provideRankingRepository(client: HttpClient): RankingRepository = RankingRepositoryImpl(client)
+    fun provideScoreRepository(client: HttpClient): ScoreRepository = ScoreRepositoryImpl(client)
 
     @Singleton
     @Provides

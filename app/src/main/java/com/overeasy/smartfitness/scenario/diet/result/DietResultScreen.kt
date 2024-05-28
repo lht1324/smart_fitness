@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,8 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.domain.diet.model.RecommendedFood
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.scenario.diet.public.DietTextButton
@@ -48,7 +50,9 @@ import kotlinx.coroutines.flow.collectLatest
 fun DietResultScreen(
     modifier: Modifier = Modifier,
     viewModel: DietResultViewModel = hiltViewModel(),
-    onFinish: () -> Unit
+    userMenu: String,
+    onFinish: () -> Unit,
+    onFailureRecommend: () -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -58,7 +62,7 @@ fun DietResultScreen(
     var isShowFailedDialog by remember { mutableStateOf(false) }
 
     var selectedIndex by remember { mutableIntStateOf(-1) }
-    val foodRecommendList = remember { viewModel.foodRecommendList }
+    val recommendedFoodList = remember { viewModel.recommendedFoodList }
 
     Box(
         modifier = modifier
@@ -100,11 +104,10 @@ fun DietResultScreen(
                 }
             )
             Spacer(modifier = Modifier.height(10.dp))
-            FlowRow(
-                verticalArrangement = Arrangement.spacedBy(15.dp),
-                horizontalArrangement = Arrangement.spacedBy(15.dp)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(15.dp)
             ) {
-                foodRecommendList.forEachIndexed { index, (name, calorie, type) ->
+                recommendedFoodList.forEachIndexed { index, foodData ->
                     RecommendedMenu(
                         modifier = Modifier
                             .noRippleClickable {
@@ -114,16 +117,14 @@ fun DietResultScreen(
                                     index
                                 }
                             },
-                        menuName = name,
-                        calorie = calorie,
-                        menuType = type,
+                        foodData = foodData,
                         isSelected = selectedIndex == index
                     )
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
-        if (foodRecommendList.isEmpty()) {
+        if (recommendedFoodList.isEmpty()) {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -140,7 +141,7 @@ fun DietResultScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "AI가 사용자님에게 맞는 식단을\n열심히 만들고 있어요.\n잠시만 기다려주세요...",
+                        text = "사용자님에게 맞는 식단을\n열심히 만들고 있어요.\n잠시만 기다려주세요...",
                         color = Color.White,
                         fontSize = 24.dpToSp(),
                         fontWeight = FontWeight.ExtraBold,
@@ -166,7 +167,7 @@ fun DietResultScreen(
     }
 
     if (isShowDoesWantToFinishDialog) {
-        val (foodName, _, _) = foodRecommendList[selectedIndex]
+        val (foodName, _, _) = recommendedFoodList[selectedIndex]
 
         Dialog(
             title = "'${foodName}'을(를) 선택하시겠어요?",
@@ -186,7 +187,7 @@ fun DietResultScreen(
     }
 
     if (isShowFinishedDialog) {
-        val (foodName, _, _) = foodRecommendList[selectedIndex]
+        val (foodName, _, _) = recommendedFoodList[selectedIndex]
 
         Dialog(
             title = "'$foodName'이(가) 저장되었어요.",
@@ -203,7 +204,7 @@ fun DietResultScreen(
 
     if (isShowFailedDialog) {
         Dialog(
-            title = "메뉴 저장이 실패했어요.",
+            title = "선택한 메뉴를 저장할 수 없어요.",
             description = "다시 한 번 시도해주세요.",
             confirmText = "확인",
             onClickConfirm = {
@@ -215,6 +216,10 @@ fun DietResultScreen(
         )
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.onLoad(userMenu)
+    }
+
     LaunchedEffect(viewModel.dietResultUiEvent) {
         viewModel.dietResultUiEvent.collectLatest { event ->
             /* no-op */
@@ -222,7 +227,10 @@ fun DietResultScreen(
                 DietResultViewModel.DietResultUiEvent.OnSuccess -> {
                     isShowFinishedDialog = true
                 }
-                DietResultViewModel.DietResultUiEvent.OnFailure -> {
+                DietResultViewModel.DietResultUiEvent.OnFailureRecommend -> {
+                    onFailureRecommend()
+                }
+                DietResultViewModel.DietResultUiEvent.OnFailureSelect -> {
                     isShowFailedDialog = true
                 }
             }
@@ -233,9 +241,7 @@ fun DietResultScreen(
 @Composable
 private fun RecommendedMenu(
     modifier: Modifier = Modifier,
-    menuName: String,
-    calorie: Float,
-    menuType: String,
+    foodData: RecommendedFood,
     isSelected: Boolean
 ) {
     Box(
@@ -256,31 +262,76 @@ private fun RecommendedMenu(
     ) {
         Column(
             modifier = Modifier
-                .padding(vertical = 5.dp, horizontal = 10.dp)
+                .padding(vertical = 10.dp, horizontal = 15.dp)
         ) {
             Text(
-                text = menuName,
+                text = foodData.name,
                 color = Color.White,
                 fontSize = 18.dpToSp(),
                 fontWeight = FontWeight.SemiBold,
-                fontFamily = fontFamily
+                fontFamily = fontFamily,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = "$calorie kcal",
-                color = Color.White,
-                fontSize = 16.dpToSp(),
-                fontWeight = FontWeight.Normal,
-                fontFamily = fontFamily
-            )
-            Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = menuType,
-                color = Color.White,
-                fontSize = 16.dpToSp(),
-                fontWeight = FontWeight.Normal,
-                fontFamily = fontFamily
-            )
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier
+                ) {
+                    Text(
+                        text = "${foodData.calorie} kcal",
+                        color = Color.White,
+                        fontSize = 16.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
+                        lineHeight = 1.dpToSp()
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Text(
+                        text = foodData.foodType,
+                        color = Color.White,
+                        fontSize = 16.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
+                        lineHeight = 1.dpToSp()
+                    )
+                }
+                Column(
+                    modifier = Modifier,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "탄수화물: ${foodData.carbohydrate}g",
+                        color = Color.White,
+                        fontSize = 14.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
+                        lineHeight = 1.dpToSp()
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "단백질: ${foodData.protein}g",
+                        color = Color.White,
+                        fontSize = 14.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
+                        lineHeight = 1.dpToSp()
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "지방: ${foodData.fat}g",
+                        color = Color.White,
+                        fontSize = 14.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily,
+                        lineHeight = 1.dpToSp()
+                    )
+                }
+            }
         }
     }
 }

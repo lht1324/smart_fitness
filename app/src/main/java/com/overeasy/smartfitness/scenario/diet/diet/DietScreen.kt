@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +49,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun DietScreen(
     modifier: Modifier = Modifier,
     viewModel: DietViewModel = hiltViewModel(),
-    onFinish: () -> Unit
+    onFinish: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -128,20 +127,20 @@ fun DietScreen(
         }
     }
 
-    if (isShowNotFinishDialog) {
-        Dialog(
-            title = "제가 모르는 음식이네요.",
-            description = "다시 한 번만 입력해주시겠어요?\n" +
-                    "(빈 칸은 상관없어요 \uD83D\uDE09)",
-            confirmText = "확인",
-            onClickConfirm = {
-                isShowNotFinishDialog = false
-            },
-            onDismissRequest = {
-                isShowNotFinishDialog = false
-            }
-        )
-    }
+//    if (isShowNotFinishDialog) {
+//        Dialog(
+//            title = "제가 모르는 음식이네요.",
+//            description = "다시 한 번만 입력해주시겠어요?\n" +
+//                    "(빈 칸은 상관없어요 \uD83D\uDE09)",
+//            confirmText = "확인",
+//            onClickConfirm = {
+//                isShowNotFinishDialog = false
+//            },
+//            onDismissRequest = {
+//                isShowNotFinishDialog = false
+//            }
+//        )
+//    }
 
     if (isShowAllEmptyDialog) {
         Dialog(
@@ -160,11 +159,14 @@ fun DietScreen(
     LaunchedEffect(viewModel.dietUiEvent) {
         viewModel.dietUiEvent.collectLatest { event ->
             when (event) {
+                is DietViewModel.DietUiEvent.OnFinishInputMenu -> {
+                    onFinish(event.userMenu)
+                }
                 DietViewModel.DietUiEvent.OnSuccessInputMenu -> {
-                    onFinish()
+//                    onFinish()
                 }
                 DietViewModel.DietUiEvent.OnFailureInputMenu -> {
-                    isShowNotFinishDialog = true
+//                    isShowNotFinishDialog = true
                 }
             }
         }

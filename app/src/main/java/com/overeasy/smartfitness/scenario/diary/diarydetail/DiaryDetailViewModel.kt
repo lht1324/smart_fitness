@@ -186,19 +186,6 @@ class DiaryDetailViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             workoutRepository.getWorkoutVideoList(noteId)
         }.onSuccess { res ->
-            res.result.workoutVideoList.filter { workoutVideoData ->
-                workoutVideoData.exerciseName == ""
-            }
-            val temp = res.result.workoutVideoList.map { workoutVideoData ->
-                workoutVideoData.run { exerciseName to workoutVideoId }
-            }.groupBy { (name, _) ->
-                name
-            }.mapValues { (_, dataList) ->
-                dataList.sortedBy { (_, id) -> id }
-            }.map { (_, dataList) ->
-                dataList
-            }
-
             _workoutVideoDataList.addAll(
                 res.result.workoutVideoList.map { workoutVideoData ->
                     workoutVideoData.run { exerciseName to workoutVideoId }

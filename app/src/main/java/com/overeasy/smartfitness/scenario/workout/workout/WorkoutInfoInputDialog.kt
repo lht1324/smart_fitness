@@ -13,12 +13,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,15 +33,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,7 +47,6 @@ import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.noRippleClickable
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
@@ -65,7 +57,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun WorkoutInfoInputDialog(
     modifier: Modifier = Modifier,
-    workoutNameList: List<String>,
+    workoutDataList: List<Pair<String, Boolean>>,
     isImeVisible: Boolean,
     onClickWatchExampleVideo: (String) -> Unit,
     onFinish: (WorkoutInfo) -> Unit
@@ -80,10 +72,19 @@ fun WorkoutInfoInputDialog(
 
     var selectedWorkoutNameIndex by remember { mutableIntStateOf(0) }
 
+    val isBodyWeightWorkout by remember {
+        derivedStateOf {
+            if (workoutDataList.isNotEmpty())
+                workoutDataList[selectedWorkoutNameIndex].second
+            else
+                false
+        }
+    }
+
     var workoutInfo by remember {
         mutableStateOf(
             WorkoutInfo(
-                workoutName = workoutNameList.firstOrNull() ?: "",
+                workoutName = workoutDataList.firstOrNull()?.first ?: "",
                 restTime = 30,
                 // weight to count
                 setDataList = listOf(
@@ -123,7 +124,7 @@ fun WorkoutInfoInputDialog(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically)
                     ) {
-                        workoutNameList.forEachIndexed { index, workoutName ->
+                        workoutDataList.forEachIndexed { index, (workoutName, workoutType) ->
                             WorkoutName(
                                 modifier = Modifier.noRippleClickable {
                                     if (selectedWorkoutNameIndex != index) {
@@ -140,12 +141,12 @@ fun WorkoutInfoInputDialog(
                         }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-                    if (workoutNameList.isNotEmpty()) {
+                    if (workoutDataList.isNotEmpty()) {
                         Text(
-                            text = "${workoutNameList[selectedWorkoutNameIndex]} 예시 영상 조회",
+                            text = "${workoutDataList[selectedWorkoutNameIndex].first} 예시 영상 조회",
                             modifier = Modifier
                                 .noRippleClickable {
-                                    onClickWatchExampleVideo(workoutNameList[selectedWorkoutNameIndex])
+                                    onClickWatchExampleVideo(workoutDataList[selectedWorkoutNameIndex].first)
                                 },
                             color = ColorSaturday,
                             fontSize = 18.dpToSp(),
@@ -180,6 +181,7 @@ fun WorkoutInfoInputDialog(
                             set = index + 1,
                             weight = setData.weight,
                             count = setData.repeats,
+                            isBodyWeightWorkout = isBodyWeightWorkout,
                             onChangeWeight = { value ->
                                 workoutInfo = workoutInfo.copy(
                                     setDataList = workoutInfo.setDataList
@@ -391,10 +393,20 @@ private fun SetDataItem(
     set: Int,
     weight: Int?,
     count: Int?,
+    isBodyWeightWorkout: Boolean,
     onChangeWeight: (String) -> Unit,
     onChangeCount: (String) -> Unit,
     onClickDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    var countTextFieldWidthPx by remember { mutableIntStateOf(0) }
+    val countTextFieldWidthDp by remember {
+        derivedStateOf {
+            context.pxToDp(countTextFieldWidthPx)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -431,12 +443,21 @@ private fun SetDataItem(
 //                fontFamily = fontFamily
 //            )
 //            Spacer(modifier = Modifier.width(10.dp))
+
+            if (!isBodyWeightWorkout) {
+                SetDataItemTextField(
+                    value = weight?.toString() ?: "",
+                    onValueChange = onChangeWeight,
+                    unitText = "kg"
+                )
+            } else {
+                Spacer(modifier = Modifier.width(countTextFieldWidthDp.dp))
+            }
             SetDataItemTextField(
-                value = weight?.toString() ?: "",
-                onValueChange = onChangeWeight,
-                unitText = "kg"
-            )
-            SetDataItemTextField(
+                modifier = Modifier.onSizeChanged { (width, _) ->
+                    if (width != countTextFieldWidthPx)
+                        countTextFieldWidthPx = width
+                },
                 value = count?.toString() ?: "",
                 onValueChange = onChangeCount,
                 unitText = "회"

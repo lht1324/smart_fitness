@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.domain.workout.model.diary.Note
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println
@@ -17,8 +16,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 import java.time.YearMonth
+import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
@@ -96,6 +95,17 @@ class DiaryViewModel @Inject constructor(
         _calendarList.addAll(calendarList)
     }
 
+    fun clearDiaryData() {
+        _noteIdList.value = listOf()
+
+        _totalPerfect.value = -1
+        _totalGood.value = -1
+        _totalNotGood.value = -1
+        _totalScore.value = -1
+
+        _totalKcal.value = 0
+    }
+
     fun onChangeSelectedCalendarData(calendarData: CalendarItemData?) {
         _selectedCalendarItemData.value = calendarData
     }
@@ -163,19 +173,16 @@ class DiaryViewModel @Inject constructor(
                 }.sumOf { note ->
                     note.totalKcal!!
                 }
-
-                println("jaehoLee", "totalPerfect = ${totalPerfect.value}")
-                println("jaehoLee", "totalGood = ${totalGood.value}")
-                println("jaehoLee", "totalNotGood = ${totalNotGood.value}")
-                println("jaehoLee", "totalScore = ${totalScore.value}")
-                println("jaehoLee", "totalKcal = ${totalKcal.value}")
-
-//                _workoutDiaryItemList.clear()
-//                _workoutDiaryItemList.addAll(res.result!!.noteList)
+            } else {
+                clearDiaryData()
             }
         }.onFailure { res ->
+            clearDiaryData()
+
             println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
         }.onError { throwable ->
+            clearDiaryData()
+
             println("jaehoLee", "onError: ${throwable.message}")
         }
     }

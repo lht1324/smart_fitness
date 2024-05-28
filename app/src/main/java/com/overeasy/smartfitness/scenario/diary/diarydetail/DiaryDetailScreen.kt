@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,16 +24,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -67,6 +72,7 @@ fun DiaryDetailScreen(
     viewModel: DiaryDetailViewModel = hiltViewModel(),
     noteId: Int,
     noteDate: String? = null,
+    isCameFromWorkout: Boolean = false,
     onClickWatchExampleVideo: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -145,40 +151,36 @@ fun DiaryDetailScreen(
                         )
                         Separator()
                         DetailText(
-                            text = "총점", // sumOf
-                            fontSize = 20.dpToSp(),
-                            fontWeight = FontWeight.Black
+                            text = "총점",
+                            fontSize = 20.dpToSp()
                         )
                         Spacer(modifier = Modifier.height(5.dp))
                         DetailText(
                             text = "${addCommaIntoNumber(diaryDetail!!.totalScore)}점",
                             fontSize = 18.dpToSp(),
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.SemiBold
                         )
                         if (workoutVideoDataList.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(10.dp))
-                            HorizontalDivider(
-                                modifier = Modifier.fillMaxWidth(),
-                                thickness = 2.dp,
-                                color = ColorSecondary
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Separator()
                             DetailText(
                                 text = "운동 영상 다시 보기",
-                                fontSize = 20.dpToSp(),
-                                fontWeight = FontWeight.Black
+                                fontSize = 20.dpToSp()
                             )
                             Spacer(modifier = Modifier.height(5.dp))
                             workoutVideoDataList.forEachIndexed { workoutIndex, dataList ->
                                 dataList.forEachIndexed { index, (workoutName, url) ->
                                     DetailText(
-                                        text = "$workoutName(${index + 1})",
+                                        text = if (dataList.size > 1) {
+                                            "$workoutName(${index + 1})"
+                                        } else {
+                                            workoutName
+                                        },
                                         modifier = Modifier.noRippleClickable {
-                                            com.overeasy.smartfitness.println("jaehoLee", "clicked url")
                                             onClickWatchExampleVideo(url)
                                         },
                                         fontSize = 18.dpToSp(),
                                         color = ColorSaturday,
+                                        fontWeight = FontWeight.SemiBold,
                                         textDecoration = TextDecoration.Underline
                                     )
                                     Spacer(modifier = Modifier.height(5.dp))
@@ -232,7 +234,6 @@ fun DiaryDetailScreen(
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 dietHistoryList.map { (_, calorie, foodCount) ->
-//                                    "${String.format("%.2f", calorie)} × $foodCount"
                                     "${calorie * foodCount.toFloat()}"
                                 }.forEachIndexed { index, calorieUsage ->
                                     Row(
@@ -313,7 +314,11 @@ fun DiaryDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "상세 정보를 조회 중입니다.\n잠시만 기다려주세요...",
+                    text = if (isCameFromWorkout) {
+                        "운동 결과"
+                    } else {
+                        "상세 정보"
+                    } + "를 조회 중입니다.\n잠시만 기다려주세요...",
                     color = Color.White,
                     fontSize = 24.dpToSp(),
                     fontWeight = FontWeight.ExtraBold,
@@ -621,7 +626,7 @@ private fun FoodInfo(
                     fontFamily = fontFamily
                 )
                 Text(
-                    text = "( = ${calorie * foodCount.toFloat()}) kcal",
+                    text = "= ${calorie * foodCount.toFloat()} kcal",
                     color = Color.White,
                     fontSize = 16.dpToSp(),
                     fontWeight = FontWeight.Medium,

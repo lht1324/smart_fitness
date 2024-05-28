@@ -12,11 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.diary.diary.DiaryScreen
 import com.overeasy.smartfitness.scenario.diary.diarydetail.DiaryDetailScreen
 import com.overeasy.smartfitness.scenario.public.Header
-import java.time.LocalDate
 
 @Composable
 fun DiaryNavHost(
@@ -31,6 +29,7 @@ fun DiaryNavHost(
             when (currentDestination) {
                 DiaryRoutes.Diary.route -> "운동 일지"
                 DiaryRoutes.DiaryDetail.route -> "상세 정보" // ${날짜} 상세 정보?
+//                DiaryRoutes.DiaryDetail.route -> "운동 결과"
                 else -> ""
             }
         }

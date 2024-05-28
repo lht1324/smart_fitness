@@ -9,5 +9,5 @@ data class WorkoutVideoData(
     val userId: Int,
     val fileName: String,
     val exerciseName: String,
-    val createdAt: String // YYYY-MM-DDT0HH:MM:SS.(locale)
+    val createdAt: List<Int>
 )

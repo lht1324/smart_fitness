@@ -112,7 +112,7 @@ fun DiaryScreen(
                 onClickItem = { calendarData ->
                     calendarData?.date?.let { date ->
                         viewModel.onClickCalendarItem(date)
-                    }
+                    } ?: viewModel.clearDiaryData()
 
                     viewModel.onChangeSelectedCalendarData(calendarData)
                 }

@@ -6,17 +6,15 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.calculateAngle
 import com.overeasy.smartfitness.domain.ai.AiRepository
-import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
+import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutDataReq
 import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
 import com.overeasy.smartfitness.getNormalizedFrameFloatArray
@@ -41,12 +39,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -69,23 +64,24 @@ class WorkoutViewModel @Inject constructor(
     val workoutUiEvent = _workoutUiEvent.asSharedFlow()
 
 //    private val _workoutNameList = mutableStateListOf("푸쉬업", "데드리프트", "딥스", "스쿼트", "숄더프레스")
-    private val _workoutNameList = mutableStateListOf<String>()
-    val workoutNameList = _workoutNameList
+    private val _workoutDataList = mutableStateListOf<Pair<String, Boolean>>()
+    val workoutDataList = _workoutDataList
 
     private val _bodyFrameData = MutableStateFlow<BodyFrameData?>(null)
     val bodyFrameData = _bodyFrameData.asStateFlow()
 
     private val noteId = MutableStateFlow(-1)
     private val workoutInfo = MutableStateFlow<WorkoutInfo?>(null)
-    private val workoutName = workoutInfo.filterNotNull().map { info ->
-        info.workoutName
+    private val workoutName = workoutInfo.map { info ->
+        info?.workoutName
     }
     private val workoutNameForVideo = MutableStateFlow("")
-    private val restTime = workoutInfo.filter { info ->
+    private val _restTime = workoutInfo.filter { info ->
         info?.restTime != null
     }.map { info ->
         info?.restTime!!
     }
+    val restTime = _restTime
     val isWorkoutInfoInitialized = workoutInfo.map { info ->
         info != null
     }
@@ -155,9 +151,7 @@ class WorkoutViewModel @Inject constructor(
                     )
                 }
             }
-        ).apply {
-            println("jaehoLee", "workoutDataReq = $this")
-        }
+        )
     }
 
     private val _firstCountdown = MutableStateFlow<Int?>(null)
@@ -256,15 +250,15 @@ class WorkoutViewModel @Inject constructor(
                 }
             }
             launch(Dispatchers.Default) {
-//                combine(updatedPose, workoutName) { pose, name ->
+                combine(updatedPose, workoutName) { pose, name ->
+                    name?.run { pose.toLandmarkInfo(this) }
 //                    pose.toLandmarkInfo(name)
-//                }.filterNotNull().collectLatest { landmarkInfo ->
-                currentWorkoutTime.map {
-                    updatedPose.firstOrNull()
-                }.filterNotNull().map { pose ->
-                    pose.toLandmarkInfo("푸시업")
-                }.filterNotNull().collectLatest { landmarkInfo ->
+                }.filterNotNull().filter {
+                    !isLoadingFinishWorkout.value
+                }.collectLatest { landmarkInfo ->
                     landmarkInfo.run {
+                        // 반전
+                        val isHeadToLeft = leftShoulder.x < leftAnkle.x
                         val leftArmAngle = calculateAngle(
                             pointA = leftShoulder.toPair(),
                             pointB = leftElbow.toPair(),
@@ -275,51 +269,82 @@ class WorkoutViewModel @Inject constructor(
                             pointB = rightElbow.toPair(),
                             pointC = rightWrist.toPair()
                         )
+//                        val averageArmAngle = calculateAngle(
+//                            pointA = Pair(
+//                                (leftShoulder.x + rightShoulder.x) / 2f,
+//                                (leftShoulder.y + rightShoulder.y) / 2f,
+//                            ),
+//                            pointB = Pair(
+//                                (leftElbow.x + rightElbow.x) / 2f,
+//                                (leftElbow.y + rightElbow.y) / 2f,
+//                            ),
+//                            pointC = Pair(
+//                                (leftWrist.x + rightWrist.x) / 2f,
+//                                (leftWrist.y + rightWrist.y) / 2f,
+//                            )
+//                        )
 
-                        /*
-                        확률 맥스 찾고 그거 인덱스 찾아서 범위 잡기
-
-                        스쿼트
-                        0 true 4개
-                        1 ~ 4 true 3개
-                        5 ~ 10 true 2개
-                        11~14 true 1개
-                        15 true 0개
-                        무릎과 엉덩이 y가 같다고 판단하는 영역을 넘어갔다 올라오면 1회
-                        허벅지 5분의 1부터 무릎 사이 영역 찍고 올라오면 1회
-
-                        데드
-                        0이 true 5개
-                        1~5 true 4개
-                        6~15 true 3개
-                        16 ~ 25  true 2개
-                        26~30 true 1개
-                        31 true 0개
-                        무릎 위 허벅지 5분의 1 영역 찍고 리턴
+                        /**
+                         * 확률 맥스 찾고 그거 인덱스 찾아서 범위 잡기
+                         *
+                         * 스쿼트
+                         * 0 true 4개
+                         * 1 ~ 4 true 3개
+                         * 5 ~ 10 true 2개
+                         * 11~14 true 1개
+                         * 15 true 0개
+                         * 무릎과 엉덩이 y가 같다고 판단하는 영역을 넘어갔다 올라오면 1회
+                         * 허벅지 5분의 1부터 무릎 사이 영역 찍고 올라오면 1회
+                         *
+                         * 데드
+                         * 0이 true 5개
+                         * 1~5 true 4개
+                         * 6~15 true 3개
+                         * 16 ~ 25  true 2개
+                         * 26~30 true 1개
+                         * 31 true 0개
+                         * 무릎 위 허벅지 5분의 1 영역 찍고 리턴
                          */
-                        val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
-                        val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
+
+                        val isHighest = if (isHeadToLeft) {
+                            leftArmAngle >= 165f
+                        } else {
+                            rightArmAngle >= 165f
+                        }
+                        val isLowest = if (isHeadToLeft) {
+                            leftArmAngle <= 105f
+                        } else {
+                            rightArmAngle <= 105f
+                        }
+//                        val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
+//                        val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
+//                        val isHighest = averageArmAngle >= 165f
+//                        val isLowest = averageArmAngle <= 105f
 
                         if (!isReachedFirstHighestPointPushUp.value) {
-                            isReachedFirstHighestPointPushUp.value =
-                                isHighest && !isLowest
+                            isReachedFirstHighestPointPushUp.value = isHighest
+//                                isHighest && !isLowest
                         }
 
                         if (!isReachedLowestPointPushUp.value) {
                             isReachedLowestPointPushUp.value =
-                                isReachedFirstHighestPointPushUp.value &&
-                                        isLowest && !isHighest
+                                isReachedFirstHighestPointPushUp.value && isLowest
+//                                        isLowest && !isHighest
                         }
 
                         if (!isReachedLastHighestPointPushUp.value) {
                             isReachedLastHighestPointPushUp.value =
                                 (isReachedFirstHighestPointPushUp.value && isReachedLowestPointPushUp.value) &&
-                                        isHighest && !isLowest
+                                        isHighest
+//                                        isHighest && !isLowest
                         }
 
-                        landmarkInfoList.value += landmarkInfo
-
-                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+//                        println("jaehoLee", "averageDegree = $averageArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+//                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+                        if (isHeadToLeft)
+                            println("jaehoLee", "leftDegree = $leftArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+                        else
+                            println("jaehoLee", "rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
                     }
                 }
             }
@@ -374,13 +399,6 @@ class WorkoutViewModel @Inject constructor(
 //                        println("jaehoLee", "frameData: ${Json.encodeToString(frameData)}")
 //                    }
                     /**
-                     * 각 값에서 평균을 뺀다.
-                     * 그 차이를 제곱한다.
-                     * 제곱한 값들의 평균을 구한다.
-                     * 그 평균의 제곱근을 구한다.
-                     */
-
-                    /**
                      *
                      *                         0이 true 5개
                      *                         1~5 true 4개
@@ -400,12 +418,6 @@ class WorkoutViewModel @Inject constructor(
                         in 16..25 -> _scoreGood.value += 1
                         in 26..31 -> _scoreNotGood.value += 1
                     }
-
-//                    when (trueCount) {
-//                        in 4..5 -> _scorePerfect.value += 1
-//                        in 2..3 -> _scoreGood.value += 1
-//                        in 0..1 -> _scoreNotGood.value += 1
-//                    }
 
                     val currentWorkoutInfo = workoutInfo.value
                     workoutInfo.value = currentWorkoutInfo?.run {
@@ -445,11 +457,6 @@ class WorkoutViewModel @Inject constructor(
                     inputBuffer.clear()
                     outputBuffer.clear()
 
-//                    println("jaehoLee", "degree job done, ${tempList.size}")
-//                    tempList.forEachIndexed { index, info ->
-//                        info.workoutName
-//                        println("jaehoLee", "degreeList[$index] = ${Json.encodeToString(info)}")
-//                    }
                     isReachedFirstHighestPointPushUp.value = false
                     isReachedLowestPointPushUp.value = false
                     isReachedLastHighestPointPushUp.value = false
@@ -457,13 +464,15 @@ class WorkoutViewModel @Inject constructor(
             }
             launch(Dispatchers.Default) {
                 totalCount.flatMapLatest { workoutCount ->
-                    combine(currentSetCount, setAmount, workoutDataReq) { count, amount, req ->
-                        Triple(count, amount, req)
-                    }.map { (count, amount, req) ->
+                    combine (currentSetCount, setAmount, currentSet) { count, amount, set ->
                         val isSetFinished = count == workoutCount
-                        val isWorkoutFinished = isSetFinished && currentSet.value == amount
+                        val isWorkoutFinished = isSetFinished && set == amount
 
-                        Triple(isSetFinished, isWorkoutFinished, req)
+                        isSetFinished to isWorkoutFinished
+                    }.flatMapLatest { (isSetFinished, isWorkoutFinished) ->
+                        workoutDataReq.map { req ->
+                            Triple(isSetFinished, isWorkoutFinished, req)
+                        }
                     }
                 }.collectLatest { (isSetFinished, isWorkoutFinished, req) ->
                     if (!isWorkoutFinished) {
@@ -625,10 +634,13 @@ class WorkoutViewModel @Inject constructor(
         pose: Pose,
         copy: (String) -> Unit
     ) {
-        // 평균치 내서 한 번에 하기
         viewModelScope.launch {
+//            if (!isLoadingFinishWorkout.value) {
+//                updatedPose.emit(pose)
+//            }
             updatedPose.emit(pose)
-            if (poseList.size == 2) {
+
+            if (poseList.size == 2 && !isLoadingFinishWorkout.value) {
                 updateBodyFrameData(
                     cameraWidthPx = cameraWidthPx,
                     cameraHeightPx = cameraHeightPx,
@@ -640,10 +652,14 @@ class WorkoutViewModel @Inject constructor(
             }
 
             poseList.add(pose)
+
+//            if (!isLoadingFinishWorkout.value) {
+//                poseList.add(pose)
+//            }
         }
     }
 
-    private suspend fun getAverageLandmarkPositionList(): List<Pair<Float, Float>> = withContext(Dispatchers.Default){
+    private fun getAverageLandmarkPositionList(): List<Pair<Float, Float>> {
         val processedPoseList = poseList.map { savedPose ->
             savedPose.allPoseLandmarks.filter { landmark ->
                 landmark.landmarkType >= PoseLandmark.LEFT_SHOULDER
@@ -654,7 +670,7 @@ class WorkoutViewModel @Inject constructor(
             }
         }
 
-        if (processedPoseList.isNotEmpty()) {
+        return if (processedPoseList.isNotEmpty()) {
             processedPoseList.first().mapIndexed { index, (x, y) ->
                 var resultX = x
                 var resultY = y
@@ -690,7 +706,7 @@ class WorkoutViewModel @Inject constructor(
              * => cameraHeight * (imageWidth - invisibleImageWidth) = cameraWidth * imageHeight
              * => imageWidth - invisibleImageWidth = (cameraWidth * imageHeight) / cameraHeight
              * => imageWidth - ((cameraWidth * imageHeight) / cameraHeight) = invisibleImageWidth
-             * => invisibleImageWidth = imageWidth - ((cameraWidth * imageHeight) / cameraHeight)
+             * => invisibleImageWidth = imageWidth - ((cameraWidth  g* imageHeight) / cameraHeight)
              */
             val invisibleImageWidth = imageWidthFloat - ((cameraWidthFloat * imageHeightFloat) / cameraHeightFloat)
             val invisibleImageWidthHalf = invisibleImageWidth / 2f
@@ -701,6 +717,7 @@ class WorkoutViewModel @Inject constructor(
                 isInVisibleArea
             }.map { (x, y) ->
                 // 좌우 반전 수정
+//                val widthRatio = (x - invisibleImageWidthHalf) / (imageWidthFloat - invisibleImageWidth)
                 val widthRatio = ((imageWidth - x) - invisibleImageWidthHalf) / (imageWidthFloat - invisibleImageWidth)
                 val heightRatio = y / imageHeightFloat
                 Offset(
@@ -793,12 +810,14 @@ class WorkoutViewModel @Inject constructor(
             exercisesRepository.getExercises()
         }.onSuccess { res ->
             if (!(res.result?.exerciseList.isNullOrEmpty())) {
-                val nameList = res.result!!.exerciseList.map { exerciseData ->
-                    exerciseData.exerciseName
+                val dataList = res.result!!.exerciseList.map { exerciseData ->
+                    exerciseData.run {
+                        exerciseName to (exerciseType == WorkoutType.BodyWeight.value)
+                    }
                 }
 
-                workoutNameList.clear()
-                workoutNameList.addAll(nameList)
+                workoutDataList.clear()
+                workoutDataList.addAll(dataList)
             }
         }.onFailure { res ->
             println("jaehoLee", "onFailure: (${res.code}), ${res.message}")
@@ -809,16 +828,17 @@ class WorkoutViewModel @Inject constructor(
 
     private suspend fun requestPostWorkoutNote() {
         ApiRequestHelper.makeRequest {
-            println("jaehoLee", "userId = ${MainApplication.appPreference.userId}")
             workoutRepository.postWorkoutNote(MainApplication.appPreference.userId)
         }.onSuccess { res ->
+            println("jaehoLee", "noteId Before = ${noteId.value}")
             noteId.value = res.result?.noteId ?: -1
+            println("jaehoLee", "noteId After = ${noteId.value}")
 
             startFirstCountdownTimer()
         }.onFailure { res ->
-            println("jaehoLee", "onFailure(postWorkoutNote()): (${res.code}), ${res.message}")
+            println("jaehoLee", "onFailure of postWorkoutNote(): (${res.code}), ${res.message}")
         }.onError { throwable ->
-            println("jaehoLee", "onError(postWorkoutNote()): ${throwable.message}")
+            println("jaehoLee", "onError of postWorkoutNote(): ${throwable.message}")
         }
     }
 
@@ -830,9 +850,9 @@ class WorkoutViewModel @Inject constructor(
             clearWorkoutData()
             isFinishedRequestPostWorkoutData.value = true
         }.onFailure { res ->
-            println("jaehoLee", "onFailure(postWorkoutData()): (${res.code}), ${res.message}")
+            println("jaehoLee", "onFailure of postWorkoutData(): (${res.code}), ${res.message}")
         }.onError { throwable ->
-            println("jaehoLee", "onError(postWorkoutData()): ${throwable.message}")
+            println("jaehoLee", "onError of postWorkoutData(): ${throwable.message}")
         }
     }
 
@@ -840,6 +860,7 @@ class WorkoutViewModel @Inject constructor(
         noteId: Int,
         workoutName: String
     ) {
+        println("jaehoLee", "noteId in request = $noteId")
         var videoFileDir = MainApplication.appPreference.currentVideoFileDir
 
         while (videoFileDir == null) {
@@ -901,7 +922,7 @@ class WorkoutViewModel @Inject constructor(
                     }
                 }
             )
-            println("jaehoLee", "onFailure(postWorkoutVideo()): (${res.code}), ${res.message}")
+            println("jaehoLee", "onFailure of postWorkoutVideo(): (${res.code}), ${res.message}")
         }.onError { throwable ->
             try {
                 val file = File(videoFileDir)
@@ -923,7 +944,7 @@ class WorkoutViewModel @Inject constructor(
                     }
                 }
             )
-            println("jaehoLee", "onError(postWorkoutVideo()): ${throwable.message}")
+            println("jaehoLee", "onError of postWorkoutVideo(): ${throwable.message}")
         }
     }
 

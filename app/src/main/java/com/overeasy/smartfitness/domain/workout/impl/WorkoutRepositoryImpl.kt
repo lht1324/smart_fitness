@@ -23,10 +23,14 @@ import io.ktor.client.plugins.timeout
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.url
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.append
 import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
 import kotlinx.coroutines.Dispatchers
@@ -65,34 +69,32 @@ class WorkoutRepositoryImpl @Inject constructor(
         videoFileDir: String,
         onProgress: (Long, Long) -> Unit
     ): BaseResponse =
-        client.simplePost("$baseUrl/video/$noteId/${
-            withContext(Dispatchers.IO) {
-                URLEncoder.encode(exerciseName, "UTF-8")
+        client.submitFormWithBinaryData(
+            formData = formData {
+                append(
+                    "file",
+                    File(videoFileDir).readBytes(),
+                    Headers.build {
+                        val fileName = videoFileDir.takeLastWhile { it != '/'}
+
+                        append(HttpHeaders.ContentType, ContentType.Video.MP4)
+                        append(HttpHeaders.ContentDisposition, "filename=\"${fileName}\"")
+                    }
+                )
             }
-        }") {
-            timeout {
-                requestTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
-                connectTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
-                socketTimeoutMillis = HttpTimeout.INFINITE_TIMEOUT_MS
-            }
-            contentType(ContentType.MultiPart.FormData)
-            body = MultiPartFormDataContent(
-                formData {
-                    append(
-                        "video",
-                        File(videoFileDir).readBytes()
-                    )
-                }
+        ) {
+            url(
+                "$baseUrl/video/$noteId/${
+                    withContext(Dispatchers.IO) {
+                        URLEncoder.encode(exerciseName, "UTF-8")
+                    }
+                }"
             )
+            contentType(ContentType.MultiPart.FormData)
             onUpload { bytesSentTotal, contentLength ->
                 onProgress(bytesSentTotal, contentLength)
-                if (contentLength - bytesSentTotal <= 10L)
-                    println("jaehoLee", "Ktor Multipart (onUpload): TotalBytes = $bytesSentTotal, ContentLength = $contentLength")
             }
+        }.run {
+            Json.decodeFromString<BaseResponse>(bodyAsText())
         }
-
-    // API 미완
-//    override suspend fun getWorkoutResult(): GetWorkoutResultRes {
-//        TODO("Not yet implemented")
-//    }
 }

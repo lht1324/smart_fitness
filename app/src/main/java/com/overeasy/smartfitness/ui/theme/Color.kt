@@ -12,13 +12,9 @@ val Pink40 = Color(0xFF7D5260)
 
 val ColorPrimary = Color(0xFF2C2D2D)
 val ColorSecondary = Color(0xFFD62532)
+//val ColorSecondary = Color(0xFF3E77E9)
 
 val ColorLightBlack = Color(0xFF2C2D2D)
-val ColorIron = Color(0xFFA5A9B4)
-val ColorBronze = Color(0xFF6E4D25)
-val ColorSilver = Color(0xFFE0E0E0)
-val ColorGold = Color(0xFFDBAC34)
-val ColorMaster = Color(0xFFD62532)
 
 val ColorSaturday = Color(0xFF3E77E9)
 val ColorSunday = Color(0xFFFF5952)

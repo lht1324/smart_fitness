@@ -6,10 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.diet.DietRepository
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsReq
-import com.overeasy.smartfitness.domain.diet.model.UserMenu
+import com.overeasy.smartfitness.domain.diet.entity.PostDietsRecommendSelectReq
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.getDateString
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,8 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,7 +41,9 @@ class DietViewModel @Inject constructor(
                     }.onSuccess { res ->
                         _screenState.value = DietScreenState.NORMAL
                     }.onFailure { res ->
-
+                        println("jaehoLee", "onFailure of getUsersById(): (${res.code}), ${res.message}")
+                    }.onError { throwable ->
+                        println("jaehoLee", "onError of getUsersById(): ${throwable.message}")
                     }
                 } else {
                     _screenState.value = DietScreenState.NEED_LOGIN
@@ -71,22 +69,29 @@ class DietViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val userId = MainApplication.appPreference.userId
 
-            requestPostDiets(
-                userId = userId,
-                req = PostDietsReq(
-                    dietList = userMenuList.toList().filter { userMenu ->
+            event(
+                DietUiEvent.OnFinishInputMenu(
+                    userMenuList.toList().filter { userMenu ->
                         userMenu.isNotEmpty()
                     }.map { userMenu ->
                         userMenu.replace(" ", "")
-                    }.map { userMenu ->
-                        UserMenu(
-                            userId = userId,
-                            dietDate = getDateString(),
-                            foodName = userMenu
-                        )
+                    }.joinToString(",") { userMenu ->
+                        userMenu
                     }
                 )
             )
+//            requestPostDiets(
+//                req = PostDietsRecommendSelectReq(
+//                    userId = userId,
+//                    consumedFoodNames = userMenuList.toList().filter { userMenu ->
+//                        userMenu.isNotEmpty()
+//                    }.map { userMenu ->
+//                        userMenu.replace(" ", "")
+//                    }.joinToString(",") { userMenu ->
+//                        userMenu
+//                    }
+//                )
+//            )
         }
     }
 
@@ -100,9 +105,9 @@ class DietViewModel @Inject constructor(
         _dietUiEvent.emit(uiEvent)
     }
 
-    private suspend fun requestGetDiets() {
+    private suspend fun requestPostDiets(req: PostDietsRecommendSelectReq) {
         ApiRequestHelper.makeRequest {
-            dietRepository.getDietsRecommend(MainApplication.appPreference.userId)
+            dietRepository.postDietsRecommend(req)
         }.onSuccess { res ->
             /* no-op */
         }.onFailure { res ->
@@ -112,25 +117,26 @@ class DietViewModel @Inject constructor(
         }
     }
 
-    private suspend fun requestPostDiets(userId: Int, req: PostDietsReq) {
-        ApiRequestHelper.makeRequest {
-            dietRepository.postDiets(
-                userId = userId,
-                req = req
-            )
-        }.onSuccess { res ->
-            _userMenuList.clear()
-            _userMenuList.add("")
-            event(DietUiEvent.OnSuccessInputMenu)
-        }.onFailure { res ->
-            println("jaehoLee", "onFailure in requestPostDiets(): ${res.message}")
-            event(DietUiEvent.OnFailureInputMenu)
-        }.onError { throwable ->
-            println("jaehoLee", "onError in requestPostDiets(): ${throwable.message}")
-        }
-    }
+//    private suspend fun requestPostDiets(userId: Int, req: PostDietsReq) {
+//        ApiRequestHelper.makeRequest {
+//            dietRepository.postDiets(
+//                userId = userId,
+//                req = req
+//            )
+//        }.onSuccess { res ->
+//            _userMenuList.clear()
+//            _userMenuList.add("")
+//            event(DietUiEvent.OnSuccessInputMenu)
+//        }.onFailure { res ->
+//            println("jaehoLee", "onFailure in requestPostDiets(): ${res.message}")
+//            event(DietUiEvent.OnFailureInputMenu)
+//        }.onError { throwable ->
+//            println("jaehoLee", "onError in requestPostDiets(): ${throwable.message}")
+//        }
+//    }
 
     sealed class DietUiEvent {
+        data class OnFinishInputMenu(val userMenu: String) : DietUiEvent()
         data object OnSuccessInputMenu : DietUiEvent()
         data object OnFailureInputMenu : DietUiEvent()
     }

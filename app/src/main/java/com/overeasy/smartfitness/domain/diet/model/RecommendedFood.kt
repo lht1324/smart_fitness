@@ -4,9 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RecommendedFood(
-    val code: String,
     val name: String,
-    val mainFoodType: String,
+    val foodType: String,
     val calorie: Float,
-    val similarity_score: Float
+    val carbohydrate: Float,
+    val protein: Float,
+    val fat: Float,
+    val similarityScore: Float
 )

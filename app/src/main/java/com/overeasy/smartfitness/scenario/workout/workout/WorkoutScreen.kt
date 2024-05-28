@@ -3,11 +3,8 @@
 package com.overeasy.smartfitness.scenario.workout.workout
 
 import android.Manifest
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
@@ -29,7 +26,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,11 +55,11 @@ import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
+import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
 import com.overeasy.smartfitness.ui.theme.ColorSunday
 import com.overeasy.smartfitness.ui.theme.fontFamily
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import java.io.File
 
@@ -77,8 +82,8 @@ fun WorkoutScreen(
                         CameraController.VIDEO_CAPTURE or
                         CameraController.IMAGE_ANALYSIS
             )
-//            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+//            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
     val poseDetectionManager = remember {
@@ -99,6 +104,7 @@ fun WorkoutScreen(
     val isImeVisible = WindowInsets.isImeVisible
 
     var isShowWorkoutInfoInputDialog by remember { mutableStateOf(false) }
+    var isShowWorkoutWarningDialog by remember { mutableStateOf(false) }
     var isShowFinishWorkoutDialog by remember { mutableStateOf(false) }
 
     var cameraWidthPx by remember { mutableIntStateOf(0) }
@@ -109,15 +115,18 @@ fun WorkoutScreen(
 
     val isWorkoutInfoInitialized by viewModel.isWorkoutInfoInitialized.collectAsState(false)
 
-    val workoutNameList = remember { viewModel.workoutNameList }
+    val workoutDataList = remember { viewModel.workoutDataList }
 
     val bodyFrameData by viewModel.bodyFrameData.collectAsState()
 
     val currentSet by viewModel.currentSet.collectAsState()
 
+    var temporaryWorkoutInfo by remember { mutableStateOf<WorkoutInfo?>(null) }
+
     val firstCountdownTimer by viewModel.firstCountdown.collectAsState()
     val restCountdownTimer by viewModel.restCountdown.collectAsState()
-    var restTime by remember { mutableIntStateOf(30) }
+//    var restTime by remember { mutableIntStateOf(30) }
+    val restTime by viewModel.restTime.collectAsState(initial = 30)
 
     val scorePerfect by viewModel.scorePerfect.collectAsState()
     val scoreGood by viewModel.scoreGood.collectAsState()
@@ -338,18 +347,47 @@ fun WorkoutScreen(
             },
             text = {
                 WorkoutInfoInputDialog(
-                    workoutNameList = workoutNameList,
+                    workoutDataList = workoutDataList,
                     isImeVisible = isImeVisible,
                     onClickWatchExampleVideo = onClickWatchExampleVideo,
                     onFinish = { workoutInfo ->
-                        restTime = workoutInfo.restTime ?: 30
-                        viewModel.setWorkoutInfo(workoutInfo)
-                        isShowWorkoutInfoInputDialog = false
+//                        restTime = workoutInfo.restTime ?: 30
+//                        viewModel.setWorkoutInfo(workoutInfo)
+                        temporaryWorkoutInfo = workoutInfo
+                        isShowWorkoutWarningDialog = true
+//                        isShowWorkoutInfoInputDialog = false
                     }
                 )
             },
             titleContentColor = Color.Black,
             containerColor = Color.White
+        )
+    }
+
+    if (isShowWorkoutWarningDialog) {
+        Dialog(
+            title = "운동 전 확인해주세요!",
+            description = "1. 화면에 대각선으로 자세를 잡아주세요.\n" +
+                    "2. 화면에 가능할 때까지 몸을 꽉 채워주세요.\n" +
+                    "3. 몸을 적당히 내린다면 운동이 감지되지 않을 수도 있어요.\n" +
+                    "\n" +
+                    "'확인'을 누르면 운동이 시작돼요!",
+            confirmText = "취소",
+            dismissText = "확인",
+            onClickConfirm = {
+                temporaryWorkoutInfo = null
+                isShowWorkoutWarningDialog = false
+            },
+            onClickDismiss = {
+                temporaryWorkoutInfo?.run {
+                    viewModel.setWorkoutInfo(this)
+                }
+                isShowWorkoutWarningDialog = false
+                isShowWorkoutInfoInputDialog = false
+            },
+            onDismissRequest = {
+                isShowWorkoutWarningDialog = false
+            }
         )
     }
 
@@ -406,6 +444,7 @@ fun WorkoutScreen(
                 is WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
 //                    poseDetectionManager.stopRecording()
 
+                    println("jaehoLee", "noteId in event = ${event.noteId}")
                     onFinishWorkout(event.noteId)
                 }
             }
@@ -449,7 +488,7 @@ private fun BoxScope.ScoreBoard(
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Good: $totalGood",
-                color = Color(0xFF2DFE54),
+                color = ColorLightGreen,
                 fontSize = 24.dpToSp(),
                 fontWeight = FontWeight.ExtraBold,
                 fontFamily = fontFamily
@@ -474,7 +513,7 @@ private fun BoxScope.RecordingButton(
 ) {
     Box(
         modifier = modifier
-            .size(90.dp)
+            .size(70.dp)
             .noRippleClickable(onClick = onClickButton)
             .background(
                 color = Color.White,
@@ -490,7 +529,7 @@ private fun BoxScope.RecordingButton(
         if (!isRecording) {
             Box(
                 modifier = Modifier
-                    .size(70.dp)
+                    .size(50.dp)
                     .background(
                         color = Color.Red,
                         shape = CircleShape
@@ -500,7 +539,7 @@ private fun BoxScope.RecordingButton(
         } else {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(20.dp)
                     .background(color = Color.Black)
                     .align(Alignment.Center)
             )
