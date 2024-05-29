@@ -22,11 +22,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -41,10 +45,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -74,7 +81,9 @@ fun WorkoutScreen(
     onUpdateJson: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val screenHeight = LocalConfiguration.current.screenHeightDp
+
     val cameraController = remember {
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
@@ -82,8 +91,8 @@ fun WorkoutScreen(
                         CameraController.VIDEO_CAPTURE or
                         CameraController.IMAGE_ANALYSIS
             )
-            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-//            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+//            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
     val poseDetectionManager = remember {
@@ -368,10 +377,59 @@ fun WorkoutScreen(
         Dialog(
             title = "운동 전 확인해주세요!",
             description = "1. 화면에 대각선으로 자세를 잡아주세요.\n" +
+                    "\n" +
                     "2. 화면에 가능할 때까지 몸을 꽉 채워주세요.\n" +
+                    "\n" +
                     "3. 몸을 적당히 내린다면 운동이 감지되지 않을 수도 있어요.\n" +
                     "\n" +
+                    "4. 운동 중 앱을 나갔다 들어오면 운동한 게 사라져요." +
                     "'확인'을 누르면 운동이 시작돼요!",
+            customDescription = {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(state = rememberScrollState())
+                ) {
+                    Text(
+                        text = "⚠\uFE0F 운동 중 앱을 나갔다 들어오면 운동이 종료돼요!",
+                        color = Color.Black,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = fontFamily
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 0.5.dp,
+                        color = Color(0xFF919191)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "1. 화면에 대각선으로 자세를 잡아주세요.\n" +
+                                "\n" +
+                                "2. 화면에 가능할 때까지 몸을 꽉 채워주세요.\n" +
+                                "\n" +
+                                "3. 몸을 적당히 내린다면 운동이 감지되지 않을 수도 있어요.",
+                        color = Color.Black,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 0.5.dp,
+                        color = Color(0xFF919191)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "'확인'을 누르면 운동이 시작돼요!",
+                        color = Color.Black,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = fontFamily
+                    )
+                }
+            },
             confirmText = "취소",
             dismissText = "확인",
             onClickConfirm = {
@@ -423,6 +481,7 @@ fun WorkoutScreen(
     }
 
     LaunchedEffect(cameraController.isRecording) {
+        println("jaehoLee", "newIsRecording = ${cameraController.isRecording}")
         isRecording = cameraController.isRecording
         viewModel.setIsRecording(cameraController.isRecording)
     }
@@ -448,6 +507,24 @@ fun WorkoutScreen(
                     onFinishWorkout(event.noteId)
                 }
             }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    if (isWorkoutRunning)
+                        viewModel.onClickStopWorkout()
+                }
+                else -> { /* no-op */ }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 }

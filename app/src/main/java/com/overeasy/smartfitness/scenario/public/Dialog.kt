@@ -20,6 +20,7 @@ fun Dialog(
     modifier: Modifier = Modifier,
     title: String? = null,
     description: String? = null,
+    customDescription: (@Composable () -> Unit)? = null,
     confirmText: String,
     dismissText: String? = null,
     onClickConfirm: () -> Unit,
@@ -49,27 +50,33 @@ fun Dialog(
             @Composable {
                 Text(
                     text = title,
-                    color= Color.Black,
+                    color = Color.Black,
                     fontSize = 20.dpToSp(),
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily
                 )
             }
         } else {
             null
         },
-        text = if (description != null) {
+        text = if (customDescription != null) {
             @Composable {
-                Text(
-                    text = description,
-                    color = Color.Black,
-                    fontSize = 18.dpToSp(),
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = fontFamily
-                )
+                customDescription()
             }
         } else {
-            null
+            if (description != null) {
+                @Composable {
+                    Text(
+                        text = description,
+                        color = Color.Black,
+                        fontSize = 18.dpToSp(),
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = fontFamily
+                    )
+                }
+            } else {
+                null
+            }
         },
         titleContentColor = Color.Black,
         containerColor = Color.White

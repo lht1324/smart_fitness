@@ -253,8 +253,10 @@ class WorkoutViewModel @Inject constructor(
                 combine(updatedPose, workoutName) { pose, name ->
                     name?.run { pose.toLandmarkInfo(this) }
 //                    pose.toLandmarkInfo(name)
-                }.filterNotNull().filter {
-                    !isLoadingFinishWorkout.value
+                }.filter { landmarkInfo ->
+                    landmarkInfo != null //  && isRecording
+                }.map { landmarkInfo ->
+                    landmarkInfo!!
                 }.collectLatest { landmarkInfo ->
                     landmarkInfo.run {
                         // 반전
@@ -306,45 +308,56 @@ class WorkoutViewModel @Inject constructor(
                          * 무릎 위 허벅지 5분의 1 영역 찍고 리턴
                          */
 
-                        val isHighest = if (isHeadToLeft) {
-                            leftArmAngle >= 165f
-                        } else {
-                            rightArmAngle >= 165f
-                        }
-                        val isLowest = if (isHeadToLeft) {
-                            leftArmAngle <= 105f
-                        } else {
-                            rightArmAngle <= 105f
-                        }
-//                        val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
-//                        val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
+//                        val isHighest = if (isHeadToLeft) {
+//                            leftArmAngle >= 165f
+//                        } else {
+//                            rightArmAngle >= 165f
+//                        }
+//                        val isLowest = if (isHeadToLeft) {
+//                            leftArmAngle <= 105f
+//                        } else {
+//                            rightArmAngle <= 105f
+//                        }
+
+//                        val isHighest = if (isHeadToLeft) {
+//                            rightArmAngle >= 165f
+//                        } else {
+//                            leftArmAngle >= 165f
+//                        }
+//                        val isLowest = if (isHeadToLeft) {
+//                            rightArmAngle <= 105f
+//                        } else {
+//                            leftArmAngle <= 105f
+//                        }
+                        val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
+                        val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
 //                        val isHighest = averageArmAngle >= 165f
 //                        val isLowest = averageArmAngle <= 105f
 
                         if (!isReachedFirstHighestPointPushUp.value) {
-                            isReachedFirstHighestPointPushUp.value = isHighest
-//                                isHighest && !isLowest
+                            isReachedFirstHighestPointPushUp.value = // isHighest
+                                isHighest && !isLowest
                         }
 
                         if (!isReachedLowestPointPushUp.value) {
                             isReachedLowestPointPushUp.value =
-                                isReachedFirstHighestPointPushUp.value && isLowest
-//                                        isLowest && !isHighest
+                                isReachedFirstHighestPointPushUp.value && // isLowest
+                                        isLowest && !isHighest
                         }
 
                         if (!isReachedLastHighestPointPushUp.value) {
                             isReachedLastHighestPointPushUp.value =
                                 (isReachedFirstHighestPointPushUp.value && isReachedLowestPointPushUp.value) &&
-                                        isHighest
-//                                        isHighest && !isLowest
+//                                        isHighest
+                                        isHighest && !isLowest
                         }
 
 //                        println("jaehoLee", "averageDegree = $averageArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
 //                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
-                        if (isHeadToLeft)
-                            println("jaehoLee", "leftDegree = $leftArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
-                        else
-                            println("jaehoLee", "rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+//                        if (isHeadToLeft)
+//                            println("jaehoLee", "leftDegree = $leftArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+//                        else
+//                            println("jaehoLee", "rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
                     }
                 }
             }
@@ -399,7 +412,6 @@ class WorkoutViewModel @Inject constructor(
 //                        println("jaehoLee", "frameData: ${Json.encodeToString(frameData)}")
 //                    }
                     /**
-                     *
                      *                         0이 true 5개
                      *                         1~5 true 4개
                      *                         6~15 true 3개
@@ -532,6 +544,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun clearWorkoutData(onFinishClear: () -> Unit = { }) {
+        println("jaehoLee", "clear")
         workoutInfo.value = null
         _currentSet.value = 0
         _isWorkoutRunning.value = false
@@ -570,7 +583,7 @@ class WorkoutViewModel @Inject constructor(
             val currentCountdown = firstCountdown.value
 
             _firstCountdown.value = if (currentCountdown == null) {
-                5
+                10
             } else {
                 if (currentCountdown != 0)
                     currentCountdown - 1

@@ -6,13 +6,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
-import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
@@ -174,7 +171,7 @@ class PoseDetectionManager(
                         recording?.close()
                         recording = null
 
-                        println("jaehoLee", "Video capture failed")
+                        println("jaehoLee", "Video capture failed, ${event.error}")
                     } else {
                         MainApplication.appPreference.currentVideoFileDir = "$filesDir/$dateString.mp4"
                         println("jaehoLee", "Video capture succeeded")

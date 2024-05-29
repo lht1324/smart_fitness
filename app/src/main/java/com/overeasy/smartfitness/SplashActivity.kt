@@ -45,7 +45,8 @@ class SplashActivity : ComponentActivity() {
                 Row(
                     modifier = Modifier
                         .wrapContentSize()
-                        .align(Alignment.Center)
+                        .align(Alignment.Center),
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     TitleText(
                         text = "tr",
@@ -71,7 +72,7 @@ class SplashActivity : ComponentActivity() {
                     if ((currentAlpha + 10L.toFloat() / 3000L.toFloat()) <= 1.0f)
                         currentAlpha += 10L.toFloat() / 3000L.toFloat()
                 }
-                delay(4000L)
+                delay(4L * 1000L)
                 startActivity(
                     Intent(this@SplashActivity, MainActivity::class.java)
                 )
@@ -94,7 +95,6 @@ private fun TitleText(
         color = color,
         fontSize = fontSize,
         fontWeight = FontWeight.Black,
-        fontFamily = fontFamily,
-        lineHeight = 1.dpToSp()
+        fontFamily = fontFamily
     )
 }

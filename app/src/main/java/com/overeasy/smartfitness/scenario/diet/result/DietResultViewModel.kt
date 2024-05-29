@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.random.Random
 
 @HiltViewModel
 class DietResultViewModel @Inject constructor(
@@ -26,14 +27,6 @@ class DietResultViewModel @Inject constructor(
 
     private val _recommendedFoodList = mutableStateListOf<RecommendedFood>() // name, calorie, type
     val recommendedFoodList = _recommendedFoodList
-
-    init {
-//        viewModelScope.launch {
-//            launch(Dispatchers.IO) {
-//                requestGetDietsRecommend()
-//            }
-//        }
-    }
 
     fun onLoad(userMenu: String) {
         viewModelScope.launch {
@@ -73,9 +66,7 @@ class DietResultViewModel @Inject constructor(
             _recommendedFoodList.addAll(
                 res.result.foodRecommend.map { foodRecommend ->
                     foodRecommend.toEntity()
-                }.sortedByDescending { recommendedFood ->
-                    recommendedFood.similarityScore
-                }
+                }.shuffled(Random(System.currentTimeMillis())) // 같은 리스트 내려오는 이슈 땜빵용 로직
             )
         }.onFailure { res ->
             event(DietResultUiEvent.OnFailureRecommend)
