@@ -1,6 +1,6 @@
 package com.overeasy.smartfitness.scenario.workout.workout
 
-import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
+import com.overeasy.smartfitness.domain.workout.dto.req.WorkoutData
 
 data class WorkoutInfo(
     val workoutName: String,

@@ -1,14 +1,13 @@
-package com.overeasy.smartfitness.domain.workout.entity
+package com.overeasy.smartfitness.domain.workout.dto.res.note
 
 import com.overeasy.smartfitness.domain.base.BaseResponseModel
-import com.overeasy.smartfitness.domain.workout.model.diary.DiaryResult
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GetDiaryRes(
+data class GetWorkoutNoteDetailRes(
     override val code: Int = -1,
     override val message: String,
     override val success: Boolean,
 
-    val result: DiaryResult?,
+    val result: GetWorkoutNoteDetailResult
 ) : BaseResponseModel

@@ -58,6 +58,7 @@ import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.ranking.navigation.RankingNavHost
 import com.overeasy.smartfitness.scenario.setting.navigation.SettingNavHost
 import com.overeasy.smartfitness.scenario.workout.navigation.WorkoutNavHost
+import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
@@ -121,7 +122,7 @@ class MainActivity : ComponentActivity() {
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 0.5.dp,
-                        color = Color(0xFF919191)
+                        color = Color919191
                     )
                     TabRow(
                         selectedTabIndex = pagerState.currentPage,
@@ -174,7 +175,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     selectedContentColor = Color.White,
-                                    unselectedContentColor = Color(0xFF919191)
+                                    unselectedContentColor = Color919191
                                 )
                             }
                         }

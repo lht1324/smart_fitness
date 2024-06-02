@@ -8,7 +8,8 @@ import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.workout.model.diary.DiaryDetail
+import com.overeasy.smartfitness.domain.workout.entity.DiaryDetail
+import com.overeasy.smartfitness.domain.workout.dto.res.note.toDto
 import com.overeasy.smartfitness.getDateString
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,16 +51,17 @@ class DiaryDetailViewModel @Inject constructor(
         ApiRequestHelper.makeRequest {
             workoutRepository.getWorkoutNoteDetail(noteId)
         }.onSuccess { res ->
-            _diaryDetail.value = res.result.run {
-                DiaryDetail(
-                    totalKcal = totalKcal,
-                    totalPerfect = totalPerfect,
-                    totalGood = totalGood,
-                    totalBad = totalBad,
-                    totalScore = totalScore,
-                    workoutList = workoutList
-                )
-            }
+            _diaryDetail.value = res.result.toDto()
+//            _diaryDetail.value = res.result.run {
+//                DiaryDetail(
+//                    totalKcal = totalKcal,
+//                    perfectCount = totalPerfect,
+//                    goodCount = totalGood,
+//                    notGoodCount = totalBad,
+//                    totalScore = totalScore,
+//                    workoutInfoList = workoutList
+//                )
+//            }
         }.onFailure { res ->
 //            _diaryDetail.value = DiaryDetail(
 //                totalKcal = 150,

@@ -1,17 +1,16 @@
 package com.overeasy.smartfitness.domain.workout
 
 import com.overeasy.smartfitness.domain.base.BaseResponse
-import com.overeasy.smartfitness.domain.workout.entity.GetDiaryDetailRes
-import com.overeasy.smartfitness.domain.workout.entity.GetDiaryRes
-import com.overeasy.smartfitness.domain.workout.entity.GetWorkoutResultRes
-import com.overeasy.smartfitness.domain.workout.entity.GetWorkoutVideoListRes
-import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutDataReq
-import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutNoteRes
+import com.overeasy.smartfitness.domain.workout.dto.req.PostWorkoutDataReq
+import com.overeasy.smartfitness.domain.workout.dto.res.note.GetWorkoutNoteDetailRes
+import com.overeasy.smartfitness.domain.workout.dto.res.note.GetWorkoutNoteListRes
+import com.overeasy.smartfitness.domain.workout.dto.res.workout.GetWorkoutVideoListRes
+import com.overeasy.smartfitness.domain.workout.dto.res.workout.PostWorkoutNoteRes
 
 interface WorkoutRepository {
     // 일지
-    suspend fun getWorkoutNoteList(date: String): GetDiaryRes
-    suspend fun getWorkoutNoteDetail(noteId: Int): GetDiaryDetailRes
+    suspend fun getWorkoutNoteList(date: String): GetWorkoutNoteListRes
+    suspend fun getWorkoutNoteDetail(noteId: Int): GetWorkoutNoteDetailRes
 
     // 운동
     suspend fun postWorkoutNote(userId: Int): PostWorkoutNoteRes

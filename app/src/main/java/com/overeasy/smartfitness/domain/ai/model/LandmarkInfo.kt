@@ -1,6 +1,6 @@
 package com.overeasy.smartfitness.domain.ai.model
 
-import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
+import com.overeasy.smartfitness.domain.ai.dto.LandmarkCoordinate
 import kotlinx.serialization.Serializable
 
 @Serializable

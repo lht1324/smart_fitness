@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
@@ -78,7 +79,7 @@ fun Header(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp),
-                color = Color(0xFF919191)
+                color = Color919191
             )
         }
     }

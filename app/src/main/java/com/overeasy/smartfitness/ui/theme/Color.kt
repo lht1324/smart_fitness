@@ -20,3 +20,5 @@ val ColorSaturday = Color(0xFF3E77E9)
 val ColorSunday = Color(0xFFFF5952)
 
 val ColorLightGreen = Color(0xFF08E95F)
+
+val Color919191 = Color(0xFF919191)

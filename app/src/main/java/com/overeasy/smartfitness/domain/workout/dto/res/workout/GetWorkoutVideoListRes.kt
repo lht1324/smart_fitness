@@ -1,7 +1,6 @@
-package com.overeasy.smartfitness.domain.workout.entity
+package com.overeasy.smartfitness.domain.workout.dto.res.workout
 
 import com.overeasy.smartfitness.domain.base.BaseResponseModel
-import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutVideoList
 import kotlinx.serialization.Serializable
 
 @Serializable

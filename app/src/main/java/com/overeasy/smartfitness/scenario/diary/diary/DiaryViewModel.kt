@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
+import com.overeasy.smartfitness.domain.workout.dto.res.note.toDto
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println
@@ -43,12 +44,12 @@ class DiaryViewModel @Inject constructor(
     private val _noteIdList = MutableStateFlow<List<Int>>(listOf())
     val noteIdList = _noteIdList.asStateFlow()
 
-    private val _totalPerfect = MutableStateFlow(-1)
-    val totalPerfect = _totalPerfect.asStateFlow()
-    private val _totalGood = MutableStateFlow(-1)
-    val totalGood = _totalGood.asStateFlow()
-    private val _totalNotGood = MutableStateFlow(-1)
-    val totalNotGood = _totalNotGood.asStateFlow()
+    private val _perfectCount = MutableStateFlow(-1)
+    val prefectCount = _perfectCount.asStateFlow()
+    private val _goodCount = MutableStateFlow(-1)
+    val goodCount = _goodCount.asStateFlow()
+    private val _notGoodCount = MutableStateFlow(-1)
+    val notGoodCount = _notGoodCount.asStateFlow()
     private val _totalScore = MutableStateFlow(-1)
     val totalScore = _totalScore.asStateFlow()
     private val _totalKcal = MutableStateFlow(0)
@@ -98,9 +99,9 @@ class DiaryViewModel @Inject constructor(
     fun clearDiaryData() {
         _noteIdList.value = listOf()
 
-        _totalPerfect.value = -1
-        _totalGood.value = -1
-        _totalNotGood.value = -1
+        _perfectCount.value = -1
+        _goodCount.value = -1
+        _notGoodCount.value = -1
         _totalScore.value = -1
 
         _totalKcal.value = 0
@@ -139,40 +140,43 @@ class DiaryViewModel @Inject constructor(
     private suspend fun requestGetWorkoutNoteList(date: String) {
         ApiRequestHelper.makeRequest {
             workoutRepository.getWorkoutNoteList(date)
-//            diaryRepository.getDiary(date)
         }.onSuccess { res ->
             if (!(res.result?.noteList.isNullOrEmpty())) {
-                val noteList = res.result!!.noteList.filter { note ->
-                    val isInvalidNote = note.totalPerfect == 0 &&
-                            note.totalGood == 0 &&
-                            note.totalBad == 0 &&
-                            note.totalScore == 0 &&
-                            (note.totalKcal == null || note.totalKcal == 0)
+                val diaryList = res.result!!.noteList.map { note ->
+                    note.toDto()
+                }.filter { diaryListItem ->
+                    diaryListItem.run {
+                        val isInvalidNote = perfectCount == 0 &&
+                                goodCount == 0 &&
+                                notGoodCount == 0 &&
+                                totalScore == 0 &&
+                                (totalKcal == null || totalKcal == 0)
 
-                    !isInvalidNote
-                }
-
-                _noteIdList.value = noteList.map { note ->
-                    note.noteId
-                }
-
-                _totalPerfect.value = noteList.sumOf { note ->
-                    note.totalPerfect
-                }
-                _totalGood.value = noteList.sumOf { note ->
-                    note.totalGood
-                }
-                _totalNotGood.value = noteList.sumOf { note ->
-                    note.totalBad
-                }
-                _totalScore.value = noteList.sumOf { note ->
-                    note.totalScore
+                        !isInvalidNote
+                    }
                 }
 
-                _totalKcal.value = noteList.filter { note ->
-                    note.totalKcal != null
-                }.sumOf { note ->
-                    note.totalKcal!!
+                _noteIdList.value = diaryList.map { diaryListItem ->
+                    diaryListItem.noteId
+                }
+
+                _perfectCount.value = diaryList.sumOf { diaryListItem ->
+                    diaryListItem.perfectCount
+                }
+                _goodCount.value = diaryList.sumOf { diaryListItem ->
+                    diaryListItem.goodCount
+                }
+                _notGoodCount.value = diaryList.sumOf { diaryListItem ->
+                    diaryListItem.notGoodCount
+                }
+                _totalScore.value = diaryList.sumOf { diaryListItem ->
+                    diaryListItem.totalScore
+                }
+
+                _totalKcal.value = diaryList.filter { diaryListItem ->
+                    diaryListItem.totalKcal != null
+                }.sumOf { diaryListItem ->
+                    diaryListItem.totalKcal!!
                 }
             } else {
                 clearDiaryData()

@@ -89,10 +89,10 @@ fun DiaryDetailScreen(
         if (diaryDetail != null) {
             val workoutNameList by remember {
                 derivedStateOf {
-                    diaryDetail!!.workoutList.distinctBy { workoutInfo ->
-                        workoutInfo.exerciseName
+                    diaryDetail!!.workoutInfoList.distinctBy { workoutInfo ->
+                        workoutInfo.workoutName
                     }.map { workoutInfo ->
-                        workoutInfo.exerciseName
+                        workoutInfo.workoutName
                     }
                 }
             }
@@ -110,12 +110,12 @@ fun DiaryDetailScreen(
                         workoutNameList.forEachIndexed { index, workoutName ->
                             WorkoutSection(
                                 name = workoutName,
-                                workoutList = diaryDetail!!.workoutList.filter { workoutInfo ->
-                                    workoutInfo.exerciseName == workoutName
+                                workoutList = diaryDetail!!.workoutInfoList.filter { workoutInfo ->
+                                    workoutInfo.workoutName == workoutName
                                 }.sortedBy { workoutInfo ->
-                                    workoutInfo.setNum
+                                    workoutInfo.setCount
                                 }.map { workoutInfo ->
-                                    workoutInfo.run { setNum to repeats }
+                                    workoutInfo.run { setCount to repeatCount }
                                 },
                                 caloriePerEachSet = index + 5
                             )
@@ -137,17 +137,17 @@ fun DiaryDetailScreen(
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
                             type = ScoreType.PERFECT,
-                            score = diaryDetail!!.totalPerfect
+                            score = diaryDetail!!.perfectCount
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
                             type = ScoreType.GOOD,
-                            score = diaryDetail!!.totalGood
+                            score = diaryDetail!!.goodCount
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         ScoreSection(
                             type = ScoreType.NOT_GOOD,
-                            score = diaryDetail!!.totalBad
+                            score = diaryDetail!!.notGoodCount
                         )
                         Separator()
                         DetailText(

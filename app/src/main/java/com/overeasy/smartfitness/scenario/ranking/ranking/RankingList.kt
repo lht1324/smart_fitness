@@ -19,6 +19,7 @@ import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
 import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
 import com.overeasy.smartfitness.dpToSp
+import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.fontFamily
 
@@ -100,7 +101,7 @@ private fun Ellipsis(
                 modifier = Modifier
                     .size(7.dp)
                     .background(
-                        color = Color(0xFF919191),
+                        color = Color919191,
                         shape = CircleShape
                     )
             )

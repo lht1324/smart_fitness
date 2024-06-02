@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.R
-import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
+import com.overeasy.smartfitness.domain.workout.dto.req.WorkoutData
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp

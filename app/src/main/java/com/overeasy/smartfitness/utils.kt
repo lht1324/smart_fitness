@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
-import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
+import com.overeasy.smartfitness.domain.ai.dto.LandmarkCoordinate
 import com.overeasy.smartfitness.scenario.workout.workout.SupportedWorkout
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter

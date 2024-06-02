@@ -62,6 +62,7 @@ import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.public.OutlinedText
+import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
@@ -387,7 +388,7 @@ fun WorkoutScreen(
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 0.5.dp,
-                        color = Color(0xFF919191)
+                        color = Color919191
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
@@ -405,7 +406,7 @@ fun WorkoutScreen(
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 0.5.dp,
-                        color = Color(0xFF919191)
+                        color = Color919191
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(

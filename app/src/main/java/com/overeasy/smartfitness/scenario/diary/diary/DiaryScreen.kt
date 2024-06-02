@@ -72,9 +72,9 @@ fun DiaryScreen(
 
     val noteIdList by viewModel.noteIdList.collectAsState()
 
-    val totalPerfect by viewModel.totalPerfect.collectAsState()
-    val totalGood by viewModel.totalGood.collectAsState()
-    val totalNotGood by viewModel.totalNotGood.collectAsState()
+    val perfectCount by viewModel.prefectCount.collectAsState()
+    val goodCount by viewModel.goodCount.collectAsState()
+    val notGoodCount by viewModel.notGoodCount.collectAsState()
     val totalScore by viewModel.totalScore.collectAsState()
     val totalKcal by viewModel.totalKcal.collectAsState()
 
@@ -122,9 +122,9 @@ fun DiaryScreen(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 20.dp),
                 noteIdList = noteIdList,
-                totalPerfect = totalPerfect,
-                totalGood = totalGood,
-                totalNotGood = totalNotGood,
+                perfectCount = perfectCount,
+                goodCount = goodCount,
+                notGoodCount = notGoodCount,
                 totalScore = totalScore,
                 totalKcal = totalKcal,
                 selectedCalendarItemData = selectedCalendarItemData,
@@ -183,9 +183,9 @@ fun DiaryScreen(
 private fun InfoSection(
     modifier: Modifier = Modifier,
     noteIdList: List<Int>,
-    totalPerfect: Int,
-    totalGood: Int,
-    totalNotGood: Int,
+    perfectCount: Int,
+    goodCount: Int,
+    notGoodCount: Int,
     totalScore: Int,
     totalKcal: Int,
     selectedCalendarItemData: CalendarItemData?,
@@ -264,13 +264,13 @@ private fun InfoSection(
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = "${totalPerfect + totalGood + totalNotGood}회",
+                    text = "${perfectCount + goodCount + notGoodCount}회",
                     color = Color.White,
                     fontSize = 18.dpToSp(),
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily
                 )
-                if (!(totalPerfect == 0 && totalGood == 0 && totalNotGood == 0)) {
+                if (!(perfectCount == 0 && goodCount == 0 && notGoodCount == 0)) {
                     Separator()
                     Text(
                         text = "점수",
@@ -280,11 +280,11 @@ private fun InfoSection(
                         fontFamily = fontFamily
                     )
                     Spacer(modifier = Modifier.height(5.dp))
-                    Score(type = ScoreType.PERFECT, score = totalPerfect)
+                    ScoreCount(scoreType = ScoreType.PERFECT, scoreCount = perfectCount)
                     Spacer(modifier = Modifier.height(5.dp))
-                    Score(type = ScoreType.GOOD, score = totalGood)
+                    ScoreCount(scoreType = ScoreType.GOOD, scoreCount = goodCount)
                     Spacer(modifier = Modifier.height(5.dp))
-                    Score(type = ScoreType.NOT_GOOD, score = totalNotGood)
+                    ScoreCount(scoreType = ScoreType.NOT_GOOD, scoreCount = notGoodCount)
                 }
                 if (totalKcal != 0) {
                     Separator()
@@ -335,15 +335,15 @@ private fun InfoSection(
             }
         }
         LaunchedEffect(
-            totalPerfect,
-            totalGood,
-            totalNotGood,
+            perfectCount,
+            goodCount,
+            notGoodCount,
             totalScore,
             totalKcal
         ) {
-            isNotExistWorkoutInfo = totalPerfect == -1 &&
-                    totalGood == -1 &&
-                    totalNotGood == -1 &&
+            isNotExistWorkoutInfo = perfectCount == -1 &&
+                    goodCount == -1 &&
+                    notGoodCount == -1 &&
                     totalScore == -1 &&
                     totalKcal == 0
         }
@@ -351,22 +351,22 @@ private fun InfoSection(
 }
 
 @Composable
-private fun Score(
+private fun ScoreCount(
     modifier: Modifier = Modifier,
-    type: ScoreType,
-    score: Int
+    scoreType: ScoreType,
+    scoreCount: Int
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = when (type) {
+            text = when (scoreType) {
                 ScoreType.PERFECT -> "Perfect"
                 ScoreType.GOOD -> "Good"
                 ScoreType.NOT_GOOD -> "Not Good"
             },
-            color = when (type) {
+            color = when (scoreType) {
                 ScoreType.PERFECT -> ColorSaturday
                 ScoreType.GOOD -> ColorLightGreen
                 ScoreType.NOT_GOOD -> ColorSunday
@@ -383,7 +383,7 @@ private fun Score(
             color = Color.LightGray
         )
         Text(
-            text = "$score",
+            text = "$scoreCount",
             color = Color.LightGray,
             fontSize = 16.dpToSp(),
             fontWeight = FontWeight.SemiBold,

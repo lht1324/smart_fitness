@@ -1,4 +1,4 @@
-package com.overeasy.smartfitness.domain.workout.model.workout
+package com.overeasy.smartfitness.domain.ai.dto
 
 import kotlinx.serialization.Serializable
 

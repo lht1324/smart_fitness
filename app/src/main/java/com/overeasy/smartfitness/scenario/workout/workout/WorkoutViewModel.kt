@@ -15,8 +15,8 @@ import com.overeasy.smartfitness.domain.ai.AiRepository
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.workout.entity.PostWorkoutDataReq
-import com.overeasy.smartfitness.domain.workout.model.workout.WorkoutData
+import com.overeasy.smartfitness.domain.workout.dto.req.PostWorkoutDataReq
+import com.overeasy.smartfitness.domain.workout.dto.req.WorkoutData
 import com.overeasy.smartfitness.getNormalizedFrameFloatArray
 import com.overeasy.smartfitness.model.workout.BodyFrameData
 import com.overeasy.smartfitness.module.tensorflowmanager.TensorFlowManager
