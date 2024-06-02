@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.api.ApiRequestHelper
-import com.overeasy.smartfitness.domain.diary.DiaryRepository
+import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-    private val diaryRepository: DiaryRepository
+    private val workoutRepository: WorkoutRepository
 ) : ViewModel() {
     private val currentYearMonth = MutableStateFlow<YearMonth?>(null)
     val currentYear = currentYearMonth.filterNotNull().map { yearMonth ->
@@ -132,13 +132,14 @@ class DiaryViewModel @Inject constructor(
 
     fun onClickCalendarItem(date: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            requestGetDiary(date)
+            requestGetWorkoutNoteList(date)
         }
     }
 
-    private suspend fun requestGetDiary(date: String) {
+    private suspend fun requestGetWorkoutNoteList(date: String) {
         ApiRequestHelper.makeRequest {
-            diaryRepository.getDiary(date)
+            workoutRepository.getWorkoutNoteList(date)
+//            diaryRepository.getDiary(date)
         }.onSuccess { res ->
             if (!(res.result?.noteList.isNullOrEmpty())) {
                 val noteList = res.result!!.noteList.filter { note ->
@@ -179,11 +180,11 @@ class DiaryViewModel @Inject constructor(
         }.onFailure { res ->
             clearDiaryData()
 
-            println("jaehoLee", "onFailure: ${res.code}, ${res.message}")
+            println("jaehoLee", "onFailure in requestGetWorkoutNoteList(): ${res.code}, ${res.message}")
         }.onError { throwable ->
             clearDiaryData()
 
-            println("jaehoLee", "onError: ${throwable.message}")
+            println("jaehoLee", "onError in requestGetWorkoutNoteList(): ${throwable.message}")
         }
     }
 

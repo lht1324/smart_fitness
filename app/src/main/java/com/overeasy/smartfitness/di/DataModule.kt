@@ -7,18 +7,16 @@ import com.overeasy.smartfitness.domain.ai.AiRepository
 import com.overeasy.smartfitness.domain.ai.impl.AiRepositoryImpl
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.diet.impl.DietRepositoryImpl
-import com.overeasy.smartfitness.domain.diary.DiaryRepository
-import com.overeasy.smartfitness.domain.diary.impl.DiaryRepositoryImpl
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.exercises.impl.ExercisesRepositoryImpl
 import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.foods.impl.FoodsRepositoryImpl
-import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.workout.impl.WorkoutRepositoryImpl
 import com.overeasy.smartfitness.domain.ranking.ScoreRepository
 import com.overeasy.smartfitness.domain.ranking.impl.ScoreRepositoryImpl
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.impl.SettingRepositoryImpl
+import com.overeasy.smartfitness.domain.workout.WorkoutRepository
+import com.overeasy.smartfitness.domain.workout.impl.WorkoutRepositoryImpl
 import com.overeasy.smartfitness.module.tensorflowmanager.TensorFlowManager
 import com.overeasy.smartfitness.module.tensorflowmanager.TensorFlowManagerImpl
 import dagger.Module
@@ -28,8 +26,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.*
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
@@ -92,10 +91,6 @@ object DataModule {
     @Singleton
     @Provides
     fun provideDietRepository(client: HttpClient): DietRepository = DietRepositoryImpl(client)
-
-    @Singleton
-    @Provides
-    fun provideDiaryRepository(client: HttpClient): DiaryRepository = DiaryRepositoryImpl(client)
 
     @Singleton
     @Provides
