@@ -59,9 +59,9 @@ import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.module.posedetectionmanager.PoseDetectionManager
 import com.overeasy.smartfitness.noRippleClickable
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.scenario.public.Dialog
+import com.overeasy.smartfitness.scenario.public.OutlinedText
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
@@ -77,8 +77,7 @@ fun WorkoutScreen(
     filesDir: File?,
     onClickWatchExampleVideo: (String) -> Unit,
     onFinishWorkout: (Int) -> Unit,
-    onChangeIsWorkoutRunning: (Boolean) -> Unit,
-    onUpdateJson: (String) -> Unit
+    onChangeIsWorkoutRunning: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -134,7 +133,6 @@ fun WorkoutScreen(
 
     val firstCountdownTimer by viewModel.firstCountdown.collectAsState()
     val restCountdownTimer by viewModel.restCountdown.collectAsState()
-//    var restTime by remember { mutableIntStateOf(30) }
     val restTime by viewModel.restTime.collectAsState(initial = 30)
 
     val scorePerfect by viewModel.scorePerfect.collectAsState()
@@ -165,11 +163,7 @@ fun WorkoutScreen(
                 viewModel.onUpdatePose(
                     cameraWidthPx = cameraWidthPx,
                     cameraHeightPx = cameraHeightPx,
-                    pose = pose,
-                    copy = { jsonText ->
-                        if (isSaveEnabled)
-                            onUpdateJson(jsonText)
-                    }
+                    pose = pose
                 )
             }
         )
@@ -198,7 +192,6 @@ fun WorkoutScreen(
             modifier = Modifier
                 .padding(bottom = 20.dp),
             onClickButton = {
-//                isSaveEnabled = !isSaveEnabled
                 if (isCameraPermissionGranted) {
                     if (!isRecording) {
                         if (isWorkoutInfoInitialized) {
@@ -218,6 +211,7 @@ fun WorkoutScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = Color.Black.copy(alpha = 0.5f))
+                    .noRippleClickable { /* no-op */ }
             ) {
                 Text(
                     text = firstCountdownTimer.toString(),
@@ -234,6 +228,7 @@ fun WorkoutScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = Color.Black.copy(alpha = 0.5f))
+                    .noRippleClickable { /* no-op */ }
             ) {
                 Column(
                     modifier = Modifier
@@ -376,14 +371,6 @@ fun WorkoutScreen(
     if (isShowWorkoutWarningDialog) {
         Dialog(
             title = "운동 전 확인해주세요!",
-            description = "1. 화면에 대각선으로 자세를 잡아주세요.\n" +
-                    "\n" +
-                    "2. 화면에 가능할 때까지 몸을 꽉 채워주세요.\n" +
-                    "\n" +
-                    "3. 몸을 적당히 내린다면 운동이 감지되지 않을 수도 있어요.\n" +
-                    "\n" +
-                    "4. 운동 중 앱을 나갔다 들어오면 운동한 게 사라져요." +
-                    "'확인'을 누르면 운동이 시작돼요!",
             customDescription = {
                 Column(
                     modifier = Modifier
@@ -404,9 +391,9 @@ fun WorkoutScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "1. 화면에 대각선으로 자세를 잡아주세요.\n" +
+                        text = "1. 화면에 대각선으로 보이도록 자세를 잡아주세요.\n" +
                                 "\n" +
-                                "2. 화면에 가능할 때까지 몸을 꽉 채워주세요.\n" +
+                                "2. 화면에 몸을 최대한 꽉 채워주세요.\n" +
                                 "\n" +
                                 "3. 몸을 적당히 내린다면 운동이 감지되지 않을 수도 있어요.",
                         color = Color.Black,
@@ -472,8 +459,8 @@ fun WorkoutScreen(
         isShowFinishWorkoutDialog = true
     }
 
-    LaunchedEffect(isWorkoutRunning) {
-        onChangeIsWorkoutRunning(isWorkoutRunning)
+    LaunchedEffect(isWorkoutRunning, firstCountdownTimer) {
+        onChangeIsWorkoutRunning(isWorkoutRunning || firstCountdownTimer != null)
     }
 
     LaunchedEffect(cameraPermissionState.status.isGranted) {
@@ -481,7 +468,6 @@ fun WorkoutScreen(
     }
 
     LaunchedEffect(cameraController.isRecording) {
-        println("jaehoLee", "newIsRecording = ${cameraController.isRecording}")
         isRecording = cameraController.isRecording
         viewModel.setIsRecording(cameraController.isRecording)
     }
@@ -500,10 +486,13 @@ fun WorkoutScreen(
                 WorkoutViewModel.WorkoutUiEvent.StopRecording -> {
                     poseDetectionManager.stopRecording()
                 }
+                WorkoutViewModel.WorkoutUiEvent.StartFakeRecording -> {
+                    isRecording = true
+                }
+                WorkoutViewModel.WorkoutUiEvent.StopFakeRecording -> {
+                    isRecording = false
+                }
                 is WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
-//                    poseDetectionManager.stopRecording()
-
-                    println("jaehoLee", "noteId in event = ${event.noteId}")
                     onFinishWorkout(event.noteId)
                 }
             }
@@ -555,28 +544,19 @@ private fun BoxScope.ScoreBoard(
                 fontFamily = fontFamily
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text(
+            OutlinedText(
                 text = "Perfect: $totalPerfect",
-                color = ColorSaturday,
-                fontSize = 24.dpToSp(),
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = fontFamily
+                textColor = ColorSaturday
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
+            OutlinedText(
                 text = "Good: $totalGood",
-                color = ColorLightGreen,
-                fontSize = 24.dpToSp(),
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = fontFamily
+                textColor = ColorLightGreen
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
+            OutlinedText(
                 text = "Not Good: $totalNotGood",
-                color = ColorSunday,
-                fontSize = 24.dpToSp(),
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = fontFamily
+                textColor = ColorSunday
             )
         }
     }

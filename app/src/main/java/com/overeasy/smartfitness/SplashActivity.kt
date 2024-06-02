@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -21,10 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
+import com.overeasy.smartfitness.scenario.public.OutlinedText
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSecondary
-import com.overeasy.smartfitness.ui.theme.fontFamily
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlin.concurrent.timer
@@ -48,17 +45,28 @@ class SplashActivity : ComponentActivity() {
                         .align(Alignment.Center),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    TitleText(
+                    OutlinedText(
                         text = "tr",
-                        color = Color.White.copy(alpha = currentAlpha)
+                        textColor = Color.White.copy(alpha = currentAlpha),
+//                        outlineColor = Color.Black.copy(alpha = currentAlpha),
+                        outlineColor = Color.Black.copy(alpha = currentAlpha),
+                        fontSize = 72.dpToSp(),
+                        fontWeight = FontWeight.Black
                     )
-                    TitleText(
+                    OutlinedText(
                         text = "AI",
-                        color = ColorSecondary
+                        textColor = ColorSecondary,
+                        outlineColor = Color.Black,
+                        fontSize = 72.dpToSp(),
+                        fontWeight = FontWeight.Black
                     )
-                    TitleText(
+                    OutlinedText(
                         text = "ner",
-                        color = Color.White.copy(alpha = currentAlpha)
+                        textColor = Color.White.copy(alpha = currentAlpha),
+//                        outlineColor = Color.Black.copy(alpha = currentAlpha),
+                        outlineColor = Color.Black.copy(alpha = currentAlpha),
+                        fontSize = 72.dpToSp(),
+                        fontWeight = FontWeight.Black
                     )
                 }
             }
@@ -80,21 +88,4 @@ class SplashActivity : ComponentActivity() {
             }
         }
     }
-}
-
-@Composable
-private fun TitleText(
-    modifier: Modifier = Modifier,
-    text: String,
-    color: Color = Color.White,
-    fontSize: TextUnit = 72.dpToSp()
-) {
-    Text(
-        text = text,
-        modifier = modifier,
-        color = color,
-        fontSize = fontSize,
-        fontWeight = FontWeight.Black,
-        fontFamily = fontFamily
-    )
 }

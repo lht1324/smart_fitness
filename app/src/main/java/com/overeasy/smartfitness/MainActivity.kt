@@ -3,7 +3,6 @@
 package com.overeasy.smartfitness
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -36,7 +35,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,58 +63,9 @@ import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
 import com.overeasy.smartfitness.ui.theme.fontFamily
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.BufferedWriter
-import java.io.IOException
-import java.io.OutputStreamWriter
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val jsonList = mutableStateListOf<String>()
-
-    private val WRITE_REQUEST_CODE: Int = 43
-
-    private fun createFile() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/json"
-            putExtra(Intent.EXTRA_TITLE, "${getDateString()}.json")
-        }
-        startActivityForResult(intent, WRITE_REQUEST_CODE)
-    }
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == WRITE_REQUEST_CODE) {
-            when (resultCode) {
-                Activity.RESULT_OK -> data?.data?.also {
-                    writeInFile(
-                        it,
-                        jsonList.joinToString { json ->
-                            "$json\n\n"
-                        }.replace("\n\n,{", "\n{")
-                    )
-                }
-                Activity.RESULT_CANCELED -> {
-                }
-            }
-        }
-    }
-
-
-    private fun writeInFile(uri: Uri, text: String) {
-        try {
-            contentResolver.openOutputStream(uri)?.also {
-                println("jaehoLee", "text = $text")
-                val bw = BufferedWriter(OutputStreamWriter(it))
-                bw.write(text)
-                bw.flush()
-                bw.close()
-                jsonList.clear()
-            } ?: println("jaehoLee", "uri is null")
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,9 +109,6 @@ class MainActivity : ComponentActivity() {
                     CurrentScreen(
                         modifier = Modifier.height(((screenHeight - tabHeight).dp)),
                         stateValue = tabItemList[currentPage],
-                        onUpdateJson = { json ->
-                            jsonList.add(json)
-                        },
                         onChangeIsWorkoutRunning = { isRunning ->
                             isWorkoutRunning = isRunning
                         },
@@ -195,10 +141,6 @@ class MainActivity : ComponentActivity() {
                                     onClick = {
                                         if (!isWorkoutRunning)
                                             currentPage = index
-
-//                                        if (currentPage == 3) {
-//                                            createFile()
-//                                        }
                                     },
                                     modifier = Modifier
                                         .onSizeChanged { (_, height) ->
@@ -306,7 +248,6 @@ class MainActivity : ComponentActivity() {
     fun CurrentScreen(
         modifier: Modifier = Modifier,
         stateValue: String,
-        onUpdateJson: (String) -> Unit,
         onChangeIsWorkoutRunning: (Boolean) -> Unit,
         onChangeHeaderHeight: (Int) -> Unit
     ) = Box(
@@ -324,7 +265,6 @@ class MainActivity : ComponentActivity() {
                 onClickWatchExampleVideo = { videoUrl ->
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
                 },
-                onUpdateJson = onUpdateJson,
                 onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
                 onChangeHeaderHeight = onChangeHeaderHeight
             )

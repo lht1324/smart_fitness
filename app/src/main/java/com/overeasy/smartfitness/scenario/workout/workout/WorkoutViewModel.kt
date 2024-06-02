@@ -27,6 +27,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -35,19 +36,20 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timer
+import kotlin.math.floor
 
 
 @HiltViewModel
@@ -116,6 +118,16 @@ class WorkoutViewModel @Inject constructor(
 
     private val updatedPose = MutableSharedFlow<Pose>()
 
+    private val workoutCountBase = combine(updatedPose, workoutName) { pose, name ->
+        name?.run { pose.toLandmarkInfo(this) } to name
+    }.filter { (landmarkInfo, _) ->
+        landmarkInfo != null &&
+                firstTimer == null &&
+                restTimer == null
+    }.map { (landmarkInfo, name) ->
+        landmarkInfo!! to name
+    }
+
     private val _scorePerfect = MutableStateFlow(0)
     val scorePerfect = _scorePerfect.asStateFlow()
     private val _scoreGood = MutableStateFlow(0)
@@ -170,22 +182,28 @@ class WorkoutViewModel @Inject constructor(
     private val _isLoadingFinishWorkout = MutableStateFlow(false)
     val isLoadingFinishWorkout = _isLoadingFinishWorkout.asStateFlow()
 
-    private val isReachedFirstHighestPointPushUp = MutableStateFlow(false)
-    private val isReachedLastHighestPointPushUp = MutableStateFlow(false)
-    private val isReachedLowestPointPushUp = MutableStateFlow(false)
+    private val isReachedFirstPoint = MutableStateFlow(false)
+    private val isReachedMiddlePoint = MutableStateFlow(false)
+    private val isReachedLastPoint = MutableStateFlow(false)
 
     private val landmarkInfoList = MutableStateFlow<List<LandmarkInfo>>(listOf())
 
-    private val interpreter = workoutName.distinctUntilChanged().map { name ->
-        when (name) {
-            "푸쉬업" -> "pushup_model.tflite"
-            "데드리프트" -> "deadlift_model.tflite"
-            "스쿼트" -> "squat_model.tflite"
-            else -> null
-        }
-    }.filterNotNull().map { modelPath ->
-        tensorFlowManager.getInterpreter(modelPath)
-    }
+//    private val interpreter = workoutName.distinctUntilChanged().map { name ->
+//        when (name) {
+//            SupportedWorkout.PUSH_UP.value -> "pushup_model.tflite"
+//            SupportedWorkout.DEAD_LIFT.value -> "deadlift_model.tflite"
+//            SupportedWorkout.SQUAT.value -> "squat_model.tflite"
+//            else -> null
+//        }
+//    }.filter { modelPath ->
+//        modelPath != null
+//    }.map { modelPath ->
+//        modelPath!!
+//    }.map { modelPath ->
+//        tensorFlowManager.getInterpreter(modelPath)
+//    }
+    private var interpreter: MutableStateFlow<Interpreter?> = MutableStateFlow(null)
+
     private val isRecording = MutableStateFlow(false)
     private val isFinishedRequestPostWorkoutData = MutableStateFlow(false)
 
@@ -198,16 +216,6 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             launch(Dispatchers.IO) {
                 requestGetExercises()
-//                workoutNameList.clear()
-//                workoutNameList.addAll(
-//                    listOf(
-//                        "푸쉬업",
-//                        "데드리프트",
-//                        "딥스",
-//                        "벤치프레스",
-//                        "숄더프레스"
-//                    )
-//                )
             }
             launch(Dispatchers.Default) {
                 workoutInfo.collectLatest { info ->
@@ -223,6 +231,22 @@ class WorkoutViewModel @Inject constructor(
                 }
             }
             launch(Dispatchers.Default) {
+                workoutName.distinctUntilChanged().map { name ->
+                    when (name) {
+                        SupportedWorkout.PUSH_UP.value -> "pushup_model.tflite"
+                        SupportedWorkout.DEAD_LIFT.value -> "deadlift_model.tflite"
+                        SupportedWorkout.SQUAT.value -> "squat_model.tflite"
+                        else -> null
+                    }
+                }.filter { modelPath ->
+                    modelPath != null
+                }.map { modelPath ->
+                    modelPath!!
+                }.collectLatest { modelPath ->
+                    interpreter.value = tensorFlowManager.getInterpreter(modelPath)
+                }
+            }
+            launch(Dispatchers.Default) {
                 firstCountdown.map { countdown ->
                     countdown to null
                 }.scan(-1 as Int? to -1 as Int?) { prev, next ->
@@ -234,6 +258,8 @@ class WorkoutViewModel @Inject constructor(
 
                         if (MainApplication.appPreference.isLogin)
                             _workoutUiEvent.emit(WorkoutUiEvent.StartRecording)
+                        else
+                            _workoutUiEvent.emit(WorkoutUiEvent.StartFakeRecording)
                     }
                 }
             }
@@ -249,18 +275,14 @@ class WorkoutViewModel @Inject constructor(
                     }
                 }
             }
+            // 푸시업 1회 카운트
             launch(Dispatchers.Default) {
-                combine(updatedPose, workoutName) { pose, name ->
-                    name?.run { pose.toLandmarkInfo(this) }
-//                    pose.toLandmarkInfo(name)
-                }.filter { landmarkInfo ->
-                    landmarkInfo != null //  && isRecording
-                }.map { landmarkInfo ->
-                    landmarkInfo!!
+                workoutCountBase.filter { (_, name) ->
+                    name == SupportedWorkout.PUSH_UP.value
+                }.map { (landmarkInfo, _) ->
+                    landmarkInfo
                 }.collectLatest { landmarkInfo ->
                     landmarkInfo.run {
-                        // 반전
-                        val isHeadToLeft = leftShoulder.x < leftAnkle.x
                         val leftArmAngle = calculateAngle(
                             pointA = leftShoulder.toPair(),
                             pointB = leftElbow.toPair(),
@@ -271,168 +293,215 @@ class WorkoutViewModel @Inject constructor(
                             pointB = rightElbow.toPair(),
                             pointC = rightWrist.toPair()
                         )
-//                        val averageArmAngle = calculateAngle(
-//                            pointA = Pair(
-//                                (leftShoulder.x + rightShoulder.x) / 2f,
-//                                (leftShoulder.y + rightShoulder.y) / 2f,
-//                            ),
-//                            pointB = Pair(
-//                                (leftElbow.x + rightElbow.x) / 2f,
-//                                (leftElbow.y + rightElbow.y) / 2f,
-//                            ),
-//                            pointC = Pair(
-//                                (leftWrist.x + rightWrist.x) / 2f,
-//                                (leftWrist.y + rightWrist.y) / 2f,
-//                            )
-//                        )
 
-                        /**
-                         * 확률 맥스 찾고 그거 인덱스 찾아서 범위 잡기
-                         *
-                         * 스쿼트
-                         * 0 true 4개
-                         * 1 ~ 4 true 3개
-                         * 5 ~ 10 true 2개
-                         * 11~14 true 1개
-                         * 15 true 0개
-                         * 무릎과 엉덩이 y가 같다고 판단하는 영역을 넘어갔다 올라오면 1회
-                         * 허벅지 5분의 1부터 무릎 사이 영역 찍고 올라오면 1회
-                         *
-                         * 데드
-                         * 0이 true 5개
-                         * 1~5 true 4개
-                         * 6~15 true 3개
-                         * 16 ~ 25  true 2개
-                         * 26~30 true 1개
-                         * 31 true 0개
-                         * 무릎 위 허벅지 5분의 1 영역 찍고 리턴
-                         */
-
-//                        val isHighest = if (isHeadToLeft) {
-//                            leftArmAngle >= 165f
-//                        } else {
-//                            rightArmAngle >= 165f
-//                        }
-//                        val isLowest = if (isHeadToLeft) {
-//                            leftArmAngle <= 105f
-//                        } else {
-//                            rightArmAngle <= 105f
-//                        }
-
-//                        val isHighest = if (isHeadToLeft) {
-//                            rightArmAngle >= 165f
-//                        } else {
-//                            leftArmAngle >= 165f
-//                        }
-//                        val isLowest = if (isHeadToLeft) {
-//                            rightArmAngle <= 105f
-//                        } else {
-//                            leftArmAngle <= 105f
-//                        }
                         val isHighest = (leftArmAngle >= 165f || rightArmAngle >= 165f)
                         val isLowest = (leftArmAngle <= 105f || rightArmAngle <= 105f)
-//                        val isHighest = averageArmAngle >= 165f
-//                        val isLowest = averageArmAngle <= 105f
 
-                        if (!isReachedFirstHighestPointPushUp.value) {
-                            isReachedFirstHighestPointPushUp.value = // isHighest
-                                isHighest && !isLowest
-                        }
+                        updateReachedPointState(
+                            firstAndLastPointState = isHighest && !isLowest,
+                            middlePointState = !isHighest && isLowest
+                        )
 
-                        if (!isReachedLowestPointPushUp.value) {
-                            isReachedLowestPointPushUp.value =
-                                isReachedFirstHighestPointPushUp.value && // isLowest
-                                        isLowest && !isHighest
-                        }
+                        landmarkInfoList.value += landmarkInfo
 
-                        if (!isReachedLastHighestPointPushUp.value) {
-                            isReachedLastHighestPointPushUp.value =
-                                (isReachedFirstHighestPointPushUp.value && isReachedLowestPointPushUp.value) &&
-//                                        isHighest
-                                        isHighest && !isLowest
-                        }
-
-//                        println("jaehoLee", "averageDegree = $averageArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
-//                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
-//                        if (isHeadToLeft)
-//                            println("jaehoLee", "leftDegree = $leftArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
-//                        else
-//                            println("jaehoLee", "rightDegree = $rightArmAngle, ${isReachedFirstHighestPointPushUp.value}, ${isReachedLowestPointPushUp.value}, ${isReachedLastHighestPointPushUp.value}")
+                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
                     }
                 }
             }
+            // 스쿼트 1회 카운트
+            launch(Dispatchers.Default) {
+                workoutCountBase.filter { (_, name) ->
+                    name == SupportedWorkout.SQUAT.value
+                }.map { (landmarkInfo, _) ->
+                    landmarkInfo
+                }.collectLatest { landmarkInfo ->
+                    landmarkInfo.run {
+                        val leftLegAngle = calculateAngle(
+                            pointA = leftHip.toPair(),
+                            pointB = leftKnee.toPair(),
+                            pointC = leftAnkle.toPair()
+                        )
+                        val rightLegAngle = calculateAngle(
+                            pointA = rightHip.toPair(),
+                            pointB = rightKnee.toPair(),
+                            pointC = rightAnkle.toPair()
+                        )
+                        val leftWaistAngle = calculateAngle(
+                            pointA = leftShoulder.toPair(),
+                            pointB = leftHip.toPair(),
+                            pointC = leftKnee.toPair()
+                        )
+                        val rightWaistAngle = calculateAngle(
+                            pointA = rightShoulder.toPair(),
+                            pointB = rightHip.toPair(),
+                            pointC = rightKnee.toPair()
+                        )
+
+                        val isUp = (leftLegAngle > 160f && leftWaistAngle > 155f) || (rightLegAngle > 160f && rightWaistAngle > 155f)
+                        val isDown = (leftLegAngle < 60f && leftWaistAngle < 60f) || (rightLegAngle < 60f && rightWaistAngle < 60f)
+
+                        updateReachedPointState(
+                            firstAndLastPointState = isUp,
+                            middlePointState = isDown
+                        )
+
+                        landmarkInfoList.value += landmarkInfo
+
+                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
+                    }
+                }
+            }
+            // 데드리프트 1회 카운트
+            launch(Dispatchers.Default) {
+                workoutCountBase.filter { (_, name) ->
+                    name == SupportedWorkout.DEAD_LIFT.value
+                }.map { (landmarkInfo, _) ->
+                    landmarkInfo
+                }.collectLatest { landmarkInfo ->
+                    landmarkInfo.run {
+                        val leftLegAngle = calculateAngle(
+                            pointA = leftHip.toPair(),
+                            pointB = leftKnee.toPair(),
+                            pointC = leftAnkle.toPair()
+                        )
+                        val rightLegAngle = calculateAngle(
+                            pointA = rightHip.toPair(),
+                            pointB = rightKnee.toPair(),
+                            pointC = rightAnkle.toPair()
+                        )
+                        val leftWaistAngle = calculateAngle(
+                            pointA = leftShoulder.toPair(),
+                            pointB = leftHip.toPair(),
+                            pointC = leftKnee.toPair()
+                        )
+                        val rightWaistAngle = calculateAngle(
+                            pointA = rightShoulder.toPair(),
+                            pointB = rightHip.toPair(),
+                            pointC = rightKnee.toPair()
+                        )
+
+                        val isDown = (leftLegAngle < 155f && leftWaistAngle < 100f) || (rightLegAngle < 155f && rightWaistAngle < 100f)
+                        val isUp = (leftLegAngle > 165f && leftWaistAngle > 160f) || (rightLegAngle > 165f && rightWaistAngle > 160f)
+
+                        updateReachedPointState(
+                            firstAndLastPointState = isDown,
+                            middlePointState = isUp
+                        )
+
+                        landmarkInfoList.value += landmarkInfo
+                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
+                    }
+                }
+            }
+            // 1회 카운트 후 판정
             launch(Dispatchers.Default) {
                 combine(
-                    isReachedFirstHighestPointPushUp,
-                    isReachedLowestPointPushUp,
-                    isReachedLastHighestPointPushUp
-                ) { isFirstHighest, isLowest, isLastHighest ->
-                    Triple(isFirstHighest, isLowest, isLastHighest)
-                }.filter { (isFirstHighest, isLowest, isLastHighest) ->
-                    isFirstHighest && isLowest && isLastHighest && firstTimer == null && restTimer == null
-                }.collectLatest {
-                    val frameDataList = if (landmarkInfoList.value.size > 8)
-                        landmarkInfoList.value.takeLast(8)
-                    else
+                    isReachedFirstPoint,
+                    isReachedMiddlePoint,
+                    isReachedLastPoint
+                ) { isFirstPoint, isMiddlePoint, isLastPoint ->
+                    Triple(isFirstPoint, isMiddlePoint, isLastPoint)
+                }.filter { (isFirstPoint, isMiddlePoint, isLastPoint) ->
+                    isFirstPoint && isMiddlePoint && isLastPoint
+                }.flatMapLatest {
+                    interpreter.map { interpreter ->
+                        interpreter to workoutName.firstOrNull()
+                    }.filter { (interpreter, name) ->
+                        interpreter != null && name != null
+                    }
+                }.map { (interpreter, name) ->
+                    interpreter!! to name!!
+                }.filter { (_, _) ->
+                    firstTimer == null && restTimer == null
+                }.collectLatest { (interpreter, name) ->
+                    val frameDataList = if (landmarkInfoList.value.size > 8) {
+                        val currentLandmarkInfoList = landmarkInfoList.value
+                        val indexList = arrayListOf(0)
+                        val dividePoint = (currentLandmarkInfoList.size - 1).toFloat() / 7f
+
+                        for (i in 1..7) {
+                            indexList.add(floor(dividePoint * i.toFloat()).toInt())
+                        }
+
+                        currentLandmarkInfoList.filterIndexed { index, _ ->
+                            indexList.contains(index)
+                        }
+                    } else {
                         landmarkInfoList.value
+                    }
+
                     landmarkInfoList.value = listOf()
-//                    val interpreter = interpreter.firstOrNull()
-//                    val inputData = FloatArray(
-//                        frameDataList.size * 12 * 2
-//                    )
-                    val inputData = getNormalizedFrameFloatArray(frameDataList)
-                    val inputBuffer = ByteBuffer.allocateDirect(1 * 8 * 24 * 5 * Float.SIZE_BYTES).apply {
+
+                    // frame * bodyPart * xyCount * view * floatByteSize
+                    val inputBufferSize = if (name != SupportedWorkout.SQUAT.value) {
+                        1 * 8 * 12 * 2 * 5 * Float.SIZE_BYTES
+                    } else {
+                        1 * 8 * 11 * 2 * 5 * Float.SIZE_BYTES
+                    }
+                    val inputBuffer = ByteBuffer.allocateDirect(inputBufferSize).apply {
                         order(ByteOrder.nativeOrder())
                     }
-                    inputData.forEach { value ->
+
+                    // outputSize * floatByteSize
+                    val outputBufferSize = if (name != SupportedWorkout.SQUAT.value) {
+                        32 * Float.SIZE_BYTES
+                    } else {
+                        16 * Float.SIZE_BYTES
+                    }
+                    val outputBuffer = ByteBuffer.allocateDirect(outputBufferSize).apply {
+                        order(ByteOrder.nativeOrder())
+                    }
+
+                    getNormalizedFrameFloatArray(frameDataList, name).forEach { value ->
                         inputBuffer.putFloat(value)
                     }
-
-                    val outputBuffer = ByteBuffer.allocateDirect(32 * Float.SIZE_BYTES).apply {
-                        order(ByteOrder.nativeOrder())
-                    }
-
-                    val interpreter = tensorFlowManager.getInterpreter("pushup_model.tflite")
 
                     interpreter.run(inputBuffer, outputBuffer)
 
                     outputBuffer.rewind()
-                    val predictionList = FloatArray(32)
+                    val predictionList = FloatArray(outputBufferSize / Float.SIZE_BYTES)
                     outputBuffer.asFloatBuffer().get(predictionList)
 
+                    println("jaehoLee", "predictionList[${totalCount.firstOrNull()}] = ${predictionList.toList().sortedByDescending { it }}")
+
                     val highestPrediction = predictionList.toList().max()
-                    val selectedPredictionIndex = predictionList.indexOfFirst { prediction ->
+//                    val selectedPredictionIndex = predictionList.toList().shuffled(Random(System.currentTimeMillis())).indexOfFirst { prediction ->
+                    val selectedPredictionIndex = predictionList.toList().indexOfFirst { prediction ->
                         prediction == highestPrediction
                     }
 
-                    println("jaehoLee", "selectedPrediction = ${predictionList.toList()}")
-                    println("jaehoLee", "selectedPredictionIndex = $selectedPredictionIndex, $highestPrediction")
-
-//                    frameDataList.forEach { frameData ->
-//                        println("jaehoLee", "frameData: ${Json.encodeToString(frameData)}")
-//                    }
                     /**
-                     *                         0이 true 5개
-                     *                         1~5 true 4개
-                     *                         6~15 true 3개
-                     *                         16~25  true 2개
-                     *                         26~30 true 1개
-                     *                         31 true 0개
+                     * 스쿼트
+                     * 0 true 4개
+                     * 1 ~ 4 true 3개
+                     * 5 ~ 10 true 2개
+                     * 11~14 true 1개
+                     * 15 true 0개
+                     *
+                     * 푸시업, 데드
+                     * 0이 true 5개
+                     * 1~5 true 4개
+                     * 6~15 true 3개
+                     * 16 ~ 25  true 2개
+                     * 26~30 true 1개
+                     * 31 true 0개
                      */
 
-//                    when (selectedPredictionIndex) {
-//                        in 0..5 -> _scorePerfect.value += 1
-//                        in 6..25 -> _scoreGood.value += 1
-//                        in 26..31 -> _scoreNotGood.value += 1
-//                    }
-                    when (selectedPredictionIndex) {
-                        in 0..15 -> _scorePerfect.value += 1
-                        in 16..25 -> _scoreGood.value += 1
-                        in 26..31 -> _scoreNotGood.value += 1
+                    if (name != SupportedWorkout.SQUAT.value) {
+                        when (selectedPredictionIndex) {
+                            in 0..15 -> _scorePerfect.value += 1
+                            in 16..25 -> _scoreGood.value += 1
+                            in 26..31 -> _scoreNotGood.value += 1
+                        }
+                    } else {
+                        when (selectedPredictionIndex) {
+                            in 0..4 -> _scorePerfect.value += 1
+                            in 5..10 -> _scoreGood.value += 1
+                            in 11..15 -> _scoreNotGood.value += 1
+                        }
                     }
 
-                    val currentWorkoutInfo = workoutInfo.value
-                    workoutInfo.value = currentWorkoutInfo?.run {
+                    workoutInfo.value = workoutInfo.value?.run {
                         copy(
                             setDataList = setDataList.mapIndexed { index, workoutData ->
                                 if (index + 1 == currentSet.value) {
@@ -469,9 +538,9 @@ class WorkoutViewModel @Inject constructor(
                     inputBuffer.clear()
                     outputBuffer.clear()
 
-                    isReachedFirstHighestPointPushUp.value = false
-                    isReachedLowestPointPushUp.value = false
-                    isReachedLastHighestPointPushUp.value = false
+                    isReachedFirstPoint.value = false
+                    isReachedMiddlePoint.value = false
+                    isReachedLastPoint.value = false
                 }
             }
             launch(Dispatchers.Default) {
@@ -523,7 +592,6 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun setIsRecording(recording: Boolean) {
-        println("jaehoLee", "setIsRecording, $recording")
         isRecording.value = recording
     }
 
@@ -544,10 +612,10 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun clearWorkoutData(onFinishClear: () -> Unit = { }) {
-        println("jaehoLee", "clear")
         workoutInfo.value = null
         _currentSet.value = 0
         _isWorkoutRunning.value = false
+        landmarkInfoList.value = listOf()
         _scorePerfect.value = 0
         _scoreGood.value = 0
         _scoreNotGood.value = 0
@@ -566,16 +634,33 @@ class WorkoutViewModel @Inject constructor(
         _firstCountdown.value = null
         _restCountdown.value = null
 
+        interpreter.value?.close()
+        interpreter.value = null
+
         viewModelScope.launch {
-            if (MainApplication.appPreference.isLogin)
+            delay(2000L)
+            if (MainApplication.appPreference.isLogin) {
                 _workoutUiEvent.emit(WorkoutUiEvent.StopRecording)
+            } else {
+                _workoutUiEvent.emit(WorkoutUiEvent.StopFakeRecording)
+            }
         }
 
         onFinishClear()
     }
 
     fun setWorkoutInfo(info: WorkoutInfo) {
-        workoutInfo.value = info
+        workoutInfo.value = info.copy(
+            setDataList = info.setDataList.map { workoutData ->
+                workoutData.copy(
+                    weight = if (info.workoutName != SupportedWorkout.SQUAT.value) {
+                        workoutData.weight
+                    } else {
+                        null
+                    }
+                )
+            }
+        )
     }
 
     private suspend fun startFirstCountdownTimer() {
@@ -644,8 +729,7 @@ class WorkoutViewModel @Inject constructor(
         cameraHeightPx: Int,
         imageWidth: Int = 480,
         imageHeight: Int = 640,
-        pose: Pose,
-        copy: (String) -> Unit
+        pose: Pose
     ) {
         viewModelScope.launch {
 //            if (!isLoadingFinishWorkout.value) {
@@ -653,7 +737,7 @@ class WorkoutViewModel @Inject constructor(
 //            }
             updatedPose.emit(pose)
 
-            if (poseList.size == 2 && !isLoadingFinishWorkout.value) {
+            if (poseList.size == 1 && !isLoadingFinishWorkout.value) {
                 updateBodyFrameData(
                     cameraWidthPx = cameraWidthPx,
                     cameraHeightPx = cameraHeightPx,
@@ -818,6 +902,26 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    private fun updateReachedPointState(
+        firstAndLastPointState: Boolean,
+        middlePointState: Boolean
+    ) {
+        if (!isReachedFirstPoint.value) {
+            isReachedFirstPoint.value = firstAndLastPointState
+        }
+
+        if (!isReachedMiddlePoint.value) {
+            isReachedMiddlePoint.value =
+                isReachedFirstPoint.value && middlePointState
+        }
+
+        if (!isReachedLastPoint.value) {
+            isReachedLastPoint.value =
+                isReachedFirstPoint.value && isReachedMiddlePoint.value &&
+                        firstAndLastPointState
+        }
+    }
+
     private suspend fun requestGetExercises() {
         ApiRequestHelper.makeRequest {
             exercisesRepository.getExercises()
@@ -964,6 +1068,8 @@ class WorkoutViewModel @Inject constructor(
     sealed class WorkoutUiEvent {
         data object StartRecording : WorkoutUiEvent()
         data object StopRecording : WorkoutUiEvent()
+        data object StartFakeRecording : WorkoutUiEvent()
+        data object StopFakeRecording : WorkoutUiEvent()
         data class FinishWorkout(val noteId: Int) : WorkoutUiEvent()
     }
 }

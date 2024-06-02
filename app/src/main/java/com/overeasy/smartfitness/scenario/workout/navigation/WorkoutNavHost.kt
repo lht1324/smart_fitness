@@ -24,7 +24,6 @@ fun WorkoutNavHost(
     modifier: Modifier = Modifier,
     filesDir: File?,
     onClickWatchExampleVideo: (String) -> Unit,
-    onUpdateJson: (String) -> Unit,
     onChangeIsWorkoutRunning: (Boolean) -> Unit,
     onChangeHeaderHeight: (Int) -> Unit
 ) {
@@ -66,8 +65,7 @@ fun WorkoutNavHost(
                         println("jaehoLee", "noteId onFinish = $noteId")
                         navHostController.navigate(WorkoutRoutes.Result.createRoute(noteId))
                     },
-                    onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
-                    onUpdateJson = onUpdateJson
+                    onChangeIsWorkoutRunning = onChangeIsWorkoutRunning
                 )
             }
             composable(WorkoutRoutes.Result.route) { backStackEntry ->

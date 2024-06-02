@@ -16,6 +16,7 @@ import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
 import com.overeasy.smartfitness.domain.workout.model.workout.LandmarkCoordinate
+import com.overeasy.smartfitness.scenario.workout.workout.SupportedWorkout
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -94,6 +95,13 @@ fun Pose.toLandmarkInfo(workoutName: String): LandmarkInfo? = run {
     if (allPoseLandmarks.size == PoseLandmark.RIGHT_FOOT_INDEX + 1) {
         LandmarkInfo(
             workoutName = workoutName,
+
+            nose = getPoseLandmark(PoseLandmark.NOSE)!!.position.run {
+                LandmarkCoordinate(
+                    x = 480 - x,
+                    y = y
+                ).matchResolution()
+            },
 
             leftShoulder = getPoseLandmark(PoseLandmark.LEFT_SHOULDER)!!.position.run {
                 LandmarkCoordinate(
@@ -291,11 +299,29 @@ fun calculateAngle(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>, point
     val (cX, cY) = pointC
 
     val angle = atan2(cY - bY, cX - bX) - atan2(aY - bY, aX - bX)
+    val angleDegrees = Math.toDegrees(angle.toDouble()).toFloat()
 
-    return abs(Math.toDegrees(angle.toDouble()).toFloat())
+    return angleDegrees.run {
+        if (this > 180f)
+            360f - this
+        else
+            this
+    }.run {
+        abs(this)
+    }
 }
 
-fun getNormalizedFrameFloatArray(frameDataList: List<LandmarkInfo>): FloatArray {
+fun calculateDistance(pointA: Pair<Float, Float>, pointB: Pair<Float, Float>): Float {
+    val (aX, aY) = pointA
+    val (bX, bY) = pointB
+
+    return sqrt(abs(bX - aX).pow(2) + abs(bY - aY).pow(2))
+}
+
+fun getNormalizedFrameFloatArray(
+    frameDataList: List<LandmarkInfo>,
+    workoutName: String
+): FloatArray {
     /**
      * 각 값에서 평균을 뺀다.
      * 그 차이를 제곱한다.
@@ -304,6 +330,38 @@ fun getNormalizedFrameFloatArray(frameDataList: List<LandmarkInfo>): FloatArray 
      */
     val frameDataListSizeDouble = frameDataList.size.toDouble()
 
+    /**
+     * keypoint_mapping = {
+     *     "Left Shoulder": "leftShoulder",
+     *     "Right Shoulder": "rightShoulder",
+     *     "Left Elbow": "leftElbow",
+     *     "Right Elbow": "rightElbow",
+     *     "Left Wrist": "leftWrist",
+     *     "Right Wrist": "rightWrist",
+     *     "Left Hip": "leftHip",
+     *     "Right Hip": "rightHip",
+     *     "Left Knee": "leftKnee",
+     *     "Right Knee": "rightKnee",
+     *     "Left Ankle": "leftAnkle",
+     *     "Right Ankle": "rightAnkle"
+     * }
+     * keypoint_mapping = {
+     *     "Nose": "nose",
+     *     "Left Shoulder": "leftShoulder",
+     *     "Right Shoulder": "rightShoulder",
+     *     "Left Hip": "leftHip",
+     *     "Right Hip": "rightHip",
+     *     "Left Knee": "leftKnee",
+     *     "Right Knee": "rightKnee",
+     *     "Left Ankle": "leftAnkle",
+     *     "Right Ankle": "rightAnkle",
+     *     "Left Foot": "leftFoot",
+     *     "Right Foot": "rightFoot"
+     * }
+     *
+     */
+    val noseAverageX = frameDataList.sumOf { it.nose.x.toDouble() } / frameDataListSizeDouble
+    val noseAverageY = frameDataList.sumOf { it.nose.y.toDouble() } / frameDataListSizeDouble
     val leftShoulderAverageX = frameDataList.sumOf { it.leftShoulder.x.toDouble() } / frameDataListSizeDouble
     val leftShoulderAverageY = frameDataList.sumOf { it.leftShoulder.y.toDouble() } / frameDataListSizeDouble
     val rightShoulderAverageX = frameDataList.sumOf { it.rightShoulder.x.toDouble() } / frameDataListSizeDouble
@@ -326,9 +384,16 @@ fun getNormalizedFrameFloatArray(frameDataList: List<LandmarkInfo>): FloatArray 
     val rightKneeAverageY = frameDataList.sumOf { it.rightKnee.y.toDouble() } / frameDataListSizeDouble
     val leftAnkleAverageX = frameDataList.sumOf { it.leftAnkle.x.toDouble() } / frameDataListSizeDouble
     val leftAnkleAverageY = frameDataList.sumOf { it.leftAnkle.y.toDouble() } / frameDataListSizeDouble
-    val rightAnkleAverageX = frameDataList.sumOf {it.rightAnkle.x.toDouble() } / frameDataListSizeDouble
-    val rightAnkleAverageY = frameDataList.sumOf {it.rightAnkle.y.toDouble() } / frameDataListSizeDouble
+    val rightAnkleAverageX = frameDataList.sumOf { it.rightAnkle.x.toDouble() } / frameDataListSizeDouble
+    val rightAnkleAverageY = frameDataList.sumOf { it.rightAnkle.y.toDouble() } / frameDataListSizeDouble
 
+    val leftFootAverageX = frameDataList.sumOf { it.run { (leftAnkle.x + leftHeel.x + leftFootIndex.x) / 3f }.toDouble() } / frameDataListSizeDouble
+    val leftFootAverageY = frameDataList.sumOf { it.run { (leftAnkle.y + leftHeel.y + leftFootIndex.y) / 3f }.toDouble() } / frameDataListSizeDouble
+    val rightFootAverageX = frameDataList.sumOf { it.run { (rightAnkle.x + rightHeel.x + rightFootIndex.x) / 3f }.toDouble() } / frameDataListSizeDouble
+    val rightFootAverageY = frameDataList.sumOf { it.run { (rightAnkle.y + rightHeel.y + rightFootIndex.y) / 3f }.toDouble() } / frameDataListSizeDouble
+
+    val noseStandardDeviationX = sqrt(frameDataList.sumOf { (it.nose.x.toDouble() - noseAverageX).pow(2) } / frameDataListSizeDouble)
+    val noseStandardDeviationY = sqrt(frameDataList.sumOf { (it.nose.y.toDouble() - noseAverageY).pow(2) } / frameDataListSizeDouble)
     val leftShoulderStandardDeviationX = sqrt(frameDataList.sumOf { (it.leftShoulder.x.toDouble() - leftShoulderAverageX).pow(2) } / frameDataListSizeDouble)
     val leftShoulderStandardDeviationY = sqrt(frameDataList.sumOf { (it.leftShoulder.y.toDouble() - leftShoulderAverageY).pow(2) } / frameDataListSizeDouble)
     val rightShoulderStandardDeviationX = sqrt(frameDataList.sumOf { (it.rightShoulder.x.toDouble() - rightShoulderAverageX).pow(2) } / frameDataListSizeDouble)
@@ -354,6 +419,11 @@ fun getNormalizedFrameFloatArray(frameDataList: List<LandmarkInfo>): FloatArray 
     val rightAnkleStandardDeviationX = sqrt(frameDataList.sumOf { (it.rightAnkle.x.toDouble() - rightAnkleAverageX).pow(2) } / frameDataListSizeDouble)
     val rightAnkleStandardDeviationY = sqrt(frameDataList.sumOf { (it.rightAnkle.y.toDouble() - rightAnkleAverageY).pow(2) } / frameDataListSizeDouble)
 
+    val leftFootStandardDeviationX = sqrt(frameDataList.sumOf { (it.run { (leftAnkle.x + leftHeel.x + leftFootIndex.x) / 3f }.toDouble() - leftFootAverageX).pow(2) } / frameDataListSizeDouble)
+    val leftFootStandardDeviationY = sqrt(frameDataList.sumOf { (it.run { (leftAnkle.y + leftHeel.y + leftFootIndex.y) / 3f }.toDouble() - leftFootAverageY).pow(2) } / frameDataListSizeDouble)
+    val rightFootStandardDeviationX = sqrt(frameDataList.sumOf { (it.run { (rightAnkle.x + rightHeel.x + rightFootIndex.x) / 3f }.toDouble() - rightFootAverageX).pow(2) } / frameDataListSizeDouble)
+    val rightFootStandardDeviationY = sqrt(frameDataList.sumOf { (it.run { (rightAnkle.y + rightHeel.y + rightFootIndex.y) / 3f }.toDouble() - rightFootAverageY).pow(2) } / frameDataListSizeDouble)
+
     // root((leftSX - leftSXA)^2 / frameDataList.size)
     /**
      * 각 값에서 평균을 뺀다.
@@ -362,41 +432,77 @@ fun getNormalizedFrameFloatArray(frameDataList: List<LandmarkInfo>): FloatArray 
      * 그 평균의 제곱근을 구한다.
      */
 
-    val inputData = FloatArray(
+    val inputDataSize = if (workoutName != SupportedWorkout.SQUAT.value) {
         frameDataList.size * 12 * 2 * 5
-    )
+    } else {
+        frameDataList.size * 11 * 2 * 5
+    }
+    val inputData = FloatArray(inputDataSize)
 
     repeat(5) { count ->
         frameDataList.forEachIndexed { index, landmarkInfo ->
-            val expandedIndex = (index + 1) * 24
-            val repeatExpandCount = (frameDataList.size * 24 * count)
+            val expandedIndex = if (workoutName != SupportedWorkout.SQUAT.value) {
+                (index + 1) * 12 * 2
+            } else {
+                (index + 1) * 11 * 2
+            }
+            val repeatExpandCount = if (workoutName != SupportedWorkout.SQUAT.value) {
+                (frameDataList.size * 12 * 2 * count)
+            } else {
+                (frameDataList.size * 11 * 2 * count)
+            }
 
             // root((leftSX - leftSXA)^2 / frameDataList.size)
             landmarkInfo.run {
-                inputData[expandedIndex - 24 + repeatExpandCount] = (leftShoulder.x - leftShoulderAverageX.toFloat()) / leftShoulderStandardDeviationX.toFloat()
-                inputData[expandedIndex - 23 + repeatExpandCount] = (leftShoulder.y - leftShoulderAverageY.toFloat()) / leftShoulderStandardDeviationY.toFloat()
-                inputData[expandedIndex - 22 + repeatExpandCount] = (rightShoulder.x - rightShoulderAverageX.toFloat()) / rightShoulderStandardDeviationX.toFloat()
-                inputData[expandedIndex - 21 + repeatExpandCount] = (rightShoulder.y - rightShoulderAverageY.toFloat()) / rightShoulderStandardDeviationY.toFloat()
-                inputData[expandedIndex - 20 + repeatExpandCount] = (leftElbow.x - leftElbowAverageX.toFloat()) / leftElbowStandardDeviationX.toFloat()
-                inputData[expandedIndex - 19 + repeatExpandCount] = (leftElbow.y - leftElbowAverageY.toFloat()) / leftElbowStandardDeviationY.toFloat()
-                inputData[expandedIndex - 18 + repeatExpandCount] = (rightElbow.x - rightElbowAverageX.toFloat()) / rightElbowStandardDeviationX.toFloat()
-                inputData[expandedIndex - 17 + repeatExpandCount] = (rightElbow.y - rightElbowAverageY.toFloat()) / rightElbowStandardDeviationY.toFloat()
-                inputData[expandedIndex - 16 + repeatExpandCount] = (leftWrist.x - leftWristAverageX.toFloat()) / leftWristStandardDeviationX.toFloat()
-                inputData[expandedIndex - 15 + repeatExpandCount] = (leftWrist.y - leftWristAverageY.toFloat()) / leftWristStandardDeviationY.toFloat()
-                inputData[expandedIndex - 14 + repeatExpandCount] = (rightWrist.x - rightWristAverageX.toFloat()) / rightWristStandardDeviationX.toFloat()
-                inputData[expandedIndex - 13 + repeatExpandCount] = (rightWrist.y - rightWristAverageY.toFloat()) / rightWristStandardDeviationY.toFloat()
-                inputData[expandedIndex - 12 + repeatExpandCount] = (leftHip.x - leftHipAverageX.toFloat()) / leftHipStandardDeviationX.toFloat()
-                inputData[expandedIndex - 11 + repeatExpandCount] = (leftHip.y - leftHipAverageY.toFloat()) / leftHipStandardDeviationY.toFloat()
-                inputData[expandedIndex - 10 + repeatExpandCount] = (rightHip.x - rightHipAverageX.toFloat()) / rightHipStandardDeviationX.toFloat()
-                inputData[expandedIndex - 9 + repeatExpandCount] = (rightHip.y - rightHipAverageY.toFloat()) / rightHipStandardDeviationY.toFloat()
-                inputData[expandedIndex - 8 + repeatExpandCount] = (leftKnee.x - leftKneeAverageX.toFloat()) / leftKneeStandardDeviationX.toFloat()
-                inputData[expandedIndex - 7 + repeatExpandCount] = (leftKnee.y - leftKneeAverageY.toFloat()) / leftKneeStandardDeviationY.toFloat()
-                inputData[expandedIndex - 6 + repeatExpandCount] = (rightKnee.x - rightKneeAverageX.toFloat()) / rightKneeStandardDeviationX.toFloat()
-                inputData[expandedIndex - 5 + repeatExpandCount] = (rightKnee.y - rightKneeAverageY.toFloat()) / rightKneeStandardDeviationY.toFloat()
-                inputData[expandedIndex - 4 + repeatExpandCount] = (leftAnkle.x - leftAnkleAverageX.toFloat()) / leftAnkleStandardDeviationX.toFloat()
-                inputData[expandedIndex - 3 + repeatExpandCount] = (leftAnkle.y - leftAnkleAverageY.toFloat()) / leftAnkleStandardDeviationY.toFloat()
-                inputData[expandedIndex - 2 + repeatExpandCount] = (rightAnkle.x - rightAnkleAverageX.toFloat()) / rightAnkleStandardDeviationX.toFloat()
-                inputData[expandedIndex - 1 + repeatExpandCount] = (rightAnkle.y - rightAnkleAverageY.toFloat()) / rightAnkleStandardDeviationY.toFloat()
+                if (workoutName != SupportedWorkout.SQUAT.value) {
+                    inputData[expandedIndex - 24 + repeatExpandCount] = (leftShoulder.x - leftShoulderAverageX.toFloat()) / leftShoulderStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 23 + repeatExpandCount] = (leftShoulder.y - leftShoulderAverageY.toFloat()) / leftShoulderStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 22 + repeatExpandCount] = (rightShoulder.x - rightShoulderAverageX.toFloat()) / rightShoulderStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 21 + repeatExpandCount] = (rightShoulder.y - rightShoulderAverageY.toFloat()) / rightShoulderStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 20 + repeatExpandCount] = (leftElbow.x - leftElbowAverageX.toFloat()) / leftElbowStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 19 + repeatExpandCount] = (leftElbow.y - leftElbowAverageY.toFloat()) / leftElbowStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 18 + repeatExpandCount] = (rightElbow.x - rightElbowAverageX.toFloat()) / rightElbowStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 17 + repeatExpandCount] = (rightElbow.y - rightElbowAverageY.toFloat()) / rightElbowStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 16 + repeatExpandCount] = (leftWrist.x - leftWristAverageX.toFloat()) / leftWristStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 15 + repeatExpandCount] = (leftWrist.y - leftWristAverageY.toFloat()) / leftWristStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 14 + repeatExpandCount] = (rightWrist.x - rightWristAverageX.toFloat()) / rightWristStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 13 + repeatExpandCount] = (rightWrist.y - rightWristAverageY.toFloat()) / rightWristStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 12 + repeatExpandCount] = (leftHip.x - leftHipAverageX.toFloat()) / leftHipStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 11 + repeatExpandCount] = (leftHip.y - leftHipAverageY.toFloat()) / leftHipStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 10 + repeatExpandCount] = (rightHip.x - rightHipAverageX.toFloat()) / rightHipStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 9 + repeatExpandCount] = (rightHip.y - rightHipAverageY.toFloat()) / rightHipStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 8 + repeatExpandCount] = (leftKnee.x - leftKneeAverageX.toFloat()) / leftKneeStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 7 + repeatExpandCount] = (leftKnee.y - leftKneeAverageY.toFloat()) / leftKneeStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 6 + repeatExpandCount] = (rightKnee.x - rightKneeAverageX.toFloat()) / rightKneeStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 5 + repeatExpandCount] = (rightKnee.y - rightKneeAverageY.toFloat()) / rightKneeStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 4 + repeatExpandCount] = (leftAnkle.x - leftAnkleAverageX.toFloat()) / leftAnkleStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 3 + repeatExpandCount] = (leftAnkle.y - leftAnkleAverageY.toFloat()) / leftAnkleStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 2 + repeatExpandCount] = (rightAnkle.x - rightAnkleAverageX.toFloat()) / rightAnkleStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 1 + repeatExpandCount] = (rightAnkle.y - rightAnkleAverageY.toFloat()) / rightAnkleStandardDeviationY.toFloat()
+                } else {
+                    inputData[expandedIndex - 22 + repeatExpandCount] = (nose.x - noseAverageX.toFloat()) / noseStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 21 + repeatExpandCount] = (nose.y - noseAverageY.toFloat()) / noseStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 20 + repeatExpandCount] = (leftShoulder.x - leftShoulderAverageX.toFloat()) / leftShoulderStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 19 + repeatExpandCount] = (leftShoulder.y - leftShoulderAverageY.toFloat()) / leftShoulderStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 18 + repeatExpandCount] = (rightShoulder.x - rightShoulderAverageX.toFloat()) / rightShoulderStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 17 + repeatExpandCount] = (rightShoulder.y - rightShoulderAverageY.toFloat()) / rightShoulderStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 16 + repeatExpandCount] = (leftHip.x - leftHipAverageX.toFloat()) / leftHipStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 15 + repeatExpandCount] = (leftHip.y - leftHipAverageY.toFloat()) / leftHipStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 14 + repeatExpandCount] = (rightHip.x - rightHipAverageX.toFloat()) / rightHipStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 13 + repeatExpandCount] = (rightHip.y - rightHipAverageY.toFloat()) / rightHipStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 12 + repeatExpandCount] = (leftKnee.x - leftKneeAverageX.toFloat()) / leftKneeStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 11 + repeatExpandCount] = (leftKnee.y - leftKneeAverageY.toFloat()) / leftKneeStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 10 + repeatExpandCount] = (rightKnee.x - rightKneeAverageX.toFloat()) / rightKneeStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 9 + repeatExpandCount] = (rightKnee.y - rightKneeAverageY.toFloat()) / rightKneeStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 8 + repeatExpandCount] = (leftAnkle.x - leftAnkleAverageX.toFloat()) / leftAnkleStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 7 + repeatExpandCount] = (leftAnkle.y - leftAnkleAverageY.toFloat()) / leftAnkleStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 6 + repeatExpandCount] = (rightAnkle.x - rightAnkleAverageX.toFloat()) / rightAnkleStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 5 + repeatExpandCount] = (rightAnkle.y - rightAnkleAverageY.toFloat()) / rightAnkleStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 4 + repeatExpandCount] = (((leftAnkle.x + leftHeel.x + leftFootIndex.x) / 3f) - leftFootAverageX.toFloat()) / leftFootStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 3 + repeatExpandCount] = (((leftAnkle.y + leftHeel.y + leftFootIndex.y) / 3f) - leftFootAverageY.toFloat()) / leftFootStandardDeviationY.toFloat()
+                    inputData[expandedIndex - 2 + repeatExpandCount] = (((rightAnkle.x + rightHeel.x + rightFootIndex.x) / 3f) - rightFootAverageX.toFloat()) / rightFootStandardDeviationX.toFloat()
+                    inputData[expandedIndex - 1 + repeatExpandCount] = (((rightAnkle.y + rightHeel.y + rightFootIndex.y) / 3f) - rightFootAverageY.toFloat()) / rightFootStandardDeviationY.toFloat()
+                }
             }
         }
     }

@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 data class LandmarkInfo(
     val workoutName: String,
 
+    val nose: LandmarkCoordinate,
+
     val leftShoulder: LandmarkCoordinate,
     val rightShoulder: LandmarkCoordinate,
     val leftElbow: LandmarkCoordinate,
