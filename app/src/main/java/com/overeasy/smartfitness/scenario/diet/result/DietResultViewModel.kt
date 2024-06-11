@@ -7,8 +7,8 @@ import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.diet.dto.toEntity
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsRecommendSelectReq
-import com.overeasy.smartfitness.domain.diet.model.RecommendedFood
+import com.overeasy.smartfitness.domain.diet.dto.PostDietsRecommendSelectReq
+import com.overeasy.smartfitness.domain.diet.entity.RecommendedFood
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

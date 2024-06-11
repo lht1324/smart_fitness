@@ -6,8 +6,8 @@ import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.domain.ai.AiRepository
 import com.overeasy.smartfitness.domain.ai.dto.PostAiFeedbackReq
 import com.overeasy.smartfitness.domain.ai.dto.PostAiFeedbackRes
-import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
-import com.overeasy.smartfitness.domain.ai.entity.PostAiRes
+import com.overeasy.smartfitness.domain.ai.dto.PostAiReq
+import com.overeasy.smartfitness.domain.ai.dto.PostAiRes
 import com.overeasy.smartfitness.simplePost
 import io.ktor.client.HttpClient
 import io.ktor.util.InternalAPI

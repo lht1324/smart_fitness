@@ -5,11 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersLoginReq
 import com.overeasy.smartfitness.isLettersOrDigits
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow

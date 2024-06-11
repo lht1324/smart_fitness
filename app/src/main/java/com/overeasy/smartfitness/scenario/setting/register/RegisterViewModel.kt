@@ -7,8 +7,8 @@ import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersLoginReq
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersSignUpReq
 import com.overeasy.smartfitness.isLettersOrDigits
 import com.overeasy.smartfitness.isLettersOrDigitsIncludeKorean
 import com.overeasy.smartfitness.model.register.RegisterBodyInfo

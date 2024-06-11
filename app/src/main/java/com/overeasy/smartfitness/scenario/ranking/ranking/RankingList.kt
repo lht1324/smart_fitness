@@ -15,8 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.overeasy.smartfitness.appConfig.MainApplication
-import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
-import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
+import com.overeasy.smartfitness.domain.score.dto.RankingInfo
+import com.overeasy.smartfitness.domain.score.dto.RankingUserInfo
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorSecondary

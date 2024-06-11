@@ -2,9 +2,9 @@ package com.overeasy.smartfitness.domain.diet
 
 import com.overeasy.smartfitness.domain.base.BaseResponse
 import com.overeasy.smartfitness.domain.diet.dto.GetDietRecommendRes
-import com.overeasy.smartfitness.domain.diet.entity.GetDietsHistoryRes
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsRecommendSelectReq
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsReq
+import com.overeasy.smartfitness.domain.diet.dto.GetDietsHistoryRes
+import com.overeasy.smartfitness.domain.diet.dto.PostDietsRecommendSelectReq
+import com.overeasy.smartfitness.domain.diet.dto.PostDietsReq
 
 interface DietRepository {
     suspend fun postDietsRecommend(req: PostDietsRecommendSelectReq): GetDietRecommendRes

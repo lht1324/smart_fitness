@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.overeasy.smartfitness.domain.diet.model.RecommendedFood
+import com.overeasy.smartfitness.domain.diet.entity.RecommendedFood
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.scenario.diet.public.DietTextButton

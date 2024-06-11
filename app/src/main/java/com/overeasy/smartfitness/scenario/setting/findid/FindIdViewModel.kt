@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.domain.setting.entity.GetUsersReq
 import com.overeasy.smartfitness.isLettersOrDigitsIncludeKorean
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel

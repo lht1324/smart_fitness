@@ -11,8 +11,8 @@ import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.exercises.impl.ExercisesRepositoryImpl
 import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.foods.impl.FoodsRepositoryImpl
-import com.overeasy.smartfitness.domain.ranking.ScoreRepository
-import com.overeasy.smartfitness.domain.ranking.impl.ScoreRepositoryImpl
+import com.overeasy.smartfitness.domain.score.ScoreRepository
+import com.overeasy.smartfitness.domain.score.impl.ScoreRepositoryImpl
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.impl.SettingRepositoryImpl
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository

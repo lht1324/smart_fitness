@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
-import com.overeasy.smartfitness.domain.setting.entity.PutUsersReq
-import com.overeasy.smartfitness.domain.setting.model.UserData
+import com.overeasy.smartfitness.domain.setting.dto.PutUsersReq
+import com.overeasy.smartfitness.domain.setting.dto.UserData
 import com.overeasy.smartfitness.isLettersOrDigitsIncludeKorean
 import com.overeasy.smartfitness.model.register.RegisterBodyInfo
 import com.overeasy.smartfitness.model.register.RegisterTasteInfo

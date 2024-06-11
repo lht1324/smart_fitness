@@ -1,15 +1,14 @@
 package com.overeasy.smartfitness.domain.setting
 
 import com.overeasy.smartfitness.domain.base.BaseResponse
-import com.overeasy.smartfitness.domain.setting.entity.DeleteUsersRes
-import com.overeasy.smartfitness.domain.setting.entity.GetUsersByIdRes
-import com.overeasy.smartfitness.domain.setting.entity.GetUsersReq
-import com.overeasy.smartfitness.domain.setting.entity.GetUsersRes
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginRes
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpReq
-import com.overeasy.smartfitness.domain.setting.entity.PostUsersSignUpRes
-import com.overeasy.smartfitness.domain.setting.entity.PutUsersReq
+import com.overeasy.smartfitness.domain.setting.dto.DeleteUsersRes
+import com.overeasy.smartfitness.domain.setting.dto.GetUsersByIdRes
+import com.overeasy.smartfitness.domain.setting.dto.GetUsersRes
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersLoginReq
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersLoginRes
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersSignUpReq
+import com.overeasy.smartfitness.domain.setting.dto.PostUsersSignUpRes
+import com.overeasy.smartfitness.domain.setting.dto.PutUsersReq
 
 interface SettingRepository {
     suspend fun postUsersLogin(

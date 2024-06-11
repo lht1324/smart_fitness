@@ -1,6 +1,6 @@
 package com.overeasy.smartfitness.domain.diet.dto
 
-import com.overeasy.smartfitness.domain.diet.model.RecommendedFood
+import com.overeasy.smartfitness.domain.diet.entity.RecommendedFood
 import kotlinx.serialization.Serializable
 
 @Serializable

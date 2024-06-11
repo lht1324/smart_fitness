@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
-import com.overeasy.smartfitness.domain.ranking.ScoreRepository
-import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
-import com.overeasy.smartfitness.domain.ranking.model.RankingUserInfo
+import com.overeasy.smartfitness.domain.score.ScoreRepository
+import com.overeasy.smartfitness.domain.score.dto.RankingInfo
+import com.overeasy.smartfitness.domain.score.dto.RankingUserInfo
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

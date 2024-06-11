@@ -6,9 +6,9 @@ import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.domain.base.BaseResponse
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.diet.dto.GetDietRecommendRes
-import com.overeasy.smartfitness.domain.diet.entity.GetDietsHistoryRes
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsRecommendSelectReq
-import com.overeasy.smartfitness.domain.diet.entity.PostDietsReq
+import com.overeasy.smartfitness.domain.diet.dto.GetDietsHistoryRes
+import com.overeasy.smartfitness.domain.diet.dto.PostDietsRecommendSelectReq
+import com.overeasy.smartfitness.domain.diet.dto.PostDietsReq
 import com.overeasy.smartfitness.simpleGet
 import com.overeasy.smartfitness.simplePost
 import io.ktor.client.HttpClient
