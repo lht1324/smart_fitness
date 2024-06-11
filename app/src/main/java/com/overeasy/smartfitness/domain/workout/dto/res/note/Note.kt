@@ -15,7 +15,7 @@ data class Note(
     val totalBad: Int
 )
 
-fun Note.toDto() = run {
+fun Note.toEntity() = run {
     DiaryListItem(
         noteId = noteId,
         totalScore = totalScore,

@@ -9,5 +9,5 @@ data class GetWorkoutVideoListRes(
     override val message: String,
     override val success: Boolean,
 
-    val result: WorkoutVideoList,
+    val result: GetWorkoutVideoListResult,
 ) : BaseResponseModel

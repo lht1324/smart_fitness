@@ -51,10 +51,10 @@ fun DiaryNavHost(
         ) {
             composable(DiaryRoutes.Diary.route) {
                 DiaryScreen(
-                    onClickMoveToDetail = { noteId, date ->
+                    onClickMoveToDetail = { noteIdList, date ->
                         navHostController.navigate(
                             DiaryRoutes.DiaryDetail.createRoute(
-                                noteId = noteId,
+                                noteIdList = noteIdList,
                                 date = date
                             )
                         )
@@ -63,7 +63,7 @@ fun DiaryNavHost(
             }
             composable(DiaryRoutes.DiaryDetail.route) { backStackEntry ->
                 DiaryDetailScreen(
-                    noteId = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID)?.toIntOrNull() ?: -1,
+                    noteIdListString = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.NOTE_ID_LIST) ?: "",
                     noteDate = backStackEntry.arguments?.getString(DiaryRoutes.DiaryDetail.DATE),
                     onClickWatchExampleVideo = onClickWatchExampleVideo
                 )

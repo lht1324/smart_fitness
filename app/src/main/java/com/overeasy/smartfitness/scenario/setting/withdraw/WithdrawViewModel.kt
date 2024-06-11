@@ -2,8 +2,8 @@ package com.overeasy.smartfitness.scenario.setting.withdraw
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +27,7 @@ class WithdrawViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             userId.filterNotNull().collectLatest { id ->
-                println("jaehoLee", "id = $id")
-                ApiRequestHelper.makeRequest {
+                makeRequest {
                     settingRepository.deleteUsers(id)
                 }.onSuccess { res ->
                     println("jaehoLee", "onSuccess, res = $res")

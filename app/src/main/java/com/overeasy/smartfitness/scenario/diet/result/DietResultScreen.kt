@@ -73,40 +73,54 @@ fun DietResultScreen(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
                 .fillMaxSize()
-                .verticalScroll(state = scrollState)
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "추천 결과",
-                color = Color.White,
-                fontSize = 24.dpToSp(),
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = fontFamily
-            )
-            Separator()
-            Text(
-                text = "원하는 메뉴를 하나만 선택해주세요.",
-                color = Color.White,
-                fontSize = 20.dpToSp(),
-                fontWeight = FontWeight.Bold,
-                fontFamily = fontFamily
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            DietTextButton(
-                modifier = Modifier.align(Alignment.End),
-                text = "완료",
-                onClick = {
-                    if (selectedIndex != -1) {
-                        isShowDoesWantToFinishDialog = true
-                    } else {
-                        isShowNeedAtLeastAnItemDialog = true
-                    }
-                }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
             Column(
+                modifier = Modifier
+            ) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "추천 결과",
+                    color = Color.White,
+                    fontSize = 24.dpToSp(),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = fontFamily
+                )
+                Separator()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "원하는 메뉴를 하나만 선택해주세요.",
+                        color = Color.White,
+                        fontSize = 20.dpToSp(),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DietTextButton(
+                        text = "완료",
+                        onClick = {
+                            if (selectedIndex != -1) {
+                                isShowDoesWantToFinishDialog = true
+                            } else {
+                                isShowNeedAtLeastAnItemDialog = true
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp,
+                    color = Color.LightGray
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .verticalScroll(state = scrollState),
                 verticalArrangement = Arrangement.spacedBy(15.dp)
             ) {
+                Spacer(modifier = Modifier.height(10.dp))
                 recommendedFoodList.forEachIndexed { index, foodData ->
                     RecommendedMenu(
                         modifier = Modifier
@@ -121,8 +135,8 @@ fun DietResultScreen(
                         isSelected = selectedIndex == index
                     )
                 }
+                Spacer(modifier = Modifier.height(20.dp))
             }
-            Spacer(modifier = Modifier.height(20.dp))
         }
         if (recommendedFoodList.isEmpty()) {
             Box(

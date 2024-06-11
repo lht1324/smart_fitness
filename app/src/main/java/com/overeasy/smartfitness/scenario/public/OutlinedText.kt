@@ -49,8 +49,6 @@ fun OutlinedText(
             onTextLayout = { layout ->
                 if (layout.layoutInput.style.letterSpacing.value != textLetterSpacingSp)
                     textLetterSpacingSp = layout.layoutInput.style.letterSpacing.value
-
-                println("jaehoLee", "textLetterSpacing = ${layout.layoutInput.style.letterSpacing.value}")
             }
         )
 
@@ -69,13 +67,7 @@ fun OutlinedText(
                 fontWeight = fontWeight,
                 fontFamily = fontFamily,
                 letterSpacing = textLetterSpacingSp.sp
-            ),
-            onTextLayout = { layout ->
-                layout.layoutInput.style.drawStyle?.run {
-                    this
-                }
-                println("jaehoLee", "outlineLetterSpacing = ${layout.layoutInput.style.letterSpacing.value}")
-            }
+            )
         )
     }
 }

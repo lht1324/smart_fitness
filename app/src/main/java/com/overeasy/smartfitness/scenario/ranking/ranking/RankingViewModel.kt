@@ -3,8 +3,8 @@ package com.overeasy.smartfitness.scenario.ranking.ranking
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.ranking.ScoreRepository
 import com.overeasy.smartfitness.domain.ranking.model.RankingInfo
@@ -62,7 +62,7 @@ class RankingViewModel @Inject constructor(
     }
 
     private suspend fun requestGetExercises() {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             exercisesRepository.getExercises()
 //            rankingRepository.getRankingCategory()
         }.onSuccess { res ->
@@ -130,39 +130,55 @@ class RankingViewModel @Inject constructor(
 //                score = 600
 //            )
 //        )
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             scoreRepository.getScoresByExerciseName(category)
         }.onSuccess { res ->
             _rankingInfoList.clear()
 
-            if (res.result?.rankingInfoList?.isNotEmpty() == true)
-                _rankingInfoList.addAll(res.result.rankingInfoList +
-                listOf(
-                    RankingInfo(
-                        nickname = "김철수1345",
-                        score = 300
-                    ),
-                    RankingInfo(
-                        nickname = "김철수3566",
-                        score = 200
-                    ),
-                    RankingInfo(
-                        nickname = "김철수15646",
-                        score = 400
-                    ),
-                    RankingInfo(
-                        nickname = "김철수1646",
-                        score = 500
-                    ),
-                    RankingInfo(
-                        nickname = "김철수18389",
-                        score = 800
-                    ),
-                    RankingInfo(
-                        nickname = "김철수104949",
-                        score = 600
-                    )
-                ))
+            if (res.result?.rankingInfoList?.isNotEmpty() == true) {
+//                val list = listOf(
+//                    RankingInfo(
+//                        nickname = "김철수1345",
+//                        score = 3300
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수3566",
+//                        score = 2100
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수15646",
+//                        score = 4300
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수1646",
+//                        score = 1500
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수18389",
+//                        score = 800
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수104949",
+//                        score = 600
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수1345",
+//                        score = 320
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수3566",
+//                        score = 240
+//                    ),
+//                    RankingInfo(
+//                        nickname = "김철수15646",
+//                        score = 480
+//                    ),
+//                )
+
+                _rankingInfoList.addAll(
+                    res.result.rankingInfoList // + list
+                )
+            }
 //            else
 //                _rankingInfoList.addAll(temporaryRankingList)
         }.onFailure { res ->
@@ -178,7 +194,7 @@ class RankingViewModel @Inject constructor(
         val userId = MainApplication.appPreference.userId
 
         if (userId != -1) {
-            ApiRequestHelper.makeRequest {
+            makeRequest {
                 scoreRepository.getScoresUserByExerciseName(userId, category)
             }.onSuccess { res ->
                 println("jaehoLee", "onSuccess: $res")

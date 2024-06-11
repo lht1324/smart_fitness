@@ -13,8 +13,9 @@ data class NoteDetailWorkoutInfo(
     val weight: Int
 )
 
-fun NoteDetailWorkoutInfo.toDto() = run {
+fun NoteDetailWorkoutInfo.toEntity() = run {
     DiaryDetailWorkoutInfo(
+        noteId = noteId,
         workoutName = exerciseName,
         setCount = setNum,
         repeatCount = repeats,

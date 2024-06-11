@@ -9,17 +9,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.overeasy.smartfitness.scenario.diet.diet.DietScreen
+import com.overeasy.smartfitness.scenario.diet.diet.DietViewModel
 import com.overeasy.smartfitness.scenario.diet.result.DietResultScreen
 import com.overeasy.smartfitness.scenario.public.Dialog
 import com.overeasy.smartfitness.scenario.public.Header
 
 @Composable
 fun DietNavHost(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dietViewModel: DietViewModel = hiltViewModel()
 ) {
     val navHostController = rememberNavController()
 
@@ -50,6 +53,7 @@ fun DietNavHost(
         ) {
             composable(DietRoutes.Diet.route) {
                 DietScreen(
+                    viewModel = dietViewModel,
                     onFinish = { userMenu ->
                         navHostController.navigate(DietRoutes.DietResult.createRoute(userMenu))
                     }
@@ -61,6 +65,7 @@ fun DietNavHost(
                 DietResultScreen(
                     userMenu = userMenu,
                     onFinish = {
+                        dietViewModel.onFinishRecommendedDietSelect()
                         navHostController.navigateUp()
                     },
                     onFailureRecommend = {

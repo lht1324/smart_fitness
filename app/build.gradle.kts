@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.AaptOptions
-
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -32,13 +30,13 @@ android {
     buildTypes {
         release {
             applicationIdSuffix = ".release"
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "IS_DEBUG", "false")
-            buildConfigField("String", "BASE_URL", "\"https://namu.wiki\"")
+            buildConfigField("String", "BASE_URL", "\"http://ceprj.gachon.ac.kr:60008\"")
         }
 
         debug {

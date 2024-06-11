@@ -4,6 +4,8 @@ package com.overeasy.smartfitness.domain.ai.impl
 
 import com.overeasy.smartfitness.BuildConfig
 import com.overeasy.smartfitness.domain.ai.AiRepository
+import com.overeasy.smartfitness.domain.ai.dto.PostAiFeedbackReq
+import com.overeasy.smartfitness.domain.ai.dto.PostAiFeedbackRes
 import com.overeasy.smartfitness.domain.ai.entity.PostAiReq
 import com.overeasy.smartfitness.domain.ai.entity.PostAiRes
 import com.overeasy.smartfitness.simplePost
@@ -19,6 +21,11 @@ class AiRepositoryImpl(
 
     override suspend fun postAi(req: PostAiReq): PostAiRes =
         client.simplePost(baseUrl) {
+            body = Json.encodeToString(req)
+        }
+
+    override suspend fun postAiFeedback(req: PostAiFeedbackReq): PostAiFeedbackRes =
+        client.simplePost("$baseUrl/feedback") {
             body = Json.encodeToString(req)
         }
 }

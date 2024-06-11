@@ -2,8 +2,8 @@ package com.overeasy.smartfitness.scenario.setting.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
 import com.overeasy.smartfitness.isLettersOrDigits
@@ -68,7 +68,7 @@ class LoginViewModel @Inject constructor(
                         id to password
                     }
                 }.collectLatest { (id, password) ->
-                    ApiRequestHelper.makeRequest {
+                    makeRequest {
                         settingRepository.postUsersLogin(
                             PostUsersLoginReq(
                                 username = id,

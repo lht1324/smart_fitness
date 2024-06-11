@@ -86,7 +86,6 @@ fun WorkoutInfoInputDialog(
             WorkoutInfo(
                 workoutName = workoutDataList.firstOrNull()?.first ?: "",
                 restTime = 30,
-                // weight to count
                 setDataList = listOf(
                     WorkoutData(
                         setNum = 1,
@@ -124,7 +123,7 @@ fun WorkoutInfoInputDialog(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically)
                     ) {
-                        workoutDataList.forEachIndexed { index, (workoutName, workoutType) ->
+                        workoutDataList.forEachIndexed { index, (workoutName, _) ->
                             WorkoutName(
                                 modifier = Modifier.noRippleClickable {
                                     if (selectedWorkoutNameIndex != index) {
@@ -260,7 +259,9 @@ fun WorkoutInfoInputDialog(
                     onClick = {
                         workoutInfo = workoutInfo.copy(
                             setDataList = if (workoutInfo.setDataList.isNotEmpty()) {
-                                workoutInfo.setDataList + workoutInfo.setDataList.last()
+                                val lastWorkoutInfo = workoutInfo.setDataList.last()
+
+                                workoutInfo.setDataList + lastWorkoutInfo.copy(setNum = lastWorkoutInfo.setNum + 1)
                             } else {
                                 listOf(
                                     WorkoutData(
@@ -279,7 +280,7 @@ fun WorkoutInfoInputDialog(
                     text = "완료",
                     onClick = {
                         val isSetDataListInvalid = workoutInfo.setDataList.any { (weight, count) ->
-                            weight == null || weight == 0 || count == null || count == 0
+                            weight == 0 || count == null || count == 0
                         } || workoutInfo.setDataList.isEmpty()
                         val isRestTimeInvalid = workoutInfo.restTime == 0 || workoutInfo.restTime == null
 

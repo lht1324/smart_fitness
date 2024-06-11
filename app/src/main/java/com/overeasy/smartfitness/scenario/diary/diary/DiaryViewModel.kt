@@ -3,9 +3,9 @@ package com.overeasy.smartfitness.scenario.diary.diary
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
-import com.overeasy.smartfitness.domain.workout.dto.res.note.toDto
+import com.overeasy.smartfitness.domain.workout.dto.res.note.toEntity
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.module.CalendarManager
 import com.overeasy.smartfitness.println
@@ -138,12 +138,12 @@ class DiaryViewModel @Inject constructor(
     }
 
     private suspend fun requestGetWorkoutNoteList(date: String) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             workoutRepository.getWorkoutNoteList(date)
         }.onSuccess { res ->
             if (!(res.result?.noteList.isNullOrEmpty())) {
                 val diaryList = res.result!!.noteList.map { note ->
-                    note.toDto()
+                    note.toEntity()
                 }.filter { diaryListItem ->
                     diaryListItem.run {
                         val isInvalidNote = perfectCount == 0 &&

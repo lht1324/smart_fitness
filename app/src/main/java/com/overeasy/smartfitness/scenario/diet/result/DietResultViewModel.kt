@@ -3,8 +3,8 @@ package com.overeasy.smartfitness.scenario.diet.result
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.diet.DietRepository
 import com.overeasy.smartfitness.domain.diet.dto.toEntity
 import com.overeasy.smartfitness.domain.diet.entity.PostDietsRecommendSelectReq
@@ -59,7 +59,7 @@ class DietResultViewModel @Inject constructor(
     }
 
     private suspend fun requestPostDietsRecommend(req: PostDietsRecommendSelectReq) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             dietRepository.postDietsRecommend(req)
         }.onSuccess { res ->
             _recommendedFoodList.clear()
@@ -68,6 +68,7 @@ class DietResultViewModel @Inject constructor(
                     foodRecommend.toEntity()
                 }.shuffled(Random(System.currentTimeMillis())) // 같은 리스트 내려오는 이슈 땜빵용 로직
             )
+            println("jaehoLee", "recommmend = ${res.result.foodRecommend.map { it.name }}")
         }.onFailure { res ->
             event(DietResultUiEvent.OnFailureRecommend)
             println("jaehoLee", "onFailure of requestPostDiets(): ${res.message}")
@@ -78,7 +79,7 @@ class DietResultViewModel @Inject constructor(
     }
 
     private suspend fun requestPostDietsRecommendSelect(req: PostDietsRecommendSelectReq) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             dietRepository.postDietsRecommendSelect(
                 req = req
             )
@@ -86,10 +87,10 @@ class DietResultViewModel @Inject constructor(
             event(DietResultUiEvent.OnSuccess)
         }.onFailure { res ->
             event(DietResultUiEvent.OnFailureSelect)
-            println("jaehoLee", "onFailure in requestPostDiets(): ${res.message}")
+            println("jaehoLee", "onFailure in requestPostDietsRecommendSelect(): ${res.message}")
         }.onError { throwable ->
             event(DietResultUiEvent.OnFailureSelect)
-            println("jaehoLee", "onError in requestPostDiets(): ${throwable.message}")
+            println("jaehoLee", "onError in requestPostDietsRecommendSelect(): ${throwable.message}")
         }
     }
 

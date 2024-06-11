@@ -3,8 +3,8 @@ package com.overeasy.smartfitness.scenario.diet.diet
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.println
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +33,7 @@ class DietViewModel @Inject constructor(
         viewModelScope.launch {
             launch {
                 if (MainApplication.appPreference.isLogin) {
-                    ApiRequestHelper.makeRequest {
+                    makeRequest {
                         settingRepository.getUsersById(MainApplication.appPreference.userId)
                     }.onSuccess { res ->
                         _screenState.value = DietScreenState.NORMAL
@@ -64,8 +64,6 @@ class DietViewModel @Inject constructor(
 
     fun onClickFinishInput() {
         viewModelScope.launch(Dispatchers.IO) {
-            val userId = MainApplication.appPreference.userId
-
             event(
                 DietUiEvent.OnFinishInputMenu(
                     userMenuList.toList().filter { userMenu ->
@@ -84,6 +82,11 @@ class DietViewModel @Inject constructor(
         if (Regex("^[ㄱ-ㅎㅏ-ㅣ가-힣 ]*\$").matches(value)) {
             _userMenuList[index] = value
         }
+    }
+
+    fun onFinishRecommendedDietSelect() {
+        _userMenuList.clear()
+        _userMenuList.add("")
     }
 
     private suspend fun event(uiEvent: DietUiEvent) {

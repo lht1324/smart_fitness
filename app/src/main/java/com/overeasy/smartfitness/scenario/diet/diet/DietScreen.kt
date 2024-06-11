@@ -33,7 +33,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.noRippleClickable
@@ -48,7 +47,8 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun DietScreen(
     modifier: Modifier = Modifier,
-    viewModel: DietViewModel = hiltViewModel(),
+//    viewModel: DietViewModel = hiltViewModel(),
+    viewModel: DietViewModel,
     onFinish: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -85,19 +85,31 @@ fun DietScreen(
                         .verticalScroll(state = scrollState)
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    DietTextButton(
-                        modifier = Modifier
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "자세히 입력할수록 좋아요.",
+                            color = Color.White,
+                            fontSize = 20.dpToSp(),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = fontFamily
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        DietTextButton(
+                            modifier = Modifier,
 //                            .padding(end = (10 + 36).dp)
-                            .align(Alignment.End),
-                        text = "입력 완료",
-                        onClick = {
-                            if (!(userMenuList.all { userMenu -> userMenu.isEmpty() })) {
-                                viewModel.onClickFinishInput()
-                            } else {
-                                isShowAllEmptyDialog = true
+//                                .align(Alignment.End),
+                            text = "입력 완료",
+                            onClick = {
+                                if (!(userMenuList.all { userMenu -> userMenu.isEmpty() })) {
+                                    viewModel.onClickFinishInput()
+                                } else {
+                                    isShowAllEmptyDialog = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                     Separator()
                     userMenuList.forEachIndexed { index, userMenu ->
                         UserMenuInputArea(

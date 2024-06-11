@@ -77,7 +77,7 @@ fun WorkoutScreen(
     viewModel: WorkoutViewModel = hiltViewModel(),
     filesDir: File?,
     onClickWatchExampleVideo: (String) -> Unit,
-    onFinishWorkout: (Int) -> Unit,
+    onFinishWorkout: (Int, String, String) -> Unit,
     onChangeIsWorkoutRunning: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
@@ -91,8 +91,8 @@ fun WorkoutScreen(
                         CameraController.VIDEO_CAPTURE or
                         CameraController.IMAGE_ANALYSIS
             )
-//            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+//            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
     val poseDetectionManager = remember {
@@ -356,11 +356,8 @@ fun WorkoutScreen(
                     isImeVisible = isImeVisible,
                     onClickWatchExampleVideo = onClickWatchExampleVideo,
                     onFinish = { workoutInfo ->
-//                        restTime = workoutInfo.restTime ?: 30
-//                        viewModel.setWorkoutInfo(workoutInfo)
                         temporaryWorkoutInfo = workoutInfo
                         isShowWorkoutWarningDialog = true
-//                        isShowWorkoutInfoInputDialog = false
                     }
                 )
             },
@@ -494,7 +491,11 @@ fun WorkoutScreen(
                     isRecording = false
                 }
                 is WorkoutViewModel.WorkoutUiEvent.FinishWorkout -> {
-                    onFinishWorkout(event.noteId)
+                    onFinishWorkout(
+                        event.noteId,
+                        event.workoutName,
+                        event.workoutResultIndexListString
+                    )
                 }
             }
         }

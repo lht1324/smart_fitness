@@ -26,7 +26,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,7 +56,6 @@ import com.overeasy.smartfitness.addCommaIntoNumber
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.ScoreType
 import com.overeasy.smartfitness.noRippleClickable
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.pxToDp
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
@@ -70,16 +68,21 @@ import com.overeasy.smartfitness.ui.theme.fontFamily
 fun DiaryDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryDetailViewModel = hiltViewModel(),
-    noteId: Int,
+    noteId: Int = -1,
+    noteIdListString: String = "",
     noteDate: String? = null,
+    workoutName: String = "",
+    workoutResultIndexListString: String = "",
     isCameFromWorkout: Boolean = false,
     onClickWatchExampleVideo: (String) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
     val diaryDetail by viewModel.diaryDetail.collectAsState()
-    val workoutVideoDataList = remember { viewModel.workoutVideoDataList }
+    val workoutInfoList by viewModel.workoutInfoList.collectAsState()
+    val workoutVideoDataList by viewModel.workoutVideoDataList.collectAsState()
     val dietHistoryList = remember { viewModel.dietHistoryList }
+    val aiFeedbackList = remember { viewModel.aiFeedbackList }
 
     Box(
         modifier = modifier
@@ -87,15 +90,6 @@ fun DiaryDetailScreen(
             .background(color = ColorPrimary)
     ) {
         if (diaryDetail != null) {
-            val workoutNameList by remember {
-                derivedStateOf {
-                    diaryDetail!!.workoutInfoList.distinctBy { workoutInfo ->
-                        workoutInfo.workoutName
-                    }.map { workoutInfo ->
-                        workoutInfo.workoutName
-                    }
-                }
-            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,20 +101,19 @@ fun DiaryDetailScreen(
                 ResultArea(
                     title = "운동",
                     contents = {
-                        workoutNameList.forEachIndexed { index, workoutName ->
-                            WorkoutSection(
-                                name = workoutName,
-                                workoutList = diaryDetail!!.workoutInfoList.filter { workoutInfo ->
-                                    workoutInfo.workoutName == workoutName
-                                }.sortedBy { workoutInfo ->
-                                    workoutInfo.setCount
-                                }.map { workoutInfo ->
-                                    workoutInfo.run { setCount to repeatCount }
-                                },
-                                caloriePerEachSet = index + 5
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            if (index != workoutNameList.size - 1) {
+                        if (workoutInfoList.isNotEmpty()) {
+                            workoutInfoList.forEach { (workoutName, workoutSetList) ->
+                                WorkoutSection(
+                                    name = workoutName,
+                                    workoutList = workoutSetList.sortedBy { workoutInfo ->
+                                        workoutInfo.setCount
+                                    }.map { workoutInfo ->
+                                        workoutInfo.run { setCount to repeatCount }
+                                    },
+                                    caloriePerEachSet = workoutSetList.firstOrNull()?.caloriePerEachCount ?: 0,
+                                    aiFeedbackList = aiFeedbackList
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
                                 HorizontalDivider(
                                     modifier = Modifier.fillMaxWidth(),
                                     thickness = 2.dp,
@@ -128,6 +121,13 @@ fun DiaryDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
+                            DetailText(text = "소모 칼로리 = ${
+                                workoutInfoList.sumOf { (_, workoutSetList) ->
+                                    workoutSetList.sumOf { workoutInfo ->
+                                        workoutInfo.run { repeatCount * caloriePerEachCount }
+                                    }
+                                }
+                            } kcal")
                         }
                         Separator()
                         DetailText(
@@ -167,10 +167,10 @@ fun DiaryDetailScreen(
                                 fontSize = 20.dpToSp()
                             )
                             Spacer(modifier = Modifier.height(5.dp))
-                            workoutVideoDataList.forEachIndexed { workoutIndex, dataList ->
-                                dataList.forEachIndexed { index, (workoutName, url) ->
+                            workoutVideoDataList.forEachIndexed { workoutIndex, (workoutName, videoDataList) ->
+                                videoDataList.forEachIndexed { index, url ->
                                     DetailText(
-                                        text = if (dataList.size > 1) {
+                                        text = if (videoDataList.size > 1) {
                                             "$workoutName(${index + 1})"
                                         } else {
                                             workoutName
@@ -184,7 +184,7 @@ fun DiaryDetailScreen(
                                         textDecoration = TextDecoration.Underline
                                     )
                                     Spacer(modifier = Modifier.height(5.dp))
-                                    if (index == dataList.size - 1 && workoutIndex != workoutVideoDataList.size - 1) {
+                                    if (index == videoDataList.size - 1 && workoutIndex != workoutVideoDataList.size - 1) {
                                         HorizontalDivider(
                                             modifier = Modifier.fillMaxWidth(),
                                             thickness = 1.dp,
@@ -330,8 +330,13 @@ fun DiaryDetailScreen(
     }
 
     LaunchedEffect(Unit) {
-        println("jaehoLee", "noteId = $noteId")
-        viewModel.onLoad(noteId, noteDate)
+        viewModel.onLoad(
+            noteId = noteId,
+            noteIdListString = noteIdListString,
+            noteDate = noteDate,
+            workoutName = workoutName,
+            workoutResultIndexListString = workoutResultIndexListString
+        )
     }
 }
 
@@ -427,7 +432,8 @@ private fun WorkoutSection(
     modifier: Modifier = Modifier,
     name: String,
     caloriePerEachSet: Int,
-    workoutList: List<Pair<Int, Int>>
+    workoutList: List<Pair<Int, Int>>,
+    aiFeedbackList: List<String> = listOf()
 ) {
     val context = LocalContext.current
 
@@ -465,7 +471,11 @@ private fun WorkoutSection(
                     dividerHeight = height
                 }
             },
-            text = "$name (1회 $caloriePerEachSet kcal 소모)",
+            text = if (caloriePerEachSet != 0) {
+                "$name (1회 $caloriePerEachSet kcal 소모)"
+            } else {
+                name
+            },
             fontSize = 18.dpToSp()
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -488,7 +498,7 @@ private fun WorkoutSection(
             visible = isClicked
         ) {
             Column {
-                workoutList.forEachIndexed { index, (set, count) ->
+                workoutList.forEach { (set, count) ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -507,26 +517,42 @@ private fun WorkoutSection(
                                     }
                                 ),
                             text = "${set}세트",
-                            fontSize = 14.dpToSp()
+                            fontSize = 14.dpToSp(),
+                            fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.width(5.dp))
-                        Divider(
-                            modifier = Modifier
-                                .width(5.dp)
-                                .height(2.dp),
+                        HorizontalDivider(
+                            modifier = Modifier.width(5.dp),
+                            thickness = 2.dp,
                             color = Color.LightGray
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         DetailText(
                             text = "${count}회",
-                            fontSize = 14.dpToSp()
+                            fontSize = 14.dpToSp(),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        DetailText(text = "소모 칼로리 = ${caloriePerEachSet * workoutList.sumOf { (_, count) -> count }} kcal")
+        if (aiFeedbackList.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Column() {
+                DetailText(text = "피드백")
+                Spacer(modifier = Modifier.height(5.dp))
+                aiFeedbackList.forEachIndexed { index, feedback ->
+                    DetailText(
+                        text = "${index + 1}. $feedback",
+                        fontSize = 14.dpToSp(),
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (index != aiFeedbackList.size - 1) {
+                        Spacer(modifier = Modifier.height(5.dp))
+                    }
+                }
+            }
+        }
     }
 }
 

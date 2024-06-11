@@ -2,8 +2,8 @@ package com.overeasy.smartfitness.scenario.setting.myinfo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PutUsersReq
 import com.overeasy.smartfitness.domain.setting.model.UserData
@@ -94,7 +94,7 @@ class MyInfoViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch(Dispatchers.IO) {
-                ApiRequestHelper.makeRequest {
+                makeRequest {
                     settingRepository.getUsersById(MainApplication.appPreference.userId)
                 }.onSuccess { res ->
                     val userData = res.result
@@ -223,8 +223,7 @@ class MyInfoViewModel @Inject constructor(
         preferenceTypeFood: String? = null,
         preferenceFoods: String? = null
     ) {
-        ApiRequestHelper.makeRequest {
-            println("jaehoLee", "spicy = $spicyPreference, meat = $meatConsumption, taste = $tastePreference, act = $activityLevel, food = $preferenceTypeFood")
+        makeRequest {
             settingRepository.putUsers(
                 PutUsersReq(
                     userId = MainApplication.appPreference.userId,

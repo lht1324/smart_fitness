@@ -1,6 +1,7 @@
 package com.overeasy.smartfitness.domain.workout.dto.res.note
 
 import com.overeasy.smartfitness.domain.workout.entity.DiaryDetail
+import com.overeasy.smartfitness.println
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,7 +14,7 @@ data class GetWorkoutNoteDetailResult(
     val workoutList: List<NoteDetailWorkoutInfo> = listOf()
 )
 
-fun GetWorkoutNoteDetailResult.toDto() = run {
+fun GetWorkoutNoteDetailResult.toEntity() = run {
     DiaryDetail(
         perfectCount = totalPerfect,
         goodCount = totalGood,
@@ -21,7 +22,9 @@ fun GetWorkoutNoteDetailResult.toDto() = run {
         totalScore = totalScore,
         totalKcal = totalKcal,
         workoutInfoList = workoutList.map { info ->
-            info.toDto()
+            info.toEntity()
+        }.apply {
+            println("jaehoLee", "workoutInfoList = $this")
         }
     )
 }

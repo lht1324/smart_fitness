@@ -1,9 +1,10 @@
 package com.overeasy.smartfitness.scenario.diary.diary
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -37,16 +39,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.overeasy.smartfitness.R
 import com.overeasy.smartfitness.dpToSp
 import com.overeasy.smartfitness.model.diary.CalendarItemData
 import com.overeasy.smartfitness.model.diary.ScoreType
-import com.overeasy.smartfitness.noRippleClickable
 import com.overeasy.smartfitness.pxToDp
+import com.overeasy.smartfitness.ui.theme.Color919191
 import com.overeasy.smartfitness.ui.theme.ColorLightGreen
 import com.overeasy.smartfitness.ui.theme.ColorPrimary
 import com.overeasy.smartfitness.ui.theme.ColorSaturday
@@ -63,7 +66,7 @@ import kotlinx.coroutines.launch
 fun DiaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel(),
-    onClickMoveToDetail: (Int, String) -> Unit
+    onClickMoveToDetail: (String, String) -> Unit
 ) {
     val currentYear by viewModel.currentYear.collectAsState(initial = 1970)
     val currentMonth by viewModel.currentMonth.collectAsState(initial = 1)
@@ -128,9 +131,9 @@ fun DiaryScreen(
                 totalScore = totalScore,
                 totalKcal = totalKcal,
                 selectedCalendarItemData = selectedCalendarItemData,
-                onClickMoveToDetail = { noteId ->
+                onClickMoveToDetail = { noteIdList ->
                     if (selectedCalendarItemData != null) {
-                        onClickMoveToDetail(noteId, selectedCalendarItemData!!.date)
+                        onClickMoveToDetail(noteIdList, selectedCalendarItemData!!.date)
                     }
                 }
             )
@@ -189,7 +192,7 @@ private fun InfoSection(
     totalScore: Int,
     totalKcal: Int,
     selectedCalendarItemData: CalendarItemData?,
-    onClickMoveToDetail: (Int) -> Unit
+    onClickMoveToDetail: (String) -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -255,13 +258,45 @@ private fun InfoSection(
                 .verticalScroll(state = scrollState)
         ) {
             if (!isNotExistWorkoutInfo) {
-                Text(
-                    text = "총 운동 횟수",
-                    color = Color.White,
-                    fontSize = 20.dpToSp(),
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = fontFamily
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "총 운동 횟수",
+                        color = Color.White,
+                        fontSize = 20.dpToSp(),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily
+                    )
+                    if (noteIdList.isNotEmpty()) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(
+                                    color = Color.White,
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color919191,
+                                    shape = CircleShape
+                                )
+                                .clickable {
+                                    onClickMoveToDetail(noteIdList.joinToString(",") { it.toString() })
+                                }
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_diary_detail),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = "${perfectCount + goodCount + notGoodCount}회",
@@ -303,26 +338,6 @@ private fun InfoSection(
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = fontFamily
                     )
-                }
-                if (noteIdList.isNotEmpty()) {
-                    Separator()
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        noteIdList.forEachIndexed { index, noteId ->
-                            Text(
-                                text = "${index + 1}번째 운동 상세 정보 확인하기",
-                                modifier = Modifier.noRippleClickable {
-                                    onClickMoveToDetail(noteId)
-                                },
-                                color = ColorSaturday,
-                                fontSize = 18.dpToSp(),
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = fontFamily,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        }
-                    }
                 }
             } else {
                 Text(

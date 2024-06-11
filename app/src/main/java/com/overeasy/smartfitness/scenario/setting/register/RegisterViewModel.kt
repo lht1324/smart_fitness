@@ -3,8 +3,8 @@ package com.overeasy.smartfitness.scenario.setting.register
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.foods.FoodsRepository
 import com.overeasy.smartfitness.domain.setting.SettingRepository
 import com.overeasy.smartfitness.domain.setting.entity.PostUsersLoginReq
@@ -322,7 +322,7 @@ class RegisterViewModel @Inject constructor(
     }
 
     private suspend fun requestPostUsersSignUp(req: PostUsersSignUpReq) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             settingRepository.postUsersSignUp(req)
         }.onSuccess { res ->
             println("jaehoLee", "onSuccess: $res")
@@ -350,7 +350,7 @@ class RegisterViewModel @Inject constructor(
         userName: String,
         password: String
     ) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             settingRepository.postUsersLogin(
                 PostUsersLoginReq(
                     username = userName,
@@ -373,7 +373,7 @@ class RegisterViewModel @Inject constructor(
     }
 
     private suspend fun requestGetFoodsInit() {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             foodsRepository.getFoodsInit()
         }.onSuccess { res ->
             val mappedList = res.result.map { menuData -> menuData.foodName }

@@ -13,7 +13,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.overeasy.smartfitness.println
 import com.overeasy.smartfitness.scenario.diary.diarydetail.DiaryDetailScreen
 import com.overeasy.smartfitness.scenario.public.Header
 import com.overeasy.smartfitness.scenario.workout.workout.WorkoutScreen
@@ -61,19 +60,29 @@ fun WorkoutNavHost(
                 WorkoutScreen(
                     filesDir = filesDir,
                     onClickWatchExampleVideo = onClickWatchExampleVideo,
-                    onFinishWorkout = { noteId ->
-                        println("jaehoLee", "noteId onFinish = $noteId")
-                        navHostController.navigate(WorkoutRoutes.Result.createRoute(noteId))
+                    onFinishWorkout = { noteId, workoutName, workoutResultIndexListString ->
+                        navHostController.navigate(
+                            WorkoutRoutes.Result.createRoute(
+                                noteId = noteId,
+                                workoutName = workoutName,
+                                workoutResultIndexListString = workoutResultIndexListString
+                            )
+                        )
                     },
                     onChangeIsWorkoutRunning = onChangeIsWorkoutRunning
                 )
             }
             composable(WorkoutRoutes.Result.route) { backStackEntry ->
                 val noteId = backStackEntry.arguments?.getString(WorkoutRoutes.Result.NOTE_ID)?.toIntOrNull() ?: -1
+                val workoutName = backStackEntry.arguments?.getString(WorkoutRoutes.Result.WORKOUT_NAME) ?: ""
+                val workoutResultIndexListString =
+                    backStackEntry.arguments?.getString(WorkoutRoutes.Result.WORKOUT_RESULT_INDEX_LIST_STRING) ?: ""
 
                 if (noteId != -1) {
                     DiaryDetailScreen(
                         noteId = noteId,
+                        workoutName = workoutName,
+                        workoutResultIndexListString = workoutResultIndexListString,
                         isCameFromWorkout = true,
                         onClickWatchExampleVideo = onClickWatchExampleVideo
                     )

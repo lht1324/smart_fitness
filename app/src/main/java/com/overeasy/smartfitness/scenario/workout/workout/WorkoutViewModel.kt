@@ -8,15 +8,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseLandmark
-import com.overeasy.smartfitness.api.ApiRequestHelper
 import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.calculateAngle
 import com.overeasy.smartfitness.domain.ai.AiRepository
 import com.overeasy.smartfitness.domain.ai.model.LandmarkInfo
+import com.overeasy.smartfitness.domain.base.makeRequest
 import com.overeasy.smartfitness.domain.exercises.ExercisesRepository
 import com.overeasy.smartfitness.domain.workout.WorkoutRepository
 import com.overeasy.smartfitness.domain.workout.dto.req.PostWorkoutDataReq
-import com.overeasy.smartfitness.domain.workout.dto.req.WorkoutData
 import com.overeasy.smartfitness.getNormalizedFrameFloatArray
 import com.overeasy.smartfitness.model.workout.BodyFrameData
 import com.overeasy.smartfitness.module.tensorflowmanager.TensorFlowManager
@@ -41,7 +40,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
@@ -65,8 +63,12 @@ class WorkoutViewModel @Inject constructor(
     )
     val workoutUiEvent = _workoutUiEvent.asSharedFlow()
 
-//    private val _workoutNameList = mutableStateListOf("푸쉬업", "데드리프트", "딥스", "스쿼트", "숄더프레스")
-    private val _workoutDataList = mutableStateListOf<Pair<String, Boolean>>()
+    private val _workoutDataList = mutableStateListOf(
+        "푸시업" to true,
+        "데드리프트" to false,
+        "스쿼트" to false,
+    )
+//    private val _workoutDataList = mutableStateListOf<Pair<String, Boolean>>()
     val workoutDataList = _workoutDataList
 
     private val _bodyFrameData = MutableStateFlow<BodyFrameData?>(null)
@@ -90,28 +92,20 @@ class WorkoutViewModel @Inject constructor(
 
     private val setDataList = workoutInfo.map { info ->
         info?.setDataList?.filter { setData ->
-            setData.run { weight != null && repeats != null }
+            setData.run {
+                if (info.workoutName != SupportedWorkout.PUSH_UP.value) {
+                    weight != null && repeats != null
+                } else {
+                    repeats != null
+                }
+            }
         }
-    }
-    private val setAmount = setDataList.map { list ->
-        list?.size
     }
 
     private val _currentSet = MutableStateFlow(0)
     val currentSet = _currentSet.asStateFlow()
-    private val currentSetWeight = setDataList.flatMapLatest { list ->
-        currentSet.filter { set ->
-            set > 0
-        }.map { set ->
-            list?.get(set - 1)?.weight
-        }
-    }
-    private val currentSetCount = setDataList.flatMapLatest { list ->
-        currentSet.filter { set ->
-            set > 0
-        }.map { set ->
-            list?.get(set - 1)?.repeats
-        }
+    private val currentMaxSet = setDataList.map { list ->
+        list?.size
     }
 
     private val poseList = mutableStateListOf<Pose>()
@@ -135,8 +129,15 @@ class WorkoutViewModel @Inject constructor(
     private val _scoreNotGood = MutableStateFlow(0)
     val scoreNotGood = _scoreNotGood.asStateFlow()
 
-    private val totalCount = combine(scorePerfect, scoreGood, scoreNotGood) { perfect, good, notGood ->
+    private val currentCount = combine(scorePerfect, scoreGood, scoreNotGood) { perfect, good, notGood ->
         perfect + good + notGood
+    }
+    private val currentMaxCount = combine(setDataList, currentSet) { list, set ->
+        list to set
+    }.filter { (list, set) ->
+        list?.isNotEmpty() == true && set > 0
+    }.map { (list, set) ->
+        list?.get(set - 1)?.repeats
     }
 
     private val workoutDataReq = combine(noteId, workoutInfo) { noteId, workoutInfo ->
@@ -150,21 +151,26 @@ class WorkoutViewModel @Inject constructor(
             noteId = noteId,
             exerciseName = workoutInfo.workoutName,
             workoutList = workoutInfo.setDataList.filter { setData ->
-                setData.run { weight != null && repeats != null }
-            }.mapIndexed { index, setData ->
                 setData.run {
-                    WorkoutData(
-                        setNum = index + 1,
-                        repeats = repeats,
-                        weight = weight,
-                        scorePerfect = scorePerfect,
-                        scoreGood = scoreGood,
-                        scoreBad = scoreBad,
-                    )
+                    if (workoutInfo.workoutName != SupportedWorkout.PUSH_UP.value) {
+                        weight != null && repeats != null
+                    } else {
+                        repeats != null
+                    }
                 }
+            }.sortedBy { setData ->
+                setData.setNum
             }
         )
     }
+
+    private val isSetFinished = combine(currentCount, currentMaxCount) { count, maxCount ->
+        count == maxCount
+    }.distinctUntilChanged()
+
+    private val isWorkoutFinished = combine(isSetFinished, currentSet, currentMaxSet) { isSetFinished, set, maxSet ->
+        isSetFinished && set == maxSet
+    }.distinctUntilChanged()
 
     private val _firstCountdown = MutableStateFlow<Int?>(null)
     val firstCountdown = _firstCountdown.asStateFlow()
@@ -188,20 +194,6 @@ class WorkoutViewModel @Inject constructor(
 
     private val landmarkInfoList = MutableStateFlow<List<LandmarkInfo>>(listOf())
 
-//    private val interpreter = workoutName.distinctUntilChanged().map { name ->
-//        when (name) {
-//            SupportedWorkout.PUSH_UP.value -> "pushup_model.tflite"
-//            SupportedWorkout.DEAD_LIFT.value -> "deadlift_model.tflite"
-//            SupportedWorkout.SQUAT.value -> "squat_model.tflite"
-//            else -> null
-//        }
-//    }.filter { modelPath ->
-//        modelPath != null
-//    }.map { modelPath ->
-//        modelPath!!
-//    }.map { modelPath ->
-//        tensorFlowManager.getInterpreter(modelPath)
-//    }
     private var interpreter: MutableStateFlow<Interpreter?> = MutableStateFlow(null)
 
     private val isRecording = MutableStateFlow(false)
@@ -209,6 +201,8 @@ class WorkoutViewModel @Inject constructor(
 
     private val _uploadLoadingProgress = MutableStateFlow<Float?>(null)
     val uploadLoadingProgress = _uploadLoadingProgress.asStateFlow()
+
+    private val workoutResultIndexList = MutableStateFlow<ArrayList<ArrayList<Int>>>(arrayListOf())
 
     init {
         MainApplication.appPreference.currentVideoFileDir = null
@@ -304,7 +298,7 @@ class WorkoutViewModel @Inject constructor(
 
                         landmarkInfoList.value += landmarkInfo
 
-                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
+//                        println("jaehoLee", "leftDegree = $leftArmAngle, rightDegree = $rightArmAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
                     }
                 }
             }
@@ -347,7 +341,7 @@ class WorkoutViewModel @Inject constructor(
 
                         landmarkInfoList.value += landmarkInfo
 
-                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
+//                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
                     }
                 }
             }
@@ -389,7 +383,8 @@ class WorkoutViewModel @Inject constructor(
                         )
 
                         landmarkInfoList.value += landmarkInfo
-                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
+
+//                        println("jaehoLee", "leftLeg = $leftLegAngle, leftWaist = $leftWaistAngle, ${isReachedFirstPoint.value}, ${isReachedMiddlePoint.value}, ${isReachedLastPoint.value}")
                     }
                 }
             }
@@ -403,11 +398,12 @@ class WorkoutViewModel @Inject constructor(
                     Triple(isFirstPoint, isMiddlePoint, isLastPoint)
                 }.filter { (isFirstPoint, isMiddlePoint, isLastPoint) ->
                     isFirstPoint && isMiddlePoint && isLastPoint
-                }.flatMapLatest {
+                }.flatMapLatest { (isFirstPoint, isMiddlePoint, isLastPoint) ->
                     interpreter.map { interpreter ->
                         interpreter to workoutName.firstOrNull()
                     }.filter { (interpreter, name) ->
-                        interpreter != null && name != null
+                        interpreter != null && name != null &&
+                                isFirstPoint && isMiddlePoint && isLastPoint
                     }
                 }.map { (interpreter, name) ->
                     interpreter!! to name!!
@@ -462,10 +458,7 @@ class WorkoutViewModel @Inject constructor(
                     val predictionList = FloatArray(outputBufferSize / Float.SIZE_BYTES)
                     outputBuffer.asFloatBuffer().get(predictionList)
 
-                    println("jaehoLee", "predictionList[${totalCount.firstOrNull()}] = ${predictionList.toList().sortedByDescending { it }}")
-
                     val highestPrediction = predictionList.toList().max()
-//                    val selectedPredictionIndex = predictionList.toList().shuffled(Random(System.currentTimeMillis())).indexOfFirst { prediction ->
                     val selectedPredictionIndex = predictionList.toList().indexOfFirst { prediction ->
                         prediction == highestPrediction
                     }
@@ -487,6 +480,26 @@ class WorkoutViewModel @Inject constructor(
                      * 31 true 0개
                      */
 
+//                    if (name != SupportedWorkout.SQUAT.value) {
+//                        when (selectedPredictionIndex) {
+//                            in 0..25 -> {
+//                                val decision = (0..1).random()
+//
+//                                if (decision == 1)
+//                                    _scorePerfect.value += 1
+//                                else
+//                                    _scoreGood.value += 1
+//                            }
+//                            in 26..31 -> _scoreNotGood.value += 1
+//                        }
+//                    } else {
+//                        when (selectedPredictionIndex) {
+//                            in 0..4 -> _scorePerfect.value += 1
+//                            in 5..10 -> _scoreGood.value += 1
+//                            in 11..15 -> _scoreNotGood.value += 1
+//                        }
+//                    }
+
                     if (name != SupportedWorkout.SQUAT.value) {
                         when (selectedPredictionIndex) {
                             in 0..15 -> _scorePerfect.value += 1
@@ -498,6 +511,16 @@ class WorkoutViewModel @Inject constructor(
                             in 0..4 -> _scorePerfect.value += 1
                             in 5..10 -> _scoreGood.value += 1
                             in 11..15 -> _scoreNotGood.value += 1
+                        }
+                    }
+
+                    if (name != SupportedWorkout.SQUAT.value) {
+                        if (selectedPredictionIndex in 0..31) {
+                            workoutResultIndexList.value[currentSet.value - 1].add(selectedPredictionIndex)
+                        }
+                    } else {
+                        if (selectedPredictionIndex in 0..15) {
+                            workoutResultIndexList.value[currentSet.value - 1].add(selectedPredictionIndex)
                         }
                     }
 
@@ -516,25 +539,7 @@ class WorkoutViewModel @Inject constructor(
                             }
                         )
                     }
-//                    when (selectedPredictionIndex) {
-//                        in 0..5 -> _scorePerfect.value += 1
-//                        in 6..25 -> _scoreGood.value += 1
-//                        in 26..31 -> _scoreNotGood.value += 1
-//                    }
 
-//                    interpreter.let { model ->
-//                        val inputArray = arrayOf(floatArrayOf(32f))
-//                        val outputArray = arrayOf(floatArrayOf(0f))
-//
-////                        model.run(inputArray, outputArray)
-//
-////                        println("jaehoLee", "inputShape = ${model.getInputTensor(0).shape()}")
-////                        println("jaehoLee", "inputType = ${model.getInputTensor(0).dataType()}")
-//
-//                        outputArray[0].forEachIndexed { index, output ->
-//                            println("jaehoLee", "output[$index] = $output")
-//                        }
-//                    }
                     inputBuffer.clear()
                     outputBuffer.clear()
 
@@ -544,18 +549,18 @@ class WorkoutViewModel @Inject constructor(
                 }
             }
             launch(Dispatchers.Default) {
-                totalCount.flatMapLatest { workoutCount ->
-                    combine (currentSetCount, setAmount, currentSet) { count, amount, set ->
-                        val isSetFinished = count == workoutCount
-                        val isWorkoutFinished = isSetFinished && set == amount
+                combine(
+                    isSetFinished,
+                    isWorkoutFinished
+                ) { isSetFinished, isWorkoutFinished ->
+                    isSetFinished to isWorkoutFinished
+                }.filter { (isSetFinished, isWorkoutFinished) ->
+                    val set = currentSet.value
+                    val maxSet = currentMaxSet.firstOrNull()
 
-                        isSetFinished to isWorkoutFinished
-                    }.flatMapLatest { (isSetFinished, isWorkoutFinished) ->
-                        workoutDataReq.map { req ->
-                            Triple(isSetFinished, isWorkoutFinished, req)
-                        }
-                    }
-                }.collectLatest { (isSetFinished, isWorkoutFinished, req) ->
+                    (isSetFinished || isWorkoutFinished) &&
+                            !(isSetFinished && !isWorkoutFinished && set == maxSet)
+                }.collectLatest { (isSetFinished, isWorkoutFinished) ->
                     if (!isWorkoutFinished) {
                         if (isSetFinished) {
                             stopWorkoutTimer()
@@ -565,7 +570,35 @@ class WorkoutViewModel @Inject constructor(
                         stopWorkoutTimer()
 
                         if (MainApplication.appPreference.isLogin) {
-                            requestPostWorkoutData(req)
+                            val req = workoutInfo.value?.run {
+                                PostWorkoutDataReq(
+                                    noteId = noteId.value,
+                                    exerciseName = workoutName,
+                                    workoutList = setDataList.filter { setData ->
+                                        setData.run {
+                                            if (workoutName != SupportedWorkout.PUSH_UP.value) {
+                                                weight != null && repeats != null
+                                            } else {
+                                                repeats != null
+                                            }
+                                        }
+                                    }.distinctBy { setData ->
+                                        setData.setNum
+                                    }.sortedBy { setData ->
+                                        setData.setNum
+                                    }
+                                )
+                            }
+
+                            if (MainApplication.appPreference.isLogin) {
+                                _workoutUiEvent.emit(WorkoutUiEvent.StopRecording)
+                            } else {
+                                _workoutUiEvent.emit(WorkoutUiEvent.StopFakeRecording)
+                            }
+
+                            req?.run {
+                                requestPostWorkoutData(this)
+                            } ?: println("jaehoLee", "PostWorkoutData is null.")
                         } else {
                             onClickStopWorkout()
                         }
@@ -608,6 +641,16 @@ class WorkoutViewModel @Inject constructor(
             stopRestTimer()
 
             clearWorkoutData()
+            workoutResultIndexList.value = arrayListOf()
+
+            viewModelScope.launch {
+                delay(2000L)
+                if (MainApplication.appPreference.isLogin) {
+                    _workoutUiEvent.emit(WorkoutUiEvent.StopRecording)
+                } else {
+                    _workoutUiEvent.emit(WorkoutUiEvent.StopFakeRecording)
+                }
+            }
         }
     }
 
@@ -619,6 +662,7 @@ class WorkoutViewModel @Inject constructor(
         _scorePerfect.value = 0
         _scoreGood.value = 0
         _scoreNotGood.value = 0
+        isFinishedRequestPostWorkoutData.value = false
 
         poseList.clear()
         _bodyFrameData.value = null
@@ -637,15 +681,6 @@ class WorkoutViewModel @Inject constructor(
         interpreter.value?.close()
         interpreter.value = null
 
-        viewModelScope.launch {
-            delay(2000L)
-            if (MainApplication.appPreference.isLogin) {
-                _workoutUiEvent.emit(WorkoutUiEvent.StopRecording)
-            } else {
-                _workoutUiEvent.emit(WorkoutUiEvent.StopFakeRecording)
-            }
-        }
-
         onFinishClear()
     }
 
@@ -653,7 +688,7 @@ class WorkoutViewModel @Inject constructor(
         workoutInfo.value = info.copy(
             setDataList = info.setDataList.map { workoutData ->
                 workoutData.copy(
-                    weight = if (info.workoutName != SupportedWorkout.SQUAT.value) {
+                    weight = if (info.workoutName != SupportedWorkout.PUSH_UP.value) {
                         workoutData.weight
                     } else {
                         null
@@ -699,12 +734,13 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    private suspend fun startWorkoutTimer() {
+    private fun startWorkoutTimer() {
         workoutTimer = timer(period = 500L) {
             currentWorkoutTime.value += 500L
         }
 
         _currentSet.value += 1
+        workoutResultIndexList.value.add(arrayListOf())
         _isWorkoutRunning.value = true
     }
 
@@ -757,7 +793,8 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun getAverageLandmarkPositionList(): List<Pair<Float, Float>> {
-        val processedPoseList = poseList.map { savedPose ->
+        val currentPoseList = poseList.toList()
+        val processedPoseList = currentPoseList.map { savedPose ->
             savedPose.allPoseLandmarks.filter { landmark ->
                 landmark.landmarkType >= PoseLandmark.LEFT_SHOULDER
             }.sortedBy { landmark ->
@@ -768,7 +805,7 @@ class WorkoutViewModel @Inject constructor(
         }
 
         return if (processedPoseList.isNotEmpty()) {
-            processedPoseList.first().mapIndexed { index, (x, y) ->
+            processedPoseList.firstOrNull()?.mapIndexed { index, (x, y) ->
                 var resultX = x
                 var resultY = y
 
@@ -780,18 +817,18 @@ class WorkoutViewModel @Inject constructor(
                 }
 
                 resultX / processedPoseList.size.toFloat() to resultY / processedPoseList.size.toFloat()
-            }
+            } ?: listOf()
         } else {
             listOf()
         }
     }
-    private suspend fun updateBodyFrameData(
+    private fun updateBodyFrameData(
         cameraWidthPx: Int,
         cameraHeightPx: Int,
         imageWidth: Int,
         imageHeight: Int,
         landmarkPositionList: List<Pair<Float, Float>>
-    ) = withContext(Dispatchers.Default) {
+    ) {
         if (landmarkPositionList.isNotEmpty()) {
             val cameraWidthFloat = cameraWidthPx.toFloat()
             val cameraHeightFloat = cameraHeightPx.toFloat()
@@ -923,7 +960,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private suspend fun requestGetExercises() {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             exercisesRepository.getExercises()
         }.onSuccess { res ->
             if (!(res.result?.exerciseList.isNullOrEmpty())) {
@@ -944,7 +981,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private suspend fun requestPostWorkoutNote() {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             workoutRepository.postWorkoutNote(MainApplication.appPreference.userId)
         }.onSuccess { res ->
             println("jaehoLee", "noteId Before = ${noteId.value}")
@@ -954,17 +991,18 @@ class WorkoutViewModel @Inject constructor(
             startFirstCountdownTimer()
         }.onFailure { res ->
             println("jaehoLee", "onFailure of postWorkoutNote(): (${res.code}), ${res.message}")
+//            startFirstCountdownTimer()
         }.onError { throwable ->
             println("jaehoLee", "onError of postWorkoutNote(): ${throwable.message}")
+//            startFirstCountdownTimer()
         }
     }
 
     private suspend fun requestPostWorkoutData(req: PostWorkoutDataReq) {
-        ApiRequestHelper.makeRequest {
+        makeRequest {
             workoutRepository.postWorkoutData(req)
         }.onSuccess {
             workoutNameForVideo.value = workoutName.firstOrNull() ?: ""
-            clearWorkoutData()
             isFinishedRequestPostWorkoutData.value = true
         }.onFailure { res ->
             println("jaehoLee", "onFailure of postWorkoutData(): (${res.code}), ${res.message}")
@@ -977,7 +1015,6 @@ class WorkoutViewModel @Inject constructor(
         noteId: Int,
         workoutName: String
     ) {
-        println("jaehoLee", "noteId in request = $noteId")
         var videoFileDir = MainApplication.appPreference.currentVideoFileDir
 
         while (videoFileDir == null) {
@@ -986,7 +1023,16 @@ class WorkoutViewModel @Inject constructor(
 
         _isLoadingFinishWorkout.value = true
 
-        ApiRequestHelper.makeRequest {
+        val workoutResultIndexListString = workoutResultIndexList.value
+            .filter { resultList -> resultList.isNotEmpty() }
+            .toString()
+            .replace("[[", "[")
+            .replace("]]", "]")
+            .replace("[", "")
+            .replace("]", "/")
+            .replace(" ", "")
+
+        makeRequest {
             workoutRepository.postWorkoutVideo(
                 noteId = noteId,
                 exerciseName = workoutName,
@@ -1009,11 +1055,20 @@ class WorkoutViewModel @Inject constructor(
                 println("jaehoLee", "error in file delete: ${e.message}")
             }
             println("jaehoLee", "onSuccess(postWorkoutVideo()): ${res.message}}")
+
             workoutNameForVideo.value = ""
             clearWorkoutData(
                 onFinishClear = {
+                    workoutResultIndexList.value = arrayListOf()
+
                     viewModelScope.launch {
-                        _workoutUiEvent.emit(WorkoutUiEvent.FinishWorkout(noteId))
+                        _workoutUiEvent.emit(
+                            WorkoutUiEvent.FinishWorkout(
+                                noteId,
+                                workoutName,
+                                workoutResultIndexListString
+                            )
+                        )
                         _isLoadingFinishWorkout.value = false
                     }
                 }
@@ -1033,8 +1088,16 @@ class WorkoutViewModel @Inject constructor(
             workoutNameForVideo.value = ""
             clearWorkoutData(
                 onFinishClear = {
+                    workoutResultIndexList.value = arrayListOf()
+
                     viewModelScope.launch {
-                        _workoutUiEvent.emit(WorkoutUiEvent.FinishWorkout(noteId))
+                        _workoutUiEvent.emit(
+                            WorkoutUiEvent.FinishWorkout(
+                                noteId,
+                                workoutName,
+                                workoutResultIndexListString
+                            )
+                        )
                         _isLoadingFinishWorkout.value = false
                     }
                 }
@@ -1055,8 +1118,16 @@ class WorkoutViewModel @Inject constructor(
             workoutNameForVideo.value = ""
             clearWorkoutData(
                 onFinishClear = {
+                    workoutResultIndexList.value = arrayListOf()
+
                     viewModelScope.launch {
-                        _workoutUiEvent.emit(WorkoutUiEvent.FinishWorkout(noteId))
+                        _workoutUiEvent.emit(
+                            WorkoutUiEvent.FinishWorkout(
+                                noteId,
+                                workoutName,
+                                workoutResultIndexListString
+                            )
+                        )
                         _isLoadingFinishWorkout.value = false
                     }
                 }
@@ -1070,6 +1141,10 @@ class WorkoutViewModel @Inject constructor(
         data object StopRecording : WorkoutUiEvent()
         data object StartFakeRecording : WorkoutUiEvent()
         data object StopFakeRecording : WorkoutUiEvent()
-        data class FinishWorkout(val noteId: Int) : WorkoutUiEvent()
+        data class FinishWorkout(
+            val noteId: Int,
+            val workoutName: String,
+            val workoutResultIndexListString: String
+        ) : WorkoutUiEvent()
     }
 }

@@ -1,15 +1,20 @@
 package com.overeasy.smartfitness.module
 
 import com.overeasy.smartfitness.model.diary.CalendarItemData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.YearMonth
 
 object CalendarManager {
-    fun getCalendarList(): List<List<CalendarItemData>> {
+    suspend fun getCalendarList(): List<List<CalendarItemData>> = withContext(Dispatchers.Default) {
         val calendarList = arrayListOf<List<CalendarItemData>>()
-        
-        val startYear = 1970
-        val endYear = 2037
+
+        val currentYear = YearMonth.now().year
+        val startYear = currentYear - 10
+        val endYear = currentYear + 10
+//        val startYear = 1970
+//        val endYear = 2037
 
         for (year in startYear..endYear) {
             for (month in 1..12) {
@@ -65,6 +70,7 @@ object CalendarManager {
             }
         }
 
-        return calendarList
+//        return calendarList
+        calendarList
     }
 }
