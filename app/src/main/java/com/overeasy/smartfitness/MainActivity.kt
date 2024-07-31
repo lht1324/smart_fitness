@@ -1,11 +1,20 @@
+@file:OptIn(ExperimentalPermissionsApi::class)
+
 package com.overeasy.smartfitness
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,137 +22,297 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import com.overeasy.smartfitness.appConfig.MainApplication
 import com.overeasy.smartfitness.model.ScreenState
-import com.overeasy.smartfitness.scenario.diary.DiaryScreen
-import com.overeasy.smartfitness.scenario.main.MainScreen
-import com.overeasy.smartfitness.scenario.ranking.RankingScreen
-import com.overeasy.smartfitness.scenario.setting.SettingScreen
-import com.overeasy.smartfitness.ui.theme.fontFamily
+import com.overeasy.smartfitness.scenario.diary.navigation.DiaryNavHost
+import com.overeasy.smartfitness.scenario.diet.navigation.DietNavHost
+import com.overeasy.smartfitness.scenario.public.Dialog
+import com.overeasy.smartfitness.scenario.ranking.navigation.RankingNavHost
+import com.overeasy.smartfitness.scenario.setting.navigation.SettingNavHost
+import com.overeasy.smartfitness.scenario.workout.navigation.WorkoutNavHost
+import com.overeasy.smartfitness.ui.theme.Color919191
+import com.overeasy.smartfitness.ui.theme.ColorPrimary
+import com.overeasy.smartfitness.ui.theme.ColorSecondary
 import com.overeasy.smartfitness.ui.theme.SmartFitnessTheme
-import kotlinx.coroutines.launch
+import com.overeasy.smartfitness.ui.theme.fontFamily
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            val coroutineScope = rememberCoroutineScope()
 
-            val screenHeight = LocalConfiguration.current.screenHeightDp
-            var tabHeight by remember { mutableFloatStateOf(0f) }
+        setContent {
+            val isSystemInDarkTheme = isSystemInDarkTheme()
+            var isShowRequestPermissionDialog by remember { mutableStateOf(false) }
+            var isShowFinishDialog by remember { mutableStateOf(false) }
+
+            var isWorkoutRunning by remember { mutableStateOf(false) }
+
+            val cameraPermissionState = rememberPermissionState(
+                permission = Manifest.permission.CAMERA,
+                onPermissionResult = { _ ->
+                    MainApplication.appPreference.isAlreadyRequestedCameraPermission = true
+                    isShowRequestPermissionDialog = false
+                }
+            )
+
+            val pagerState = rememberPagerState(
+                pageCount = {
+                    ScreenState.entries.size
+                }
+            )
 
             val tabItemList = ScreenState.entries.map { state ->
                 state.value
             }
-            val pagerState = rememberPagerState(
-                pageCount = {
-                    tabItemList.size
-                }
-            )
+            var currentPage by remember { mutableIntStateOf(2) }
+            var headerHeight by remember { mutableIntStateOf(0) }
+
+            val screenHeight = LocalConfiguration.current.screenHeightDp
+            var tabHeight by remember { mutableFloatStateOf(0f) }
+
             SmartFitnessTheme {
-                Column(Modifier.fillMaxSize()) {
-                    HorizontalPager(
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) {
+                    CurrentScreen(
                         modifier = Modifier.height(((screenHeight - tabHeight).dp)),
-                        state = pagerState,
-                        userScrollEnabled = false
-                    ) { page ->
-                        CurrentScreen(stateValue = tabItemList[page])
-                    }
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(color = Color.Blue)
-                            .weight(1f)
+                        stateValue = tabItemList[currentPage],
+                        onChangeIsWorkoutRunning = { isRunning ->
+                            isWorkoutRunning = isRunning
+                        },
+                        onChangeHeaderHeight = {
+                            if (headerHeight != it) {
+                                headerHeight = it
+                            }
+                        }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 0.5.dp,
+                        color = Color919191
                     )
                     TabRow(
                         selectedTabIndex = pagerState.currentPage,
-                        containerColor = Color.White,
-                        contentColor = Color.Magenta,
+                        containerColor = Color(0xFF454747),
+                        contentColor = ColorSecondary,
                         indicator = { _ ->
-                            TabRowDefaults.Indicator(height = 1.dp, color = Color.Transparent)
+                            SecondaryIndicator(
+                                height = 1.dp,
+                                color = Color.Transparent
+                            )
                         }
                     ) {
                         tabItemList.forEachIndexed { index, tabItem ->
                             Row {
                                 Tab(
-                                    selected = pagerState.currentPage == index,
+                                    selected = currentPage == index,
                                     onClick = {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(index)
-                                        }
+                                        if (!isWorkoutRunning)
+                                            currentPage = index
                                     },
                                     modifier = Modifier
-                                        .border(
-                                            width = 0.dp,
-                                            color = Color.Black
-                                        )
-                                        .onSizeChanged { size ->
-                                            val heightDp = pxToDp(size.height)
+                                        .onSizeChanged { (_, height) ->
+                                            val heightDp = pxToDp(height)
 
-                                            if (heightDp != tabHeight)
+                                            if (heightDp != tabHeight) {
                                                 tabHeight = heightDp
+                                            }
                                         },
                                     text = {
-                                        Text(text = tabItem)
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Image(
+                                                painter = painterResource(
+                                                    getTabIconByScreenState(
+                                                        isSelected = currentPage == index,
+                                                        screenState = ScreenState.entries[index]
+                                                    )
+                                                ),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Text(
+                                                text = tabItem,
+                                                fontSize = 12.dpToSp(),
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = fontFamily
+                                            )
+                                        }
                                     },
-                                    selectedContentColor = Color.Blue,
-                                    unselectedContentColor = Color.Cyan
+                                    selectedContentColor = Color.White,
+                                    unselectedContentColor = Color919191
                                 )
-//                                if (index != tabItemList.size - 1) {
-//                                    Divider(
-//                                        modifier = Modifier.size(
-//                                            width = 2.dp,
-//                                            height = tabHeight.dp
-//                                        ).weight(1f),
-//                                        color = Color.Black
-//                                    )
-//                                }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.weight(1f))
                 }
+            }
+
+            BackHandler {
+                isShowFinishDialog = !isShowFinishDialog
+            }
+
+            if (isShowRequestPermissionDialog) {
+                Dialog(
+                    title = "카메라 권한을 허용해야 운동을 분석할 수 있어요.",
+                    description = "권한을 거부한 뒤 허용하고 싶다면\n" +
+                            "'앱 설정 -> 권한'에서 카메라 권한을 허용해 주세요.",
+                    confirmText = "취소",
+                    dismissText = "허용하기",
+                    onClickConfirm = {
+                        isShowRequestPermissionDialog = false
+                    },
+                    onClickDismiss = {
+                        MainApplication.appPreference.isAlreadyRequestedCameraPermission = true
+                        cameraPermissionState.launchPermissionRequest()
+                    },
+                    onDismissRequest = {
+                        isShowRequestPermissionDialog = false
+                    }
+                )
+            }
+
+            if (isShowFinishDialog && !isWorkoutRunning) {
+                Dialog(
+//                    title = "끄려고요?",
+//                    description = "운동은 하고 가는 거죠?",
+                    title = "운동은 하고 가는 거죠?",
+                    description = "켰다 끄는 건 좀 아니긴 한데...\n뭐라 하려는 건 아니에요 ㅋㅋ",
+                    confirmText = "아니",
+                    dismissText = "응",
+                    onClickConfirm = {
+                        isShowFinishDialog = false
+                    },
+                    onClickDismiss = {
+                        finish()
+                    },
+                    onDismissRequest = {
+                        isShowFinishDialog = false
+                    }
+                )
+            }
+
+            LaunchedEffect(Unit) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (isSystemInDarkTheme) {
+                        SystemBarStyle.dark(ColorPrimary.toArgb())
+                    } else {
+                        SystemBarStyle.light(ColorPrimary.toArgb(), ColorPrimary.toArgb())
+                    }
+                )
+
+                if (cameraPermissionState.status.shouldShowRationale) {
+                    MainApplication.appPreference.isAlreadyRequestedCameraPermission = false
+                }
+
+                isShowRequestPermissionDialog = !(MainApplication.appPreference.isAlreadyRequestedCameraPermission)
+            }
+        }
+    }
+
+    @Composable
+    fun CurrentScreen(
+        modifier: Modifier = Modifier,
+        stateValue: String,
+        onChangeIsWorkoutRunning: (Boolean) -> Unit,
+        onChangeHeaderHeight: (Int) -> Unit
+    ) = Box(
+        modifier = modifier
+    ) {
+        when (stateValue) {
+            ScreenState.DietScreen.value -> DietNavHost()
+            ScreenState.DiaryScreen.value -> DiaryNavHost(
+                onClickWatchExampleVideo = { videoUrl ->
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+                }
+            )
+            ScreenState.MainScreen.value -> WorkoutNavHost(
+                filesDir = filesDir,
+                onClickWatchExampleVideo = { videoUrl ->
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+                },
+                onChangeIsWorkoutRunning = onChangeIsWorkoutRunning,
+                onChangeHeaderHeight = onChangeHeaderHeight
+            )
+            ScreenState.RankingScreen.value -> RankingNavHost()
+            ScreenState.SettingScreen.value -> SettingNavHost()
+            else -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = ColorPrimary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "화면 로딩에 실패했습니다.",
+                    color = Color.White,
+                    fontSize = 18.dpToSp(),
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
 }
 
-@Composable
-fun CurrentScreen(stateValue: String) = when (stateValue) {
-    ScreenState.MainScreen.value -> MainScreen()
-    ScreenState.DiaryScreen.value -> DiaryScreen()
-    ScreenState.RankingScreen.value -> RankingScreen()
-    ScreenState.SettingScreen.value -> SettingScreen()
-    else -> Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "화면 로딩에 실패했습니다.",
-            fontSize = 18.dpToSp(),
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Bold
-        )
+private fun getTabIconByScreenState(isSelected: Boolean, screenState: ScreenState) = when (screenState) {
+    ScreenState.DietScreen -> if (isSelected) {
+        R.drawable.ic_food_selected
+    } else {
+        R.drawable.ic_food_unselected
+    }
+    ScreenState.DiaryScreen -> if (isSelected) {
+        R.drawable.ic_calendar_selected
+    } else {
+        R.drawable.ic_calendar_unselected
+    }
+    ScreenState.MainScreen -> if (isSelected) {
+        R.drawable.ic_fitness_selected
+    } else {
+        R.drawable.ic_fitness_unselected
+    }
+    ScreenState.RankingScreen -> if (isSelected) {
+        R.drawable.ic_ranking_selected
+    } else {
+        R.drawable.ic_ranking_unselected
+    }
+    ScreenState.SettingScreen -> if (isSelected) {
+        R.drawable.ic_setting_selected
+    } else {
+        R.drawable.ic_setting_unselected
     }
 }
